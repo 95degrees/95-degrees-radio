@@ -1,6 +1,6 @@
-package me.voidinvoid;
+package me.voidinvoid.utils;
 
-public class ConsoleColor {
+public final class ConsoleColor {
     // Reset
     public static final String RESET = "\033[0m";  // Text Reset
     public static final String RESET_SPACE = RESET + " ";

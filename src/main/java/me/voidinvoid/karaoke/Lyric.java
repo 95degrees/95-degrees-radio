@@ -1,6 +1,6 @@
 package me.voidinvoid.karaoke;
 
-import me.voidinvoid.Utils;
+import me.voidinvoid.utils.FormattingUtils;
 
 public class Lyric {
 
@@ -8,7 +8,7 @@ public class Lyric {
     private double entryTime, length;
 
     public Lyric(String text, double entryTime, double length) {
-        this.text = Utils.escape(text.replace("&apos;", "'").replace("&quot;", "\"")); //todo temp
+        this.text = FormattingUtils.escapeMarkup(text.replace("&apos;", "'").replace("&quot;", "\"")); //todo temp
         this.entryTime = entryTime;
         this.length = length;
     }

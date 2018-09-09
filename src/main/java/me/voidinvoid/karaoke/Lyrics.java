@@ -1,6 +1,6 @@
 package me.voidinvoid.karaoke;
 
-import me.voidinvoid.Utils;
+import me.voidinvoid.utils.FormattingUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -42,10 +42,10 @@ public class Lyrics {
     public String getMessage(String songName, double elapsed) {
         Lyric active = getActiveLyric(elapsed);
 
-        StringBuilder builder = new StringBuilder("[").append(Utils.escape(songName)).append(" Lyrics]\n\n");
+        StringBuilder builder = new StringBuilder("[").append(FormattingUtils.escapeMarkup(songName)).append(" Lyrics]\n\n");
 
         for (Lyric l : lyrics) {
-            builder.append(l.equals(active) ? "➡" : "◼").append(Utils.escape(l.getText())).append("\n");
+            builder.append(l.equals(active) ? "➡" : "◼").append(FormattingUtils.escapeMarkup(l.getText())).append("\n");
         }
 
         System.out.println(builder.toString());

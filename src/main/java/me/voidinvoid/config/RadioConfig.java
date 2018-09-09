@@ -1,4 +1,4 @@
-package me.voidinvoid;
+package me.voidinvoid.config;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;

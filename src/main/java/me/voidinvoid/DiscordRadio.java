@@ -1,6 +1,9 @@
 package me.voidinvoid;
 
+import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.dj.SongDJ;
 import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -23,12 +26,12 @@ public class DiscordRadio implements EventListener {
             return;
         }
 
-        System.out.println(ConsoleColor.BLUE_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
-
         if (!RadioConfig.loadFromFile(new File(args[0]))) {
             System.out.println(ConsoleColor.RED + "Failed to load config!" + ConsoleColor.RESET);
             return;
         }
+
+        System.out.println(ConsoleColor.BLUE_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
 
         new DiscordRadio(RadioConfig.config);
     }
@@ -49,6 +52,7 @@ public class DiscordRadio implements EventListener {
         this.config = config;
     }
 
+    @Override
     public void onEvent(Event e) {
         if (e instanceof ReadyEvent) {
             connectToGuild();
@@ -56,16 +60,18 @@ public class DiscordRadio implements EventListener {
     }
 
     public void connectToGuild() {
-        VoiceChannel v = jda.getVoiceChannelById(config.channels.voice);
-        AudioManager m = v.getGuild().getAudioManager();
+        VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
-        SongOrchestrator orch = new SongOrchestrator(this, jda, jda.getTextChannelById(config.channels.radioChat), jda.getTextChannelById(config.channels.djChat), config.channels.lyricsChat == null ? null : jda.getTextChannelById(config.channels.lyricsChat), v, config.locations.playlists);
+        SongOrchestrator orch = new SongOrchestrator(this, jda, jda.getTextChannelById(config.channels.radioChat), config.channels.lyricsChat == null ? null : jda.getTextChannelById(config.channels.lyricsChat), radioVoiceChannel, config.locations.playlists);
+
+        orch.registerSongEventListener(new SongDJ(orch, jda.getTextChannelById(config.channels.djChat)));
 
         startTaskManager();
 
+        AudioManager m = radioVoiceChannel.getGuild().getAudioManager();
+
         m.setSendingHandler(orch.getHandler());
-        //m.setReceivingHandler(orch.getKaraokeAudioListener());
-        m.openAudioConnection(v);
+        m.openAudioConnection(radioVoiceChannel);
 
         orch.playNextSong();
     }
@@ -76,29 +82,5 @@ public class DiscordRadio implements EventListener {
 
     public static void shutdown(boolean restart) {
         System.exit(restart ? 1 : 0);
-
-        //SongOrchestrator.instance.getJda().shutdown();
-        //SongOrchestrator.instance.getManager().shutdown();
-
-        //TaskManager.shutdown();
-
-        /*isRunning = false;
-
-        if (restart) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                try {
-                    Thread.sleep(3000); //hack
-
-                } catch (Exception ex) {
-                    System.out.println("FAILED TO RESTART!!");
-                    ex.printStackTrace();
-                }
-            }));
-            try {
-                Thread.sleep(1000);
-            } catch (Exception ignored) {}
-
-            System.exit(1);
-        }*/
     }
 }

@@ -1,6 +1,17 @@
-package me.voidinvoid;
+package me.voidinvoid.utils;
 
-public final class Utils {
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.songs.AlbumArtType;
+import me.voidinvoid.songs.Song;
+import me.voidinvoid.songs.SongType;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.requests.restaction.MessageAction;
+
+import java.io.File;
+
+public final class FormattingUtils {
 
     public static String getFormattedMsTime(long time) {
         long second = (time / 1000) % 60;
@@ -29,13 +40,20 @@ public final class Utils {
             format += seconds + "s";
         }
 
-        //if (minutes > 0) return minute + "m" + ((second == 0) ? "" : " " + second + "s");
         return format.trim();
     }
 
-    public static String escape(String text) {
+    public static String escapeMarkup(String text) {
         if (text == null) return "";
         if (text.startsWith("http://") || text.startsWith("https://")) return text; //todo HACK
         return text.replace("_", "\\_").replace("*", "\\*").replace("~", "\\~").replace("`", "\\`");
+    }
+
+    public static String getSongType(AudioTrack track) {
+        Song song = track.getUserData(Song.class);
+
+        if (song.getType() == SongType.SONG && track.getInfo().isStream) return "Stream";
+
+        return song.getType().getDisplayName();
     }
 }

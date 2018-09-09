@@ -1,11 +1,11 @@
-package me.voidinvoid;
+package me.voidinvoid.songs;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import me.voidinvoid.songs.FileSong;
-import me.voidinvoid.songs.NetworkSong;
-import me.voidinvoid.songs.Song;
+import me.voidinvoid.utils.ConsoleColor;
+import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.config.RadioConfig;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
@@ -20,14 +20,14 @@ public class SongQueue extends AudioEventAdapter {
     private List<Song> queue;
     private List<Song> songMap;
     private File directory;
-    private boolean isJinglesDirectory;
+    private SongType queueType;
     private boolean shuffleSongs;
     
     private String queueMapCache;
 
-    public SongQueue(Path directoryLocation, boolean isJinglesDirectory, boolean shuffleSongs) {
+    public SongQueue(Path directoryLocation, SongType queueType, boolean shuffleSongs) {
         directory = directoryLocation.toFile();
-        this.isJinglesDirectory = isJinglesDirectory;
+        this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
 
         initFiles();
@@ -70,7 +70,7 @@ public class SongQueue extends AudioEventAdapter {
         if (files == null) return;
 
         for (File f : files) {
-            Song s = new FileSong(f, isJinglesDirectory);
+            Song s = new FileSong(queueType, f);
             s.setQueue(this);
             songs.add(s);
             songMap.add(s);

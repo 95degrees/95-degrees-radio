@@ -1,7 +1,7 @@
 package me.voidinvoid.tasks.types;
 
 import me.voidinvoid.SongOrchestrator;
-import me.voidinvoid.SongPlaylist;
+import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
 

@@ -19,7 +19,7 @@ public class AnnounceTask extends RadioTaskExecutor {
 
         MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(message).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
-        if (announceToDj) orch.getDjChannel().sendMessage(embed).queue();
+        if (announceToDj) orch.djChannel_temp.sendMessage(embed).queue();
         if (announceToText) orch.getRadioChannel().sendMessage(embed).queue();
     }
 }

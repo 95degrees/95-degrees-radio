@@ -2,7 +2,8 @@ package me.voidinvoid.songs;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
-import me.voidinvoid.RadioConfig;
+import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.utils.AlbumArtUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -23,8 +24,9 @@ public class FileSong extends Song {
     private File file;
     private File albumArtFile;
 
-    public FileSong(File file, boolean isJingle) {
-        super(isJingle);
+    public FileSong(SongType type, File file) {
+        super(type);
+
         this.file = file;
 
         try {
@@ -36,7 +38,7 @@ public class FileSong extends Song {
                 if (art == null) return;
 
                 String mime = tag.getAlbumImageMimeType().replace("image/", "");
-                BufferedImage artImg = scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
+                BufferedImage artImg = AlbumArtUtils.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
 
                 Path album = Files.createTempFile("albumart-", "." + mime);
                 albumArtFile = album.toFile();
@@ -64,7 +66,7 @@ public class FileSong extends Song {
 
     @Override
     public File getAlbumArtFile() {
-        return albumArtFile == null ? isJingle() ? FALLBACK_JINGLE_FILE : FALLBACK_FILE : albumArtFile;
+        return albumArtFile == null ? getType() == SongType.JINGLE ? FALLBACK_JINGLE_FILE : FALLBACK_FILE : albumArtFile;
     }
 
     @Override

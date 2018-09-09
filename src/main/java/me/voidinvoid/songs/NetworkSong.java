@@ -2,7 +2,7 @@ package me.voidinvoid.songs;
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.RadioConfig;
+import me.voidinvoid.config.RadioConfig;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
@@ -22,8 +22,9 @@ public class NetworkSong extends Song {
 
     private String albumArtUrl;
 
-    public NetworkSong(AudioTrack track, User suggestedBy, boolean isJingle) {
-        super(isJingle);
+    public NetworkSong(SongType type, AudioTrack track, User suggestedBy) {
+        super(type);
+
         this.url = track.getInfo().uri;
         this.suggestedBy = suggestedBy;
         this.track = track;

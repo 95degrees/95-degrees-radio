@@ -1,8 +1,9 @@
-package me.voidinvoid;
+package me.voidinvoid.coins;
 
+import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.entities.User;
 
-public class UserCoinGain {
+public class UserCoinTracker {
 
     private static final long COINS_PER_MINUTE = 1;
 
@@ -13,7 +14,7 @@ public class UserCoinGain {
     private long totalTime;
     private boolean frozen;
 
-    public UserCoinGain(User user, boolean frozen) {
+    public UserCoinTracker(User user, boolean frozen) {
 
         this.user = user;
         this.frozen = frozen;

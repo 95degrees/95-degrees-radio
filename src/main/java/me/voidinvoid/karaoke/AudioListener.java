@@ -2,7 +2,7 @@ package me.voidinvoid.karaoke;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import de.sciss.jump3r.lowlevel.LameEncoder;
-import me.voidinvoid.RadioConfig;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.SongOrchestrator;
 import net.dv8tion.jda.core.audio.AudioReceiveHandler;
 import net.dv8tion.jda.core.audio.CombinedAudio;

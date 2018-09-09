@@ -2,6 +2,7 @@ package me.voidinvoid;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.config.RadioConfig;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
@@ -81,7 +82,7 @@ public class SongSearchPlaylist {
                     AudioTrack track = playlist.get(index);
                     e.getTextChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
 
-                    SongOrchestrator.instance.addLoadedNetworkTrack(e.getUser(), track, e.getChannel().equals(SongOrchestrator.instance.getDjChannel()), false, false);
+                    SongOrchestrator.instance.addLoadedNetworkTrack(e.getUser(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
                     return true;
                 } catch (Exception ex) {
                     System.out.println("Error handling search reaction event");

@@ -1,7 +1,6 @@
 package me.voidinvoid.songs;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.SongQueue;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -9,22 +8,12 @@ import java.io.File;
 
 public abstract class Song {
 
-    private boolean isJingle;
+    private SongType songType;
 
     private SongQueue queue;
 
-    public Song(boolean isJingle) {
-        this.isJingle = isJingle;
-    }
-
-    public BufferedImage scaleAlbumArt(BufferedImage img) {
-        BufferedImage output = new BufferedImage(128, 128, img.getType());
-
-        Graphics2D g2d = output.createGraphics();
-        g2d.drawImage(img, 0, 0, 128, 128, null);
-        g2d.dispose();
-
-        return output;
+    public Song(SongType songType) {
+        this.songType = songType;
     }
 
     public AudioTrack getTrack() {
@@ -43,9 +32,7 @@ public abstract class Song {
 
     public abstract boolean isPersistent();
 
-    public boolean isJingle() {
-        return isJingle;
-    }
+    public SongType getType() { return songType; }
 
     public SongQueue getQueue() {
         return queue;
@@ -53,5 +40,15 @@ public abstract class Song {
 
     public void setQueue(SongQueue queue) {
         this.queue = queue;
+    }
+
+    private static BufferedImage scaleAlbumArt(BufferedImage img) {
+        BufferedImage output = new BufferedImage(128, 128, img.getType());
+
+        Graphics2D g2d = output.createGraphics();
+        g2d.drawImage(img, 0, 0, 128, 128, null);
+        g2d.dispose();
+
+        return output;
     }
 }

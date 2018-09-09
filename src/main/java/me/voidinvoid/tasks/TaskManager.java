@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import me.voidinvoid.ConsoleColor;
+import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.SongOrchestrator;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;

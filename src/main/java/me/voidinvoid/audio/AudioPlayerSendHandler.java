@@ -1,4 +1,4 @@
-package me.voidinvoid;
+package me.voidinvoid.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
@@ -19,14 +19,6 @@ public class AudioPlayerSendHandler implements AudioSendHandler {
     }
 
     public byte[] provide20MsAudio() {
-        //AudioListener listener = SongOrchestrator.instance.getKaraokeAudioListener();
-        /*ShortBuffer buff = ByteBuffer.allocateDirect(6000)
-                .order(ByteOrder.nativeOrder())
-                .asShortBuffer();
-        AudioChunkDecoder decoder = lastFrame.getFormat().createDecoder();
-        decoder.decode(data, buff);
-        decoder.close();
-        if (listener != null) listener.addSelfData(buff);*/
         return lastFrame.getData();
     }
 

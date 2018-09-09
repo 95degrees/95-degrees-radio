@@ -1,4 +1,4 @@
-package me.voidinvoid;
+package me.voidinvoid.songs;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,8 +39,8 @@ public class SongPlaylist {
             ex.printStackTrace();
         }
 
-        songs = new SongQueue(Paths.get(dirName, "Songs"), false, shuffleSongs);
-        jingles = new SongQueue(Paths.get(dirName, "Jingles"), true, true);
+        songs = new SongQueue(Paths.get(dirName, "Songs"), SongType.SONG, shuffleSongs);
+        jingles = new SongQueue(Paths.get(dirName, "Jingles"), SongType.JINGLE, true);
     }
 
     public SongQueue getSongs() {

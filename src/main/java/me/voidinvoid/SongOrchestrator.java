@@ -17,14 +17,19 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import me.voidinvoid.audio.AudioPlayerSendHandler;
+import me.voidinvoid.coins.CoinCreditorListener;
+import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.karaoke.Lyric;
 import me.voidinvoid.karaoke.Lyrics;
 import me.voidinvoid.karaoke.LyricsManager;
-import me.voidinvoid.songs.AlbumArtType;
-import me.voidinvoid.songs.NetworkSong;
-import me.voidinvoid.songs.Song;
+import me.voidinvoid.songs.*;
 import me.voidinvoid.tasks.RadioTaskComposition;
 import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.AlbumArtUtils;
+import me.voidinvoid.utils.ConsoleColor;
+import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.*;
@@ -33,7 +38,6 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.requests.RequestFuture;
-import net.dv8tion.jda.core.requests.restaction.MessageAction;
 
 import java.awt.*;
 import java.io.File;
@@ -55,12 +59,14 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     private DefaultAudioPlayerManager manager;
     private AudioPlayer player;
     private AudioPlayerSendHandler handler;
-    private TextChannel radioChannel, djChannel, lyricsChannel;
+    private TextChannel radioChannel, lyricsChannel;
+    
+    @Deprecated
+    public TextChannel djChannel_temp; //todo temp
 
     //private boolean playingJingle;
     //private Song currentSong;
     private VoiceChannel voiceChannel;
-    private SongDJ dj;
     private JDA jda;
     private File playlistDir;
     private boolean suggestionsEnabled = true;
@@ -69,7 +75,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     private DiscordRadio radio;
 
     private boolean karaokeMode;
-    //private AudioListener karaokeAudioListener;
 
     private List<Song> awaitingSpecialSongs = new ArrayList<>();
 
@@ -77,7 +82,9 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     private Map<Long, SongSearchPlaylist> searchPlaylists = new HashMap<>();
 
-    public SongOrchestrator(DiscordRadio radio, JDA jda, TextChannel radioChannel, TextChannel djChannel, TextChannel lyricsChannel, VoiceChannel voiceChannel, String playlistDir) {
+    private List<SongEventListener> songEventListeners = new ArrayList<>();
+
+    public SongOrchestrator(DiscordRadio radio, JDA jda, TextChannel radioChannel, TextChannel lyricsChannel, VoiceChannel voiceChannel, String playlistDir) {
         instance = this;
 
         this.radio = radio;
@@ -86,7 +93,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         this.playlistDir = new File(playlistDir);
 
         if (RadioConfig.config.useCoinGain)
-            jda.addEventListener(new CoinCreditor(this));
+            jda.addEventListener(new CoinCreditorListener(this));
 
         loadPlaylists();
 
@@ -103,12 +110,8 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         player = manager.createPlayer();
         player.addListener(this);
 
-        dj = new SongDJ(this, djChannel, player);
-        player.addListener(dj);
-
         this.jda = jda;
         this.radioChannel = radioChannel;
-        this.djChannel = djChannel;
         this.lyricsChannel = lyricsChannel;
 
         if (lyricsChannel != null) {
@@ -116,10 +119,17 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         }
 
         jda.addEventListener(this);
+        
+        //todo temp
+        djChannel_temp = jda.getTextChannelById(RadioConfig.config.channels.djChat);
 
         //karaokeAudioListener = new AudioListener();
 
         handler = new AudioPlayerSendHandler(player);
+    }
+
+    public void registerSongEventListener(SongEventListener listener) {
+        songEventListeners.add(listener);
     }
 
     public DefaultAudioPlayerManager getManager() {
@@ -132,10 +142,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     public TextChannel getRadioChannel() {
         return radioChannel;
-    }
-
-    public TextChannel getDjChannel() {
-        return djChannel;
     }
 
     public VoiceChannel getVoiceChannel() {
@@ -163,14 +169,9 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             this.activePlaylist.getSongs().clearNetworkTracks();
         }
 
-        this.activePlaylist = activePlaylist;
+        songEventListeners.forEach(l -> l.onPlaylistChange(this.activePlaylist, activePlaylist));
 
-        djChannel.sendMessage(new EmbedBuilder()
-                .setTitle("Playlist")
-                .setDescription("Active playlist has been changed")
-                .setColor(new Color(230, 230, 230))
-                .addField("Name", activePlaylist.getName(), true)
-                .setTimestamp(new Date().toInstant()).build()).queue();
+        this.activePlaylist = activePlaylist;
     }
 
     public AudioPlayer getPlayer() {
@@ -184,7 +185,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     public void loadPlaylists() {
         System.out.println("Loading playlists...");
 
-        specialQueue = new SongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), true, false);
+        specialQueue = new SongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), SongType.SPECIAL, false);
 
         System.out.println("Loaded special queue");
 
@@ -259,8 +260,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         System.out.println("              Jingle after " + timeUntilJingle + " more songs");
 
         if (song.getTrack() != null) {
-            //currentSong = song;
-            dj.onNewSong(song.getTrack(), song.isJingle(), timeUntilJingle);
             player.playTrack(song.getTrack());
             return;
         }
@@ -268,8 +267,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         manager.loadItem(song.getIdentifier(), new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
                 track.setUserData(song);
-                //currentSong = song;
-                dj.onNewSong(track, song.isJingle(), timeUntilJingle);
                 player.playTrack(track);
             }
 
@@ -285,7 +282,8 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 System.out.println("Load failed for file: (ID) " + song.getIdentifier());
                 e.printStackTrace();
                 playNextSong(false, false);
-                djChannel.sendMessage(new EmbedBuilder().setTitle("Failed to Load Track").setColor(Color.RED).setDescription("Failed to load " + song.getLocation() + ".\nCheck the console for stack trace").addField("Error Message", e.getMessage(), false).build()).queue();
+
+                songEventListeners.forEach(l -> l.onSongLoadError(song, e));
             }
         });
     }
@@ -305,8 +303,9 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         final Song song = track.getUserData(Song.class);
         String overrideListeningTo = nowPlayingSongOverrides.remove(song);
 
-        if (song.isJingle()) {
-            player.setVolume(20);
+        songEventListeners.forEach(l -> l.onSongStart(song, track, player, timeUntilJingle));
+
+        if (song.getType() != SongType.SONG) {
             if (RadioConfig.config.useStatus) {
                 if (overrideListeningTo != null) {
                     jda.getPresence().setGame(Game.listening(overrideListeningTo));
@@ -315,7 +314,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 }
             }
         } else {
-            player.setVolume(35);
             if (RadioConfig.config.useStatus) {
                 if (overrideListeningTo != null) {
                     jda.getPresence().setGame(Game.listening(overrideListeningTo));
@@ -345,7 +343,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     } else {
                         lyricsAvailable = true;
 
-                        lyricsChannel.sendMessage(new EmbedBuilder().setDescription("📜 Live song lyrics for **" + Utils.escape(song.getTrack().getInfo().title) + "**").build())
+                        lyricsChannel.sendMessage(new EmbedBuilder().setDescription("📜 Live song lyrics for **" + FormattingUtils.escapeMarkup(song.getTrack().getInfo().title) + "**").build())
                                 .queue(h -> lyricsChannel.sendMessage("◼\n➡ `...`\n◼\n◼\n◼\n◼").queue(m -> startLyricThread(lyrics, song, h, m))
                                 );
                     }
@@ -375,15 +373,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 embed.addField("\u200b", "Lyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
             }
 
-            if (song.getAlbumArtType() == AlbumArtType.FILE) {
-                File albumArt = song.getAlbumArtFile();
-                embed.setThumbnail("attachment://" + albumArt.getName());
-                radioChannel.sendFile(albumArt).embed(embed.build()).queue();
-
-            } else if (song.getAlbumArtType() == AlbumArtType.NETWORK) {
-                embed.setThumbnail(song.getAlbumArtURL());
-                radioChannel.sendMessage(embed.build()).queue();
-            }
+            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel);
         }
     }
 
@@ -515,26 +505,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             }
         }
 
-        /*if (!track.getInfo().isStream && track.getDuration() > MAX_SONG_LENGTH) { //> 5 mins
-            System.out.println("Suggested track is too long (" + track.getDuration() + "ms), can be at max 5 mins (300000ms)");
-
-            EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
-                    .setDescription("Song is too long to be added to the queue")
-                    .setColor(new Color(230, 230, 230))
-                    .setThumbnail("attachment://" + NetworkSong.NETWORK_ALBUM.getName())
-                    .addField("Name", track.getInfo().title, true)
-                    .addField("URL", track.getInfo().uri, true)
-                    .setTimestamp(new Date().toInstant());
-
-            if (suggestedBy != null) {
-                embed.setFooter(suggestedBy.getName(), suggestedBy.getAvatarUrl());
-            }
-
-            radioChannel.sendFile(NetworkSong.NETWORK_ALBUM).embed(embed.build()).queue();
-            return;
-        }*/
-
-        NetworkSong song = new NetworkSong(track, suggestedBy, false);
+        NetworkSong song = new NetworkSong(SongType.SONG, track, suggestedBy);
 
         int index = 0;
 
@@ -562,30 +533,10 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
         if (suggestedBy != null) {
             embed.setFooter(suggestedBy.getName(), suggestedBy.getAvatarUrl());
+            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
         }
 
-        MessageAction action;
-
-        if (song.getAlbumArtType() == AlbumArtType.FILE) {
-            File albumArt = song.getAlbumArtFile();
-            embed.setThumbnail("attachment://" + albumArt.getName());
-            MessageEmbed built = embed.build();
-
-            if (suggestedBy != null) radioChannel.sendFile(NetworkSong.NETWORK_ALBUM).embed(built).queue();
-            action = djChannel.sendFile(NetworkSong.NETWORK_ALBUM).embed(built);
-
-        } else if (song.getAlbumArtType() == AlbumArtType.NETWORK) {
-            embed.setThumbnail(song.getAlbumArtURL());
-            MessageEmbed built = embed.build();
-
-            if (suggestedBy != null) radioChannel.sendMessage(built).queue();
-            action = djChannel.sendMessage(built);
-        } else {
-            System.out.println("Unknown album art type???");
-            return;
-        }
-
-        action.queue(m -> {
+        AlbumArtUtils.attachAlbumArt(embed, song, djChannel_temp).queue(m -> {
             m.addReaction("❌").queue();
             songSuggestionMessages.put(m.getIdLong(), song);
         });
@@ -600,7 +551,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             }
 
             public void playlistLoaded(AudioPlaylist p) {
-                new SongSearchPlaylist(p, author, djChannel.equals(channel)).sendMessage(channel);
+                new SongSearchPlaylist(p, author, djChannel_temp.equals(channel)).sendMessage(channel);
             }
 
             public void noMatches() {
@@ -645,7 +596,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 }
             }
 
-            if (!e.getChannel().equals(radioChannel) && !e.getChannel().equals(djChannel)) return;
+            if (!e.getChannel().equals(radioChannel) && !e.getChannel().equals(djChannel_temp)) return;
             if (e.getAuthor().isBot()) return;
 
             User author = e.getAuthor();
@@ -665,12 +616,12 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     return;
                 }
 
-                addNetworkTrack(author, channel, "ytsearch:" + message.getContentRaw().substring(args[0].length()).trim(), channel.equals(djChannel), false, false, true);
+                addNetworkTrack(author, channel, "ytsearch:" + message.getContentRaw().substring(args[0].length()).trim(), channel.equals(djChannel_temp), false, false, true);
                 return;
             }
 
             ////DJ commands////
-            if (channel.equals(djChannel)) {
+            if (channel.equals(djChannel_temp)) {
                 if (args[0].equalsIgnoreCase("!songs")) {
                     if (args.length < 2) {
                         commandError(message, author, "Page number required");
@@ -718,7 +669,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     }
 
                     player.getPlayingTrack().setPosition(time);
-                    commandSuccess(message, author, "Seeked to " + Utils.getFormattedMsTime(time));
+                    commandSuccess(message, author, "Seeked to " + FormattingUtils.getFormattedMsTime(time));
                     return;
 
                 } else if (args[0].equalsIgnoreCase("!radio-announce")) {
@@ -743,7 +694,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
                     MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(String.join(" ", args).trim()).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
-                    djChannel.sendMessage(embed).queue();
+                    djChannel_temp.sendMessage(embed).queue();
                     radioChannel.sendMessage(embed).queue();
                     return;
 
@@ -913,7 +864,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 }
             }
 
-            addNetworkTrack(author, channel, message.getContentRaw(), channel.equals(djChannel), false, false, false);
+            addNetworkTrack(author, channel, message.getContentRaw(), channel.equals(djChannel_temp), false, false, false);
         } else if (ev instanceof MessageReactionAddEvent) {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
             if (e.getUser().isBot()) return;
@@ -942,7 +893,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 MessageEmbed built = embed.build();
 
                 radioChannel.sendFile(song.getAlbumArtFile()).embed(built).queue();
-                djChannel.sendFile(song.getAlbumArtFile()).embed(built).queue();
+                djChannel_temp.sendFile(song.getAlbumArtFile()).embed(built).queue();
 
             } else if (searchPlaylists.containsKey(e.getMessageIdLong())) {
                 if (searchPlaylists.get(e.getMessageIdLong()).handleReaction(e)) {
@@ -953,7 +904,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     }
 
     public RequestFuture<Message> onRecordingStarted(String title) {
-        return djChannel.sendMessage(new EmbedBuilder().setDescription("📝 Encoding karaoke recording for " + title + "...").build()).submit();
+        return djChannel_temp.sendMessage(new EmbedBuilder().setDescription("📝 Encoding karaoke recording for " + title + "...").build()).submit();
     }
 
     public void onRecordingReady(Message msg, String title, String fileName) {
@@ -997,7 +948,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         if (karaokeMode == this.karaokeMode) return;
         MessageEmbed embed = new EmbedBuilder().setTitle("Karaoke").setDescription("🎤 Karaoke mode has " + (karaokeMode ? "been activated!" : "ended!")).setTimestamp(OffsetDateTime.now()).setColor(new Color(82, 255, 238)).build();
 
-        djChannel.sendMessage(embed).queue();
+        djChannel_temp.sendMessage(embed).queue();
         radioChannel.sendMessage(embed).queue();
 
         this.karaokeMode = karaokeMode;
