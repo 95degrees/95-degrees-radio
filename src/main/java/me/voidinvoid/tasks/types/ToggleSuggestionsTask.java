@@ -14,6 +14,6 @@ public class ToggleSuggestionsTask extends RadioTaskExecutor {
 
     @Override
     public void runTask(SongOrchestrator orch, ParameterList params) {
-        orch.setSuggestionsEnabled(enable);
+        orch.setSuggestionsEnabled(enable, null);
     }
 }

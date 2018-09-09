@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
+import net.dv8tion.jda.core.entities.User;
 
 public interface SongEventListener {
 
@@ -18,5 +19,9 @@ public interface SongEventListener {
     }
 
     default void onPlaylistChange(SongPlaylist oldPlaylist, SongPlaylist newPlaylist) {
+    }
+
+    default void onSuggestionsToggle(boolean enabled, User source) {
+
     }
 }

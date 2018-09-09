@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.requests.restaction.MessageAction;
 
+import javax.annotation.CheckReturnValue;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -15,6 +16,7 @@ public final class AlbumArtUtils {
 
     public static final int ALBUM_ART_SCALE_SIZE = 128;
 
+    @CheckReturnValue
     public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel) {
         if (song.getAlbumArtType() == AlbumArtType.FILE) {
             File albumArt = song.getAlbumArtFile();
@@ -27,6 +29,7 @@ public final class AlbumArtUtils {
         }
     }
 
+    @CheckReturnValue
     public static MessageAction attachAlbumArtToEdit(EmbedBuilder embed, Song song, Message existingMessage) {
         if (song.getAlbumArtType() == AlbumArtType.FILE) {
             File albumArt = song.getAlbumArtFile();

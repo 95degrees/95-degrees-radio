@@ -3,6 +3,7 @@ package me.voidinvoid.dj.actions;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.SongOrchestrator;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
 
 public class PauseSongAction extends DJAction {
 
@@ -16,7 +17,7 @@ public class PauseSongAction extends DJAction {
     }
 
     @Override
-    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel) {
+    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
         orch.getPlayer().setPaused(!orch.getPlayer().isPaused());
     }
 }

@@ -373,7 +373,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 embed.addField("\u200b", "Lyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
             }
 
-            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel);
+            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
         }
     }
 
@@ -451,7 +451,13 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if (endReason.mayStartNext) playNextSong();
+        if (endReason.mayStartNext) {
+
+            Song song = track.getUserData(Song.class);
+            songEventListeners.forEach(l -> l.onSongEnd(song, track));
+
+            playNextSong();
+        }
     }
 
     @Override
@@ -916,8 +922,10 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         return suggestionsEnabled;
     }
 
-    public boolean setSuggestionsEnabled(boolean enable) {
-        return suggestionsEnabled = enable;
+    public boolean setSuggestionsEnabled(boolean enabled, User source) {
+        songEventListeners.forEach(l -> l.onSuggestionsToggle(enabled, source));
+
+        return suggestionsEnabled = enabled;
     }
 
     public SongQueue getSpecialQueue() {
