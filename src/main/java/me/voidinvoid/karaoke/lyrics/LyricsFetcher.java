@@ -1,4 +1,4 @@
-package me.voidinvoid.karaoke;
+package me.voidinvoid.karaoke.lyrics;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -6,13 +6,13 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.stream.Collectors;
 
-public class LyricsManager {
+public class LyricsFetcher {
 
     static {
         System.setProperty("http.agent", "");
     }
 
-    public static Lyrics findLyricsFor(String youtubeId) {
+    public static SongLyrics findLyricsFor(String youtubeId) {
         try {
             URL url = new URL("https://extension.musixmatch.com/?res=" + generateId(youtubeId));// + "&hl=en-GB&v=" + youtubeId + "&type=track&lang=en&name&kind&fmt=1");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -28,11 +28,9 @@ public class LyricsManager {
 
             String result = new BufferedReader(new InputStreamReader(conn.getInputStream())).lines().collect(Collectors.joining("\n"));
 
-            return new Lyrics(result);
+            return new SongLyrics(result);
 
-        } catch (Exception e) {
-            System.out.println("Error fetching lyrics for " + youtubeId);
-            e.printStackTrace();
+        } catch (Exception ignored) {
             return null;
         }
     }

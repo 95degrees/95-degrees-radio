@@ -19,6 +19,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.core.requests.RequestFuture;
 import net.dv8tion.jda.core.requests.restaction.MessageAction;
 
 import java.awt.*;
@@ -95,7 +96,11 @@ public class SongDJ implements SongEventListener, EventListener {
             activeMessageId = m.getId();
 
             if (!track.getInfo().isStream) {
-                taskTimer = executor.scheduleAtFixedRate(() -> editMessage(track, player, timeUntilJingle, m).queue(), 0, 2, TimeUnit.SECONDS);
+                final RequestFuture[] updateMsg = {null};
+                taskTimer = executor.scheduleAtFixedRate(() -> {
+                    if (updateMsg[0] != null) updateMsg[0].cancel(false);
+                    updateMsg[0] = editMessage(track, player, timeUntilJingle, m).submit();
+                }, 0, 2, TimeUnit.SECONDS);
             }
 
             availableActions.forEach(a -> m.addReaction(a.getEmoji()).queue());
@@ -151,7 +156,7 @@ public class SongDJ implements SongEventListener, EventListener {
     public void onSongLoadError(Song song, FriendlyException error) {
         textChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Failed to Load Track")
-                .setColor(Color.RED)
+                .setColor(Colors.ACCENT_ERROR)
                 .setDescription("Failed to load " + song.getLocation() + ".\nCheck the console for stack trace")
                 .addField("Error Message", error.getMessage(), false)
                 .setTimestamp(OffsetDateTime.now()).build()).queue();

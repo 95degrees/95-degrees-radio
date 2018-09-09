@@ -1,4 +1,4 @@
-package me.voidinvoid.karaoke;
+package me.voidinvoid.karaoke.lyrics;
 
 import me.voidinvoid.utils.FormattingUtils;
 import org.w3c.dom.Document;
@@ -15,11 +15,11 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Lyrics {
+public class SongLyrics {
 
-    private List<Lyric> lyrics = new ArrayList<>();
+    private List<LyricLine> lyrics = new ArrayList<>();
 
-    public Lyrics(String rawXml) throws ParserConfigurationException, SAXException, IOException {
+    public SongLyrics(String rawXml) throws ParserConfigurationException, SAXException, IOException {
 
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(rawXml)));
         doc.getDocumentElement().normalize();
@@ -32,7 +32,7 @@ public class Lyrics {
             if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
 
                 Element lyric = (Element) node;
-                lyrics.add(new Lyric(lyric.getFirstChild() == null ? "" : lyric.getFirstChild().getTextContent(), Double.valueOf(lyric.getAttribute("start")), Double.valueOf(lyric.getAttribute("dur"))));
+                lyrics.add(new LyricLine(lyric.getFirstChild() == null ? "" : lyric.getFirstChild().getTextContent(), Double.valueOf(lyric.getAttribute("start")), Double.valueOf(lyric.getAttribute("dur"))));
             }
         }
 
@@ -40,11 +40,11 @@ public class Lyrics {
     }
 
     public String getMessage(String songName, double elapsed) {
-        Lyric active = getActiveLyric(elapsed);
+        LyricLine active = getActiveLyric(elapsed);
 
-        StringBuilder builder = new StringBuilder("[").append(FormattingUtils.escapeMarkup(songName)).append(" Lyrics]\n\n");
+        StringBuilder builder = new StringBuilder("[").append(FormattingUtils.escapeMarkup(songName)).append(" SongLyrics]\n\n");
 
-        for (Lyric l : lyrics) {
+        for (LyricLine l : lyrics) {
             builder.append(l.equals(active) ? "➡" : "◼").append(FormattingUtils.escapeMarkup(l.getText())).append("\n");
         }
 
@@ -54,19 +54,20 @@ public class Lyrics {
     }
 
     public double getNextLyricEntryTime(double elapsed) {
-        for (Lyric l : lyrics) {
+        for (LyricLine l : lyrics) {
             if (l.getEntryTime() > elapsed) return l.getEntryTime();
         }
 
         return -1;
     }
 
-    public List<Lyric> getLyrics() {
+    public List<LyricLine> getLyrics() {
         return lyrics;
     }
 
-    public Lyric getActiveLyric(double elapsed) {
-        for (Lyric l : lyrics) {
+    public LyricLine getActiveLyric(double elapsed) {
+
+        for (LyricLine l : lyrics) {
             if ((l.getEntryTime() <= elapsed) && (l.getEntryTime() + l.getLength() >= elapsed)) return l;
         }
 

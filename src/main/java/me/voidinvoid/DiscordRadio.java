@@ -65,6 +65,7 @@ public class DiscordRadio implements EventListener {
         SongOrchestrator orch = new SongOrchestrator(this, jda, jda.getTextChannelById(config.channels.radioChat), config.channels.lyricsChat == null ? null : jda.getTextChannelById(config.channels.lyricsChat), radioVoiceChannel, config.locations.playlists);
 
         orch.registerSongEventListener(new SongDJ(orch, jda.getTextChannelById(config.channels.djChat)));
+        orch.registerSongEventListener(new SongDJ(orch, jda.getTextChannelById(config.channels.lyricsChat))); //todo TEMP
 
         startTaskManager();
 

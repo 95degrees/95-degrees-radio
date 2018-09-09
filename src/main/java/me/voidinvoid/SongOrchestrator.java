@@ -21,13 +21,14 @@ import me.voidinvoid.audio.AudioPlayerSendHandler;
 import me.voidinvoid.coins.CoinCreditorListener;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
-import me.voidinvoid.karaoke.Lyric;
-import me.voidinvoid.karaoke.Lyrics;
-import me.voidinvoid.karaoke.LyricsManager;
+import me.voidinvoid.karaoke.lyrics.LyricLine;
+import me.voidinvoid.karaoke.lyrics.SongLyrics;
+import me.voidinvoid.karaoke.lyrics.LyricsFetcher;
 import me.voidinvoid.songs.*;
 import me.voidinvoid.tasks.RadioTaskComposition;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.AlbumArtUtils;
+import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -60,7 +61,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     private AudioPlayer player;
     private AudioPlayerSendHandler handler;
     private TextChannel radioChannel, lyricsChannel;
-    
+
     @Deprecated
     public TextChannel djChannel_temp; //todo temp
 
@@ -119,7 +120,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         }
 
         jda.addEventListener(this);
-        
+
         //todo temp
         djChannel_temp = jda.getTextChannelById(RadioConfig.config.channels.djChat);
 
@@ -333,7 +334,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     String[] idSplit = track.getIdentifier().split("\\?v=");
                     if (idSplit.length < 1) return;
 
-                    Lyrics lyrics = LyricsManager.findLyricsFor(idSplit[0]);
+                    SongLyrics lyrics = LyricsFetcher.findLyricsFor(idSplit[0]);
 
                     List<Message> msgs = lyricsChannel.getHistory().retrievePast(10).complete();
                     msgs.stream().filter(m -> m.getAuthor().equals(jda.getSelfUser())).forEach(m -> m.delete().queue());
@@ -370,20 +371,20 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             }
 
             if (lyricsAvailable) {
-                embed.addField("\u200b", "Lyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
+                embed.addField("\u200b", "SongLyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
             }
 
             AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
         }
     }
 
-    public void startLyricThread(Lyrics lyrics, Song song, Message headerMessage, Message lyricMessage) {
+    public void startLyricThread(SongLyrics lyrics, Song song, Message headerMessage, Message lyricMessage) {
         AudioTrack track = song.getTrack();
 
         Thread t = new Thread(() -> {
             double elapsed;
 
-            Lyric lastLyric = null;
+            LyricLine lastLyric = null;
             boolean lastEndedLyric = false;
 
             while (song.equals(getCurrentSong())) {
@@ -394,7 +395,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
                     boolean endedLyric = false;
 
-                    Lyric lyric;
+                    LyricLine lyric;
 
                     if (elapsed < lyrics.getLyrics().get(0).getEntryTime()) {
                         lyric = lyrics.getLyrics().get(0);
@@ -416,7 +417,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
                     lastEndedLyric = endedLyric;
 
-                    List<Lyric> lyricsList = lyrics.getLyrics();
+                    List<LyricLine> lyricsList = lyrics.getLyrics();
 
                     int index = lyricsList.indexOf(lyric);
                     StringBuilder message = new StringBuilder();
@@ -424,17 +425,21 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     for (int i = -1; i <= 6; i++) {
                         message.append(i == 0 ? endedLyric ? "⬜" : "➡" : "◼");
 
+                        if (i == 0) message.append("**");
+
                         if (index + i >= 0 && index + i < lyricsList.size()) {
                             String text = lyricsList.get(index + i).getText();
                             if (!text.trim().isEmpty()) {
-                                message.append("` ").append(text).append(" `");
+                                message.append(text);
                             }
                         }
+
+                        if (i == 0) message.append("**");
 
                         message.append("\n");
                     }
 
-                    lyricMessage.editMessage(message.toString()).complete();
+                    lyricMessage.editMessage(new EmbedBuilder().setDescription(message.toString()).build()).complete();
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -451,11 +456,12 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
-        if (endReason.mayStartNext) {
-
+        if (endReason.mayStartNext || endReason == AudioTrackEndReason.REPLACED) {
             Song song = track.getUserData(Song.class);
             songEventListeners.forEach(l -> l.onSongEnd(song, track));
+        }
 
+        if (endReason.mayStartNext) {
             playNextSong();
         }
     }
@@ -499,7 +505,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                         .setDescription(errorMsg)
                         .addField("Title", track.getInfo().title, true)
                         .addField("URL", track.getInfo().uri, true)
-                        .setColor(Color.RED)
+                        .setColor(Colors.ACCENT_ERROR)
                         .setTimestamp(new Date().toInstant());
 
                 if (suggestedBy != null) {
