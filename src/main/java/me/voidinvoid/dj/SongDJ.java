@@ -9,7 +9,6 @@ import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.NetworkSong;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
-import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;

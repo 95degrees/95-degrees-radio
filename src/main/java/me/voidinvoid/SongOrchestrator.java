@@ -385,7 +385,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             if (!suggestionsEnabled) {
                 errorMsg = "Song suggestions are currently disabled";
             } else if (activePlaylist.getSongs().suggestionsBy(suggestedBy).size() >= 3) {
-                errorMsg = "Song could not be queued because you already have at least 3 suggested songs in the queue already";
+                errorMsg = "Song could not be queued because you already have at least 3 suggested songs in the queue";
             } else if (track.getInfo().isStream) {
                 errorMsg = "Streams cannot be queued";
             } else if (track.getDuration() > MAX_SONG_LENGTH) {
