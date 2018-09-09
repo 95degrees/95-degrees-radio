@@ -89,16 +89,16 @@ public class SongDJ implements SongEventListener, EventListener {
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         activeTrack = track;
 
-        Stream<DJAction> actions = this.actions.stream().filter(r -> r.shouldShow(track));
+        List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(track)).collect(Collectors.toList());
 
-        MessageAction msg = createMessage(song, track, actions, player, timeUntilJingle, null); //send original message and then queue to update every 2 secs
+        MessageAction msg = createMessage(song, track, availableActions, player, timeUntilJingle, null); //send original message and then queue to update every 2 secs
 
         msg.queue(m -> {
             if (!track.getInfo().isStream) {
                 taskTimer = executor.scheduleAtFixedRate(() -> editMessage(track, player, timeUntilJingle, m).queue(), 0, 2, TimeUnit.SECONDS);
             }
 
-            actions.forEach(a -> m.addReaction(a.getEmoji()).queue());
+            availableActions.forEach(a -> m.addReaction(a.getEmoji()).queue());
         });
     }
 
@@ -110,7 +110,7 @@ public class SongDJ implements SongEventListener, EventListener {
         taskTimer.cancel(false);
     }
 
-    public MessageAction createMessage(Song song, AudioTrack track, Stream<DJAction> actions, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
+    public MessageAction createMessage(Song song, AudioTrack track, List<DJAction> actions, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Playing " + getSongType(track))
@@ -120,7 +120,7 @@ public class SongDJ implements SongEventListener, EventListener {
                 .addField(song instanceof NetworkSong ? "URL" : "File", FormattingUtils.escapeMarkup(song.getLocation()), false)
                 .addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) + (track.getInfo().isStream ? "" : " (in " + getFormattedMsTimeLabelled(track.getDuration() - track.getPosition()) + ")") : "After " + (timeUntilJingle + 1) + " more songs", false)
                 .addField("Elapsed", track.getInfo().isStream ? "-" : getFormattedMsTime(track.getPosition()) + " / " + getFormattedMsTime(track.getDuration()), false)
-                .addField("", actions.map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false)
+                .addField("", actions.stream().map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false)
                 .setTimestamp(OffsetDateTime.now());
 
         if (song instanceof NetworkSong) {
