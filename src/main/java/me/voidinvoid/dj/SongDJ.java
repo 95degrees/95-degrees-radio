@@ -6,7 +6,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.dj.actions.*;
 import me.voidinvoid.events.SongEventListener;
-import me.voidinvoid.songs.FileSong;
 import me.voidinvoid.songs.NetworkSong;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
@@ -31,7 +30,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static me.voidinvoid.utils.FormattingUtils.*;
 
@@ -91,9 +89,11 @@ public class SongDJ implements SongEventListener, EventListener {
 
         List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(track)).collect(Collectors.toList());
 
-        MessageAction msg = createMessage(song, track, availableActions, player, timeUntilJingle, null); //send original message and then queue to update every 2 secs
+        MessageAction msg = createMessage(song, track, availableActions, player, timeUntilJingle); //send original message and then queue to update every 2 secs
 
         msg.queue(m -> {
+            activeMessageId = m.getId();
+
             if (!track.getInfo().isStream) {
                 taskTimer = executor.scheduleAtFixedRate(() -> editMessage(track, player, timeUntilJingle, m).queue(), 0, 2, TimeUnit.SECONDS);
             }
@@ -110,14 +110,14 @@ public class SongDJ implements SongEventListener, EventListener {
         taskTimer.cancel(false);
     }
 
-    public MessageAction createMessage(Song song, AudioTrack track, List<DJAction> actions, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
+    public MessageAction createMessage(Song song, AudioTrack track, List<DJAction> actions, AudioPlayer player, int timeUntilJingle) {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Playing " + getSongType(track))
                 .setColor(player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN)
-                .addField("Title" + (song instanceof FileSong ? " (#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ")" : ""), track.getInfo().title, true)
+                .addField("Title", track.getInfo().title, true)
                 .addField(song instanceof NetworkSong ? "Uploader" : "Artist", FormattingUtils.escapeMarkup(track.getInfo().author), true)
-                .addField(song instanceof NetworkSong ? "URL" : "File", FormattingUtils.escapeMarkup(song.getLocation()), false)
+                .addField(song instanceof NetworkSong ? "URL" : "File (#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ")", FormattingUtils.escapeMarkup(song.getLocation()), false)
                 .addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) + (track.getInfo().isStream ? "" : " (in " + getFormattedMsTimeLabelled(track.getDuration() - track.getPosition()) + ")") : "After " + (timeUntilJingle + 1) + " more songs", false)
                 .addField("Elapsed", track.getInfo().isStream ? "-" : getFormattedMsTime(track.getPosition()) + " / " + getFormattedMsTime(track.getDuration()), false)
                 .addField("", actions.stream().map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false)
@@ -129,11 +129,7 @@ public class SongDJ implements SongEventListener, EventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        if (originalMessage == null) {
-            return AlbumArtUtils.attachAlbumArt(embed, song, textChannel);
-        } else {
-            return AlbumArtUtils.attachAlbumArtToEdit(embed, song, originalMessage);
-        }
+        return AlbumArtUtils.attachAlbumArt(embed, song, textChannel);
     }
 
     public MessageAction editMessage(AudioTrack track, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
@@ -148,7 +144,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
         embed.setTimestamp(OffsetDateTime.now());
 
-        return originalMessage.editMessage(embed.build());
+        return AlbumArtUtils.attachAlbumArtToEdit(embed, track.getUserData(Song.class), originalMessage);
     }
 
     @Override
