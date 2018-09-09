@@ -2,6 +2,7 @@ package me.voidinvoid;
 
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
+import me.voidinvoid.karaoke.KaraokeLyricsListener;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
@@ -65,7 +66,7 @@ public class DiscordRadio implements EventListener {
         SongOrchestrator orch = new SongOrchestrator(this, jda, jda.getTextChannelById(config.channels.radioChat), config.channels.lyricsChat == null ? null : jda.getTextChannelById(config.channels.lyricsChat), radioVoiceChannel, config.locations.playlists);
 
         orch.registerSongEventListener(new SongDJ(orch, jda.getTextChannelById(config.channels.djChat)));
-        orch.registerSongEventListener(new SongDJ(orch, jda.getTextChannelById(config.channels.lyricsChat))); //todo TEMP
+        orch.registerSongEventListener(new KaraokeLyricsListener(jda.getTextChannelById(config.channels.lyricsChat))); //todo TEMP
 
         startTaskManager();
 

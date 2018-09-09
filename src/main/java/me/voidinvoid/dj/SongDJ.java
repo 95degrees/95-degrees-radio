@@ -100,7 +100,7 @@ public class SongDJ implements SongEventListener, EventListener {
                 taskTimer = executor.scheduleAtFixedRate(() -> {
                     if (updateMsg[0] != null) updateMsg[0].cancel(false);
                     updateMsg[0] = editMessage(track, player, timeUntilJingle, m).submit();
-                }, 0, 2, TimeUnit.SECONDS);
+                }, 0, 5, TimeUnit.SECONDS);
             }
 
             availableActions.forEach(a -> m.addReaction(a.getEmoji()).queue());
@@ -134,7 +134,7 @@ public class SongDJ implements SongEventListener, EventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        return AlbumArtUtils.attachAlbumArt(embed, song, textChannel);
+        return textChannel.sendMessage(embed.build());
     }
 
     public MessageAction editMessage(AudioTrack track, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
@@ -149,7 +149,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
         embed.setTimestamp(OffsetDateTime.now());
 
-        return AlbumArtUtils.attachAlbumArtToEdit(embed, track.getUserData(Song.class), originalMessage);
+        return textChannel.sendMessage(embed.build());
     }
 
     @Override

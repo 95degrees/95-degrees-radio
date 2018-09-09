@@ -12,7 +12,6 @@ import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioTrack;
 import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -21,9 +20,6 @@ import me.voidinvoid.audio.AudioPlayerSendHandler;
 import me.voidinvoid.coins.CoinCreditorListener;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
-import me.voidinvoid.karaoke.lyrics.LyricLine;
-import me.voidinvoid.karaoke.lyrics.SongLyrics;
-import me.voidinvoid.karaoke.lyrics.LyricsFetcher;
 import me.voidinvoid.songs.*;
 import me.voidinvoid.tasks.RadioTaskComposition;
 import me.voidinvoid.tasks.TaskManager;
@@ -325,32 +321,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 }
             }
 
-            boolean lyricsAvailable = false;
-
-            if (karaokeMode) {
-                //karaokeAudioListener.startRecording(track);
-
-                if (track instanceof YoutubeAudioTrack && lyricsChannel != null) {
-                    String[] idSplit = track.getIdentifier().split("\\?v=");
-                    if (idSplit.length < 1) return;
-
-                    SongLyrics lyrics = LyricsFetcher.findLyricsFor(idSplit[0]);
-
-                    List<Message> msgs = lyricsChannel.getHistory().retrievePast(10).complete();
-                    msgs.stream().filter(m -> m.getAuthor().equals(jda.getSelfUser())).forEach(m -> m.delete().queue());
-
-                    if (lyrics == null) {
-                        lyricsChannel.sendMessage(new EmbedBuilder().setDescription("⚠ Couldn't find song lyrics for " + song.getTrack().getInfo().title).build()).queue();
-                    } else {
-                        lyricsAvailable = true;
-
-                        lyricsChannel.sendMessage(new EmbedBuilder().setDescription("📜 Live song lyrics for **" + FormattingUtils.escapeMarkup(song.getTrack().getInfo().title) + "**").build())
-                                .queue(h -> lyricsChannel.sendMessage("◼\n➡ `...`\n◼\n◼\n◼\n◼").queue(m -> startLyricThread(lyrics, song, h, m))
-                                );
-                    }
-                }
-            }
-
             for (long l : songSuggestionMessages.keySet()) {
                 if (songSuggestionMessages.get(l).equals(song)) {
                     songSuggestionMessages.remove(l); //remove the ability to cancel this song since it's already playing by now
@@ -370,88 +340,12 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
             }
 
-            if (lyricsAvailable) {
-                embed.addField("\u200b", "SongLyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
+            if (false) { //TODO REIMPLEMENT
+                embed.addField("\u200b", "Song lyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
             }
 
             AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
         }
-    }
-
-    public void startLyricThread(SongLyrics lyrics, Song song, Message headerMessage, Message lyricMessage) {
-        AudioTrack track = song.getTrack();
-
-        Thread t = new Thread(() -> {
-            double elapsed;
-
-            LyricLine lastLyric = null;
-            boolean lastEndedLyric = false;
-
-            while (song.equals(getCurrentSong())) {
-                try {
-                    Thread.sleep(50);
-                    elapsed = track.getPosition() / 1000;
-                    elapsed += 0.4;
-
-                    boolean endedLyric = false;
-
-                    LyricLine lyric;
-
-                    if (elapsed < lyrics.getLyrics().get(0).getEntryTime()) {
-                        lyric = lyrics.getLyrics().get(0);
-                        endedLyric = true;
-                    } else {
-                        lyric = lyrics.getActiveLyric(elapsed);
-                    }
-
-                    if (Objects.equals(lyric, lastLyric) && endedLyric == lastEndedLyric) continue;
-
-                    if (lyric == null) {
-                        if (lastLyric == null) continue;
-
-                        endedLyric = true;
-                        lyric = lastLyric;
-                    } else {
-                        lastLyric = lyric;
-                    }
-
-                    lastEndedLyric = endedLyric;
-
-                    List<LyricLine> lyricsList = lyrics.getLyrics();
-
-                    int index = lyricsList.indexOf(lyric);
-                    StringBuilder message = new StringBuilder();
-
-                    for (int i = -1; i <= 6; i++) {
-                        message.append(i == 0 ? endedLyric ? "⬜" : "➡" : "◼");
-
-                        if (i == 0) message.append("**");
-
-                        if (index + i >= 0 && index + i < lyricsList.size()) {
-                            String text = lyricsList.get(index + i).getText();
-                            if (!text.trim().isEmpty()) {
-                                message.append(text);
-                            }
-                        }
-
-                        if (i == 0) message.append("**");
-
-                        message.append("\n");
-                    }
-
-                    lyricMessage.editMessage(new EmbedBuilder().setDescription(message.toString()).build()).complete();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            headerMessage.delete().submit(false);
-            lyricMessage.delete().submit(false);
-        });
-
-        t.setDaemon(true);
-        t.start();
     }
 
     @Override
