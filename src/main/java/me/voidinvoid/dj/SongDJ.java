@@ -43,7 +43,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
     private String activeMessageId;
 
-    private Song song;
+    private AudioTrack activeTrack;
 
     private SongOrchestrator orchestrator;
 
@@ -79,7 +79,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
             String emote = e.getReaction().getReactionEmote().getName();
 
-            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(song)).findFirst().ifPresent(r -> r.invoke(orchestrator, song, textChannel));
+            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(activeTrack)).findFirst().ifPresent(r -> r.invoke(orchestrator, activeTrack, textChannel));
 
             e.getReaction().removeReaction(e.getUser()).queue();
         }
@@ -87,9 +87,9 @@ public class SongDJ implements SongEventListener, EventListener {
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        this.song = song;
+        activeTrack = track;
 
-        Stream<DJAction> actions = this.actions.stream().filter(r -> r.shouldShow(song));
+        Stream<DJAction> actions = this.actions.stream().filter(r -> r.shouldShow(track));
 
         MessageAction msg = createMessage(song, track, actions, player, timeUntilJingle, null); //send original message and then queue to update every 2 secs
 
@@ -104,8 +104,8 @@ public class SongDJ implements SongEventListener, EventListener {
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
-        this.song = null;
-        this.activeMessageId = null;
+        activeTrack = null;
+        activeMessageId = null;
 
         taskTimer.cancel(false);
     }
@@ -130,9 +130,9 @@ public class SongDJ implements SongEventListener, EventListener {
         }
 
         if (originalMessage == null) {
-            return  AlbumArtUtils.attachAlbumArt(embed, song, textChannel);
+            return AlbumArtUtils.attachAlbumArt(embed, song, textChannel);
         } else {
-            return  AlbumArtUtils.attachAlbumArtToEdit(embed, song, originalMessage);
+            return AlbumArtUtils.attachAlbumArtToEdit(embed, song, originalMessage);
         }
     }
 

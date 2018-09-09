@@ -1,7 +1,7 @@
 package me.voidinvoid.dj.actions;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.SongOrchestrator;
-import me.voidinvoid.songs.Song;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 public class SkipSongAction extends DJAction {
@@ -11,7 +11,7 @@ public class SkipSongAction extends DJAction {
     }
 
     @Override
-    public void invoke(SongOrchestrator orch, Song song, TextChannel djChannel) {
+    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel) {
         orch.playNextSong();
     }
 }

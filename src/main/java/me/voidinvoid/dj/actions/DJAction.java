@@ -1,7 +1,7 @@
 package me.voidinvoid.dj.actions;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.SongOrchestrator;
-import me.voidinvoid.songs.Song;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 public abstract class DJAction {
@@ -23,9 +23,9 @@ public abstract class DJAction {
         return emoji;
     }
 
-    public boolean shouldShow(Song song) {
+    public boolean shouldShow(AudioTrack track) {
         return true;
     }
 
-    public abstract void invoke(SongOrchestrator orch, Song song, TextChannel djChannel);
+    public abstract void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel);
 }
