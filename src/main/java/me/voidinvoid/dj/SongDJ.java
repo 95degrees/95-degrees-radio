@@ -89,16 +89,21 @@ public class SongDJ implements SongEventListener, EventListener {
 
         List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(track)).collect(Collectors.toList());
 
-        MessageAction msg = createMessage(song, track, availableActions, player, timeUntilJingle); //send original message and then queue to update every 2 secs
+        MessageAction msg = createMessage(song, track, availableActions, player, timeUntilJingle); //send original message and then queue to update every 5 secs
 
         msg.queue(m -> {
             activeMessageId = m.getId();
 
             if (!track.getInfo().isStream) {
-                final RequestFuture[] updateMsg = {null};
-                taskTimer = executor.scheduleAtFixedRate(() -> {
-                    if (updateMsg[0] != null) updateMsg[0].cancel(false);
-                    updateMsg[0] = editMessage(track, player, timeUntilJingle, m).submit();
+                taskTimer = executor.scheduleAtFixedRate(new Runnable() {
+                    RequestFuture updateMsg = null;
+
+                    @Override
+                    public void run() {
+                        if (updateMsg != null) updateMsg.cancel(true);
+
+                        updateMsg = SongDJ.this.editMessage(track, player, timeUntilJingle, m).submit();
+                    }
                 }, 0, 5, TimeUnit.SECONDS);
             }
 
@@ -148,7 +153,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
         embed.setTimestamp(OffsetDateTime.now());
 
-        return textChannel.sendMessage(embed.build());
+        return originalMessage.editMessage(embed.build());
     }
 
     @Override

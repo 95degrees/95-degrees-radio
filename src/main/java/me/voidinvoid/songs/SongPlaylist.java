@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 
 public class SongPlaylist {
 
@@ -17,6 +19,8 @@ public class SongPlaylist {
     private boolean isDefault;
     private boolean shuffleSongs;
     private boolean jinglesEnabled;
+
+    private CompletableFuture<List<Song>> songsFuture, jinglesFuture;
 
     public SongPlaylist(File dir) {
         String dirName = dir.toString();
@@ -41,6 +45,9 @@ public class SongPlaylist {
 
         songs = new SongQueue(Paths.get(dirName, "Songs"), SongType.SONG, shuffleSongs);
         jingles = new SongQueue(Paths.get(dirName, "Jingles"), SongType.JINGLE, true);
+
+        songsFuture = songs.loadSongsAsync();
+        jinglesFuture = jingles.loadSongsAsync();
     }
 
     public SongQueue getSongs() {
@@ -65,5 +72,16 @@ public class SongPlaylist {
 
     public boolean isJinglesEnabled() {
         return jinglesEnabled;
+    }
+
+    public void awaitLoad() {
+        if (songsFuture.isDone() && jinglesFuture.isDone()) return; //already loaded
+
+        try {
+            songsFuture.get();
+            jinglesFuture.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

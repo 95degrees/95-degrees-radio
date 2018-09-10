@@ -4,18 +4,17 @@ import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import me.voidinvoid.utils.ConsoleColor;
-import me.voidinvoid.DiscordRadio;
-import me.voidinvoid.config.RadioConfig;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 public class SongQueue extends AudioEventAdapter {
 
-    private Random random = new Random();
+    private static final Random RANDOM = new Random();
 
     private List<Song> queue;
     private List<Song> songMap;
@@ -23,70 +22,56 @@ public class SongQueue extends AudioEventAdapter {
     private SongType queueType;
     private boolean shuffleSongs;
     
-    private String queueMapCache;
+    private String queueCache;
 
     public SongQueue(Path directoryLocation, SongType queueType, boolean shuffleSongs) {
         directory = directoryLocation.toFile();
         this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
 
-        initFiles();
-
-        if (RadioConfig.config.liveFileUpdates) listenForChanges();
+        //if (RadioConfig.config.liveFileUpdates) listenForChanges(); todo maybe reimplement
     }
 
-    private void listenForChanges() {
-        Thread t = new Thread(() -> {
-            try {
-                WatchService service = FileSystems.getDefault().newWatchService();
-                directory.toPath().register(service, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_DELETE/*, StandardWatchEventKinds.ENTRY_MODIFY*/);
+    public CompletableFuture<List<Song>> loadSongsAsync() {
+        CompletableFuture<List<Song>> files = CompletableFuture.supplyAsync(this::initSongs); //find all files async
+        files.whenComplete((l, e) -> {
 
-                while (DiscordRadio.isRunning) {
-                    WatchKey wk = service.take();
-                    System.out.println(ConsoleColor.WHITE + ConsoleColor.PURPLE_BACKGROUND + " Directory change detected " + ConsoleColor.RESET);
+            List<Song> songMap = new ArrayList<>(l); //a clone
+            songMap.sort(Comparator.comparing(Song::getIdentifier)); //probably not needed but just in-case
 
-                    /*for (WatchEvent<?> e : wk.pollEvents()) {
-                        System.out.println(e.kind().name());
-                        //if (StandardWatchEventKinds.OVERFLOW.equals(e.kind())) continue;
-                    }*/
+            if (shuffleSongs) Collections.shuffle(l);
 
-                    initFiles();
+            List<Song> allSongs = new ArrayList<>();
 
-                    if (!wk.reset()) break;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (queue != null) { //when updating the queue, re-add the network songs...
+                allSongs = queue.stream().filter(s -> s instanceof NetworkSong).collect(Collectors.toList());
             }
+
+            allSongs.addAll(l); //...and then add the rest of the songs to the queue (so network songs are first)
+
+            this.songMap = songMap;
+
+            queue = allSongs;
+            queueCache = null;
         });
-        t.setDaemon(true);
-        t.start();
+
+        return files;
     }
 
-    private void initFiles() {
+    private List<Song> initSongs() {
         List<Song> songs = new ArrayList<>();
-        List<Song> songMap = new ArrayList<>();
 
         File[] files = directory.listFiles();
-        if (files == null) return;
+        if (files == null) return songs;
 
         for (File f : files) {
             Song s = new FileSong(queueType, f);
             s.setQueue(this);
             songs.add(s);
-            songMap.add(s);
-            System.out.println("        ├─ " + ConsoleColor.BLUE_BACKGROUND + " SONG " + ConsoleColor.RESET_SPACE + f.getName());
+            System.out.println(ConsoleColor.BLUE_BACKGROUND + " SONG " + ConsoleColor.RESET_SPACE + f.getName());
         }
 
-        this.songMap = new ArrayList<>(songs);
-        if (shuffleSongs) Collections.shuffle(songs);
-        List<Song> allSongs = new ArrayList<>();
-        if (queue != null) {
-             allSongs = queue.stream().filter(s -> s instanceof NetworkSong).collect(Collectors.toList());
-        }
-        allSongs.addAll(songs);
-        queue = allSongs;
-        queueMapCache = null;
-        this.songMap = songMap;
+        return songs;
     }
 
     public Song getNextAndRemove() {
@@ -95,7 +80,7 @@ public class SongQueue extends AudioEventAdapter {
         Song song = queue.get(0);
         queue.remove(0);
         
-        queueMapCache = null;
+        queueCache = null;
 
         return song;
     }
@@ -104,23 +89,23 @@ public class SongQueue extends AudioEventAdapter {
         Song song = getNextAndRemove();
         if (song.isPersistent()) queue.add(song);
         
-        queueMapCache = null;
+        queueCache = null;
 
         return song;
     }
 
     public Song getRandom() {
-        queueMapCache = null;
-        return queue.size() == 0 ? null : queue.get(random.nextInt(queue.size()));
+        queueCache = null;
+        return queue.size() == 0 ? null : queue.get(RANDOM.nextInt(queue.size()));
     }
 
     public boolean remove(NetworkSong song) {
-        queueMapCache = null;
+        queueCache = null;
         return queue.remove(song);
     }
 
     public int addNetworkSong(NetworkSong song) {
-        queueMapCache = null;
+        queueCache = null;
         
         song.setQueue(this);
 
@@ -172,7 +157,7 @@ public class SongQueue extends AudioEventAdapter {
     }
 
     public String getFormattedQueue() {
-        if (queueMapCache != null) return queueMapCache;
+        if (queueCache != null) return queueCache;
 
         StringBuilder output = new StringBuilder("[Song queue]\n\n");
 
@@ -195,16 +180,13 @@ public class SongQueue extends AudioEventAdapter {
 
                 if (!addedDesc) output.append(s.getLocation());
             }
-            /*if (s instanceof NetworkSong) {
-                NetworkSong ns = ((NetworkSong) s);
-                if (ns.getSuggestedBy() != null) output.append(" [").append(ns.getSuggestedBy().getName()).append("]");
-            }*/
+
             output.append("\n");
             if (i >= 10) break;
         }
 
         String res = output.toString();
-        return queueMapCache = res.substring(0, Math.min(res.length(), 1900));
+        return queueCache = res.substring(0, Math.min(res.length(), 1900));
     }
 
     public void clearNetworkTracks() {

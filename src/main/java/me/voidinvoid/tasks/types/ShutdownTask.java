@@ -11,7 +11,6 @@ public class ShutdownTask extends RadioTaskExecutor {
     public void runTask(SongOrchestrator orch, ParameterList params) {
         orch.getJda().shutdownNow();
         //todo manager shutdown
-        DiscordRadio.isRunning = false;
         //System.exit(0);
     }
 }

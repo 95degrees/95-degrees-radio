@@ -1,12 +1,15 @@
 package me.voidinvoid.coins;
 
+import me.voidinvoid.DiscordRadio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ShutdownEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceDeafenEvent;
@@ -23,6 +26,10 @@ public class CoinCreditorListener implements EventListener {
 
     private SongOrchestrator orchestrator;
 
+    private VoiceChannel voiceChannel;
+
+    private TextChannel textChannel;
+
     private Map<Long, UserCoinTracker> coinGains = new HashMap<>();
 
     private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
@@ -31,7 +38,10 @@ public class CoinCreditorListener implements EventListener {
 
         this.orchestrator = orchestrator;
 
-        for (Member m : orchestrator.getVoiceChannel().getMembers()) {
+        voiceChannel = orchestrator.getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
+        textChannel = orchestrator.getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+
+        for (Member m : voiceChannel.getMembers()) {
             User u = m.getUser();
             if (u.isBot()) continue;
             coinGains.put(u.getIdLong(), new UserCoinTracker(u, m.getVoiceState().isDeafened()));
@@ -44,7 +54,7 @@ public class CoinCreditorListener implements EventListener {
             GuildVoiceJoinEvent e = (GuildVoiceJoinEvent) ev;
 
             if (e.getMember().getUser().isBot()) return;
-            if (!orchestrator.getVoiceChannel().equals(e.getChannelJoined())) return;
+            if (!voiceChannel.equals(e.getChannelJoined())) return;
 
             coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened()));
 
@@ -52,7 +62,7 @@ public class CoinCreditorListener implements EventListener {
             GuildVoiceDeafenEvent e = (GuildVoiceDeafenEvent) ev;
 
             if (e.getMember().getUser().isBot()) return;
-            if (!orchestrator.getVoiceChannel().equals(e.getVoiceState().getChannel())) return;
+            if (!voiceChannel.equals(e.getVoiceState().getChannel())) return;
 
             User user = e.getMember().getUser();
 
@@ -66,7 +76,7 @@ public class CoinCreditorListener implements EventListener {
             GuildVoiceLeaveEvent e = (GuildVoiceLeaveEvent) ev;
 
             if (e.getMember().getUser().isBot()) return;
-            if (!orchestrator.getVoiceChannel().equals(e.getChannelLeft())) return;
+            if (!voiceChannel.equals(e.getChannelLeft())) return;
 
             giveCoins(e.getMember(), false);
         } else if (ev instanceof ShutdownEvent) {
@@ -75,7 +85,7 @@ public class CoinCreditorListener implements EventListener {
     }
 
     private void shutdown() {
-        for (Member m : orchestrator.getVoiceChannel().getMembers()) {
+        for (Member m : voiceChannel.getMembers()) {
             UserCoinTracker coins = coinGains.remove(m.getUser().getIdLong());
             if (coins == null) continue; //shouldn't happen
 
@@ -109,7 +119,7 @@ public class CoinCreditorListener implements EventListener {
         }
 
         if (!clump) {
-            orchestrator.getRadioChannel().sendMessage(new EmbedBuilder()
+            textChannel.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Coins")
                     .setColor(new Color(110, 230, 140))
                     .setDescription(user.getName() + " has earned <:degreecoin:431982714212843521> " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))

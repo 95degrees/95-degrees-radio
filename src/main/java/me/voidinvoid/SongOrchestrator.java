@@ -17,7 +17,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import me.voidinvoid.audio.AudioPlayerSendHandler;
-import me.voidinvoid.coins.CoinCreditorListener;
+import me.voidinvoid.audio.twitch.TwitchKrakenStreamAudioSourceManager;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.*;
@@ -34,7 +34,6 @@ import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.requests.RequestFuture;
 
 import java.awt.*;
 import java.io.File;
@@ -49,29 +48,25 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     public static final int JINGLE_FREQUENCY = 3;
     public static final int MAX_SONG_LENGTH = 300000;
 
-    public static SongOrchestrator instance;
     private List<SongPlaylist> playlists;
     private SongPlaylist activePlaylist;
     private int timeUntilJingle = 0;
     private DefaultAudioPlayerManager manager;
     private AudioPlayer player;
-    private AudioPlayerSendHandler handler;
-    private TextChannel radioChannel, lyricsChannel;
+    private AudioPlayerSendHandler audioSendHandler;
+
+    @Deprecated
+    private TextChannel radioChannel;
 
     @Deprecated
     public TextChannel djChannel_temp; //todo temp
 
-    //private boolean playingJingle;
-    //private Song currentSong;
-    private VoiceChannel voiceChannel;
     private JDA jda;
-    private File playlistDir;
+    private File playlistsRoot;
     private boolean suggestionsEnabled = true;
     private SongQueue specialQueue;
     private Map<Long, NetworkSong> songSuggestionMessages = new HashMap<>();
     private DiscordRadio radio;
-
-    private boolean karaokeMode;
 
     private List<Song> awaitingSpecialSongs = new ArrayList<>();
 
@@ -81,68 +76,53 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     private List<SongEventListener> songEventListeners = new ArrayList<>();
 
-    public SongOrchestrator(DiscordRadio radio, JDA jda, TextChannel radioChannel, TextChannel lyricsChannel, VoiceChannel voiceChannel, String playlistDir) {
-        instance = this;
+    public SongOrchestrator(DiscordRadio radio, RadioConfig config) {
 
         this.radio = radio;
-        this.voiceChannel = voiceChannel;
+        jda = radio.getJda();
 
-        this.playlistDir = new File(playlistDir);
-
-        if (RadioConfig.config.useCoinGain)
-            jda.addEventListener(new CoinCreditorListener(this));
+        this.playlistsRoot = new File(config.locations.playlists);
 
         loadPlaylists();
 
         manager = new DefaultAudioPlayerManager();
+
         AudioSourceManagers.registerLocalSource(manager);
         manager.registerSourceManager(new YoutubeAudioSourceManager(true));
         manager.registerSourceManager(new SoundCloudAudioSourceManager());
         manager.registerSourceManager(new BandcampAudioSourceManager());
         manager.registerSourceManager(new VimeoAudioSourceManager());
-        manager.registerSourceManager(new me.voidinvoid.audio.twitch.TwitchStreamAudioSourceManager());
+        manager.registerSourceManager(new TwitchKrakenStreamAudioSourceManager());
         manager.registerSourceManager(new BeamAudioSourceManager());
         manager.registerSourceManager(new HttpAudioSourceManager());
 
         player = manager.createPlayer();
         player.addListener(this);
 
-        this.jda = jda;
-        this.radioChannel = radioChannel;
-        this.lyricsChannel = lyricsChannel;
-
-        if (lyricsChannel != null) {
-            lyricsChannel.getHistory().retrievePast(100).queue(msgs -> msgs.stream().filter(m -> m.getAuthor().equals(jda.getSelfUser())).forEach(m -> m.delete().queue()));
-        }
+        player.setVolume(50);
 
         jda.addEventListener(this);
 
         //todo temp
         djChannel_temp = jda.getTextChannelById(RadioConfig.config.channels.djChat);
 
-        //karaokeAudioListener = new AudioListener();
-
-        handler = new AudioPlayerSendHandler(player);
+        audioSendHandler = new AudioPlayerSendHandler(player);
     }
 
     public void registerSongEventListener(SongEventListener listener) {
         songEventListeners.add(listener);
     }
 
-    public DefaultAudioPlayerManager getManager() {
-        return manager;
-    }
-
     public JDA getJda() {
         return jda;
     }
 
-    public TextChannel getRadioChannel() {
-        return radioChannel;
+    public DefaultAudioPlayerManager getAudioManager() {
+        return manager;
     }
 
-    public VoiceChannel getVoiceChannel() {
-        return voiceChannel;
+    public AudioPlayerSendHandler getAudioSendHandler() {
+        return audioSendHandler;
     }
 
     public List<SongPlaylist> getPlaylists() {
@@ -180,23 +160,14 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     }
 
     public void loadPlaylists() {
-        System.out.println("Loading playlists...");
-
+        System.out.println("Loading special queue...");
         specialQueue = new SongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), SongType.SPECIAL, false);
 
-        System.out.println("Loaded special queue");
-
-        /*if (playlists != null) {
-            playlists.forEach(p -> {
-                p.getSongs().getQueue().stream().filter(Song::hasCustomAlbumArt).forEach(s -> s.getAlbumArtFile().delete());
-                p.getJingles().getQueue().stream().filter(Song::hasCustomAlbumArt).forEach(s -> s.getAlbumArtFile().delete()); //clean up our junk
-            });
-        }*/
-
-        File[] playlistFiles = playlistDir.listFiles(File::isDirectory);
+        System.out.println("Loading playlists...");
+        File[] playlistFiles = playlistsRoot.listFiles(File::isDirectory);
 
         if (playlistFiles == null) {
-            System.out.println("!!! Playlist folder file listing is null !!!");
+            System.out.println(ConsoleColor.RED + "Playlist folder file listing is null" + ConsoleColor.RESET);
             return;
         }
 
@@ -211,18 +182,16 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         }
 
         if (playlists.size() == 0) {
-            System.out.println("!!! No playlists found !!!");
+            System.out.println(ConsoleColor.RED + "No playlists found!" + ConsoleColor.RESET);
             return;
         }
 
         if (activePlaylist == null) {
             activePlaylist = playlists.get(0);
-            System.out.println("Warning: no default song directory found. Defaulted to " + activePlaylist.getName());
+            System.out.println(ConsoleColor.YELLOW + "Warning: no default song directory found. Defaulted to " + activePlaylist.getName() + ConsoleColor.RESET);
         }
-    }
 
-    public AudioPlayerSendHandler getHandler() {
-        return handler;
+        activePlaylist.awaitLoad();
     }
 
     public void playNextSong() {
@@ -327,24 +296,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     break;
                 }
             }
-
-            EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
-                    .setColor(new Color(230, 230, 230))
-                    .addField("Title", track.getInfo().title, true)
-                    .addField(song instanceof NetworkSong ? "Uploader" : "Artist", track.getInfo().author, true)
-                    .setTimestamp(new Date().toInstant());
-
-            if (song instanceof NetworkSong) {
-                NetworkSong ns = (NetworkSong) song;
-                if (ns.getSuggestedBy() != null)
-                    embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
-            }
-
-            if (false) { //TODO REIMPLEMENT
-                embed.addField("\u200b", "Song lyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
-            }
-
-            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
         }
     }
 
@@ -634,10 +585,10 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                         return;
                     }
 
-                    song++;
+                    song--;
                     List<Song> map = activePlaylist.getSongs().getSongMap();
 
-                    if (song > 0 && song < map.size()) {
+                    if (song >= 0 && song < map.size()) {
                         playSong(map.get(song));
                         return;
                     }
@@ -658,12 +609,12 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                             return;
                         }
 
-                        lyricsChannel = lyrics;
+                        //lyricsChannel = lyrics;
 
                         commandSuccess(message, author, "Set lyrics channel to #" + lyrics.getName());
                     }
 
-                    setKaraokeMode(!karaokeMode);
+                    //setKaraokeMode(!karaokeMode);
                     return;
 
                 } else if (args[0].equalsIgnoreCase("!stop-radio")) {
@@ -809,15 +760,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         }
     }
 
-    public RequestFuture<Message> onRecordingStarted(String title) {
-        return djChannel_temp.sendMessage(new EmbedBuilder().setDescription("📝 Encoding karaoke recording for " + title + "...").build()).submit();
-    }
-
-    public void onRecordingReady(Message msg, String title, String fileName) {
-        msg.editMessage(new EmbedBuilder().setDescription("⬆ Uploading karaoke recording for " + title + "...").build()).queue();
-        msg.getChannel().sendMessage(new EmbedBuilder().setDescription("⬇ Karaoke recording attached for " + title).build()).addFile(new File(fileName)).submit(false).whenComplete((m, a) -> msg.delete().queue());
-    }
-
     public boolean areSuggestionsEnabled() {
         return suggestionsEnabled;
     }
@@ -847,22 +789,4 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     public Map<Song, String> getNowPlayingSongOverrides() {
         return nowPlayingSongOverrides;
     }
-
-    public boolean isKaraokeMode() {
-        return karaokeMode;
-    }
-
-    public void setKaraokeMode(boolean karaokeMode) {
-        if (karaokeMode == this.karaokeMode) return;
-        MessageEmbed embed = new EmbedBuilder().setTitle("Karaoke").setDescription("🎤 Karaoke mode has " + (karaokeMode ? "been activated!" : "ended!")).setTimestamp(OffsetDateTime.now()).setColor(new Color(82, 255, 238)).build();
-
-        djChannel_temp.sendMessage(embed).queue();
-        radioChannel.sendMessage(embed).queue();
-
-        this.karaokeMode = karaokeMode;
-    }
-
-    /*public AudioListener getKaraokeAudioListener() {
-        return karaokeAudioListener;
-    }*/
 }

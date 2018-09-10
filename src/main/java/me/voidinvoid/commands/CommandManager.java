@@ -9,11 +9,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class CommandListener implements EventListener {
+public class CommandManager implements EventListener {
 
     private List<Command> commands = new ArrayList<>();
 
-    public CommandListener register(Command cmd) {
+    public CommandManager() {
+        register(new QueueCommand());
+    }
+
+    CommandManager register(Command cmd) {
         commands.add(cmd);
 
         return this;

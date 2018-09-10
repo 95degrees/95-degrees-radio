@@ -13,7 +13,7 @@ public class PlayJingleAction extends DJAction {
 
     @Override
     public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
-        orch.setTimeUntilJingle(0);
+        orch.setTimeUntilJingle(-1);
         orch.playNextSong();
     }
 }

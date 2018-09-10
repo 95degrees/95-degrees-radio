@@ -3,6 +3,8 @@ package me.voidinvoid.karaoke;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.karaoke.lyrics.LyricLine;
 import me.voidinvoid.karaoke.lyrics.LyricsFetcher;
@@ -13,9 +15,12 @@ import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 
+import java.awt.*;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executors;
@@ -23,11 +28,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class KaraokeLyricsListener implements SongEventListener {
+public class KaraokeManager implements SongEventListener {
 
     private static final long LYRIC_LAG_COMPENSATION_MS = 400L; //always be 0.4s ahead to compensate for lag
 
     private TextChannel textChannel;
+    private TextChannel radioChannel;
+    private TextChannel djChannel;
 
     private ScheduledExecutorService executor;
 
@@ -35,19 +42,30 @@ public class KaraokeLyricsListener implements SongEventListener {
 
     private Message activeMessage;
 
-    public KaraokeLyricsListener(TextChannel textChannel) {
+    private boolean karaokeMode;
 
-        this.textChannel = textChannel;
+    public KaraokeManager() {
+
+        executor = Executors.newScheduledThreadPool(1);
+
+        radioChannel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+        djChannel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat);
+    }
+
+    private boolean initialiseKaraoke() {
+        if (textChannel == null) textChannel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
+        if (textChannel == null) return false;
 
         List<Message> lyricsMsgs = textChannel.getHistory().retrievePast(10).complete(); //clear out old messages if for whatever reason there's some there
         User self = textChannel.getJDA().getSelfUser();
         lyricsMsgs.stream().filter(m -> m.getAuthor().equals(self)).forEach(m -> m.delete().queue());
 
-        executor = Executors.newScheduledThreadPool(1);
+        return true;
     }
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
+        if (!karaokeMode) return;
 
         if (song.getType() == SongType.JINGLE) return;
 
@@ -140,5 +158,31 @@ public class KaraokeLyricsListener implements SongEventListener {
             taskTimer.cancel(false);
             activeMessage.delete().queue();
         }
+    }
+
+    public boolean isKaraokeMode() {
+        return karaokeMode;
+    }
+
+    public boolean setKaraokeMode(boolean karaokeMode, TextChannel channel) {
+        if (karaokeMode == this.karaokeMode) return karaokeMode;
+
+        this.karaokeMode = karaokeMode;
+        this.textChannel = channel;
+
+        MessageEmbed embed = new EmbedBuilder()
+                .setTitle("Karaoke")
+                .setDescription("🎤 Karaoke mode has " + (karaokeMode ? "been activated!" : "ended!"))
+                .setTimestamp(OffsetDateTime.now())
+                .setColor(new Color(82, 255, 238)).build();
+
+        if (radioChannel != null) radioChannel.sendMessage(embed).queue();
+        if (djChannel != null) djChannel.sendMessage(embed).queue();
+
+        if (!karaokeMode) return false;
+
+        if (channel == null && RadioConfig.config.channels.lyricsChat == null) return false;
+
+        return initialiseKaraoke();
     }
 }

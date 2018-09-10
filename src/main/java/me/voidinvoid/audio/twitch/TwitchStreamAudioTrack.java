@@ -10,7 +10,7 @@ import com.sedmelluq.discord.lavaplayer.track.playback.LocalAudioTrackExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static me.voidinvoid.audio.twitch.TwitchStreamAudioSourceManager.getChannelIdentifierFromUrl;
+import static me.voidinvoid.audio.twitch.TwitchKrakenStreamAudioSourceManager.getChannelIdentifierFromUrl;
 
 /**
  * Audio track that handles processing Twitch tracks.
@@ -18,13 +18,13 @@ import static me.voidinvoid.audio.twitch.TwitchStreamAudioSourceManager.getChann
 public class TwitchStreamAudioTrack extends M3uStreamAudioTrack {
     private static final Logger log = LoggerFactory.getLogger(TwitchStreamAudioTrack.class);
 
-    private final TwitchStreamAudioSourceManager sourceManager;
+    private final TwitchKrakenStreamAudioSourceManager sourceManager;
 
     /**
      * @param trackInfo     Track info
      * @param sourceManager Source manager which was used to find this track
      */
-    public TwitchStreamAudioTrack(AudioTrackInfo trackInfo, TwitchStreamAudioSourceManager sourceManager) {
+    public TwitchStreamAudioTrack(AudioTrackInfo trackInfo, TwitchKrakenStreamAudioSourceManager sourceManager) {
         super(trackInfo);
 
         this.sourceManager = sourceManager;

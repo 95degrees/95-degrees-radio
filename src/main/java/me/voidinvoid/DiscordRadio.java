@@ -1,8 +1,10 @@
 package me.voidinvoid;
 
+import me.voidinvoid.coins.CoinCreditorListener;
+import me.voidinvoid.commands.CommandManager;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
-import me.voidinvoid.karaoke.KaraokeLyricsListener;
+import me.voidinvoid.karaoke.KaraokeManager;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
@@ -19,7 +21,7 @@ import java.io.File;
 
 public class DiscordRadio implements EventListener {
 
-    public static boolean isRunning = true;
+    public static DiscordRadio instance;
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -34,11 +36,17 @@ public class DiscordRadio implements EventListener {
 
         System.out.println(ConsoleColor.BLUE_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
 
-        new DiscordRadio(RadioConfig.config);
+        instance = new DiscordRadio(RadioConfig.config);
     }
 
     private RadioConfig config;
     private JDA jda;
+
+    private SongOrchestrator orchestrator;
+
+    private SongDJ dj;
+    private KaraokeManager karaokeManager;
+    private CommandManager commandManager;
 
     public DiscordRadio(RadioConfig config) {
         try {
@@ -46,36 +54,62 @@ public class DiscordRadio implements EventListener {
 
             if (config.useStatus) jda.getPresence().setGame(null);
         } catch (LoginException e) {
+            System.out.println(ConsoleColor.RED + "Discord login failure!" + ConsoleColor.RESET);
             e.printStackTrace();
             return;
         }
 
         this.config = config;
+
+        startTaskManager();
     }
 
     @Override
     public void onEvent(Event e) {
         if (e instanceof ReadyEvent) {
-            connectToGuild();
+            startRadio();
         }
     }
 
-    public void connectToGuild() {
+    public void startRadio() {
+
+        commandManager = new CommandManager();
+
+        orchestrator = new SongOrchestrator(this, config);
+
+        orchestrator.registerSongEventListener(new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
+        orchestrator.registerSongEventListener(new KaraokeManager());
+
+        if (RadioConfig.config.useCoinGain) jda.addEventListener(new CoinCreditorListener(orchestrator));
+
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
-        SongOrchestrator orch = new SongOrchestrator(this, jda, jda.getTextChannelById(config.channels.radioChat), config.channels.lyricsChat == null ? null : jda.getTextChannelById(config.channels.lyricsChat), radioVoiceChannel, config.locations.playlists);
+        AudioManager mgr = radioVoiceChannel.getGuild().getAudioManager();
 
-        orch.registerSongEventListener(new SongDJ(orch, jda.getTextChannelById(config.channels.djChat)));
-        orch.registerSongEventListener(new KaraokeLyricsListener(jda.getTextChannelById(config.channels.lyricsChat))); //todo TEMP
+        mgr.setSendingHandler(orchestrator.getAudioSendHandler());
+        mgr.openAudioConnection(radioVoiceChannel);
 
-        startTaskManager();
+        orchestrator.playNextSong();
+    }
 
-        AudioManager m = radioVoiceChannel.getGuild().getAudioManager();
+    public JDA getJda() {
+        return jda;
+    }
 
-        m.setSendingHandler(orch.getHandler());
-        m.openAudioConnection(radioVoiceChannel);
+    public SongOrchestrator getOrchestrator() {
+        return orchestrator;
+    }
 
-        orch.playNextSong();
+    public SongDJ getDj() {
+        return dj;
+    }
+
+    public KaraokeManager getKaraokeManager() {
+        return karaokeManager;
+    }
+
+    public CommandManager getCommandManager() {
+        return commandManager;
     }
 
     public void startTaskManager() {
