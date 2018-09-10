@@ -1,6 +1,7 @@
 package me.voidinvoid.tasks.types;
 
 import me.voidinvoid.SongOrchestrator;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -19,6 +20,6 @@ public class KaraokeTask extends RadioTaskExecutor {
 
     @Override
     public void runTask(SongOrchestrator orch, ParameterList params) {
-        orch.setKaraokeMode(start);
+        orch.getRadio().getKaraokeManager().setKaraokeMode(start, orch.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat)); //todo channel param
     }
 }

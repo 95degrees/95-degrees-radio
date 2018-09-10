@@ -4,6 +4,7 @@ import me.voidinvoid.coins.CoinCreditorListener;
 import me.voidinvoid.commands.CommandManager;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
+import me.voidinvoid.events.RadioMessageListener;
 import me.voidinvoid.karaoke.KaraokeManager;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.ConsoleColor;
@@ -79,6 +80,7 @@ public class DiscordRadio implements EventListener {
 
         orchestrator.registerSongEventListener(new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(new KaraokeManager());
+        orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
 
         if (RadioConfig.config.useCoinGain) jda.addEventListener(new CoinCreditorListener(orchestrator));
 

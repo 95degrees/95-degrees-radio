@@ -109,7 +109,7 @@ public class SongQueue extends AudioEventAdapter {
         
         song.setQueue(this);
 
-        int pos = 0;
+        int pos = 0; //push the song to the bottom of all network songs but above regular songs
         for (Song s : queue) {
             if (!(s instanceof NetworkSong)) break;
 

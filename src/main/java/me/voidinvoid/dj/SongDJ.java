@@ -9,12 +9,14 @@ import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.NetworkSong;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
+import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -23,7 +25,7 @@ import net.dv8tion.jda.core.requests.restaction.MessageAction;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,6 +41,8 @@ public class SongDJ implements SongEventListener, EventListener {
 
     private List<DJAction> actions = new ArrayList<>();
 
+    private Map<String, NetworkSong> queueDeletionMessages = new HashMap<>();
+
     private String activeMessageId;
 
     private AudioTrack activeTrack;
@@ -46,7 +50,6 @@ public class SongDJ implements SongEventListener, EventListener {
     private SongOrchestrator orchestrator;
 
     private ScheduledExecutorService executor;
-
     private ScheduledFuture taskTimer;
 
     public SongDJ(SongOrchestrator orchestrator, TextChannel textChannel) {
@@ -71,6 +74,30 @@ public class SongDJ implements SongEventListener, EventListener {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
 
             if (e.getUser().isBot()) return;
+
+            if (queueDeletionMessages.containsKey(e.getMessageId())) {
+                NetworkSong song = queueDeletionMessages.remove(e.getMessageId());
+
+                song.getQueue().remove(song);
+
+                e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Network radio song suggestion removed").queue();
+
+                EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
+                        .setDescription("Song has been removed from the queue")
+                        .setColor(new Color(230, 230, 230))
+                        .addField("Name", song.getTrack().getInfo().title, true)
+                        .addField("URL", song.getTrack().getInfo().uri, true)
+                        .setTimestamp(new Date().toInstant());
+
+                if (song.getSuggestedBy() != null) {
+                    embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
+                }
+
+                AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(); //TODO split into another event? and remove via orchestrator
+                AlbumArtUtils.attachAlbumArt(embed, song, e.getTextChannel()).queue();
+                return;
+            }
+
             if (activeMessageId == null) return;
 
             if (!e.getMessageId().equals(activeMessageId)) return;
@@ -86,6 +113,15 @@ public class SongDJ implements SongEventListener, EventListener {
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         activeTrack = track;
+
+        if (song instanceof NetworkSong) {
+            for (String id : queueDeletionMessages.keySet()) {
+                if (queueDeletionMessages.get(id).equals(song)) {
+                    queueDeletionMessages.remove(id); //remove the ability to cancel this song since it's already playing by now
+                    break;
+                }
+            }
+        }
 
         List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(track)).collect(Collectors.toList());
 
@@ -174,5 +210,34 @@ public class SongDJ implements SongEventListener, EventListener {
                 .setColor(new Color(230, 230, 230))
                 .addField("Name", newPlaylist.getName(), true)
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
+    }
+
+    @Override
+    public void onSuggestionsToggle(boolean enabled, User source) {
+        textChannel.sendMessage(new EmbedBuilder().setTitle("Song Suggestions")
+                .setDescription("Song suggestions " + (enabled ? "enabled" : "disabled"))
+                .setFooter(source.getName(), source.getAvatarUrl())
+                .setTimestamp(OffsetDateTime.now())
+                .build()).queue();
+    }
+
+    @Override
+    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, User user, int queuePosition) {
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
+                .setDescription("Added song to the queue")
+                .setColor(new Color(230, 230, 230))
+                .addField("Title", track.getInfo().title, true)
+                .addField("URL", track.getInfo().uri, true)
+                .addField("Queue Position", "#" + (queuePosition + 1), false)
+                .setTimestamp(OffsetDateTime.now());
+
+        if (user != null) {
+            embed.setFooter(user.getName(), user.getAvatarUrl());
+        }
+
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
+            m.addReaction("❌").queue();
+            queueDeletionMessages.put(m.getId(), song);
+        });
     }
 }

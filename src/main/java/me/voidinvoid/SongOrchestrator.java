@@ -19,6 +19,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import me.voidinvoid.audio.AudioPlayerSendHandler;
 import me.voidinvoid.audio.twitch.TwitchKrakenStreamAudioSourceManager;
 import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.events.NetworkSongError;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.*;
 import me.voidinvoid.tasks.RadioTaskComposition;
@@ -47,6 +48,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     public static final int JINGLE_FREQUENCY = 3;
     public static final int MAX_SONG_LENGTH = 300000;
+    public static final int USER_QUEUE_LIMIT = 3;
 
     private List<SongPlaylist> playlists;
     private SongPlaylist activePlaylist;
@@ -65,7 +67,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     private File playlistsRoot;
     private boolean suggestionsEnabled = true;
     private SongQueue specialQueue;
-    private Map<Long, NetworkSong> songSuggestionMessages = new HashMap<>();
+
     private DiscordRadio radio;
 
     private List<Song> awaitingSpecialSongs = new ArrayList<>();
@@ -289,13 +291,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                     jda.getPresence().setGame(Game.listening(song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
                 }
             }
-
-            for (long l : songSuggestionMessages.keySet()) {
-                if (songSuggestionMessages.get(l).equals(song)) {
-                    songSuggestionMessages.remove(l); //remove the ability to cancel this song since it's already playing by now
-                    break;
-                }
-            }
         }
     }
 
@@ -330,41 +325,38 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             return;
         }
 
+        NetworkSong song = new NetworkSong(SongType.SONG, track, suggestedBy);
+
         if (!allowStream) {
-            String errorMsg = null;
+            final NetworkSongError error;
 
             if (!suggestionsEnabled) {
-                errorMsg = "Song suggestions are currently disabled";
-            } else if (activePlaylist.getSongs().suggestionsBy(suggestedBy).size() >= 3) {
-                errorMsg = "Song could not be queued because you already have at least 3 suggested songs in the queue";
+                error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
+            } else if (activePlaylist.getSongs().suggestionsBy(suggestedBy).size() >= USER_QUEUE_LIMIT) {
+                error = NetworkSongError.QUEUE_LIMIT_REACHED;
             } else if (track.getInfo().isStream) {
-                errorMsg = "Streams cannot be queued";
+                error = NetworkSongError.IS_STREAM;
             } else if (track.getDuration() > MAX_SONG_LENGTH) {
-                errorMsg = "Song is too long to be added to the queue";
+                error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
+            } else {
+                error = null;
             }
 
-            if (errorMsg != null) {
-                EmbedBuilder embed = new EmbedBuilder()
-                        .setTitle("Song Queue")
-                        .setThumbnail("attachment://" + NetworkSong.NETWORK_ALBUM.getName())
-                        .setDescription(errorMsg)
-                        .addField("Title", track.getInfo().title, true)
-                        .addField("URL", track.getInfo().uri, true)
-                        .setColor(Colors.ACCENT_ERROR)
-                        .setTimestamp(new Date().toInstant());
-
-                if (suggestedBy != null) {
-                    embed.setFooter(suggestedBy.getName(), suggestedBy.getAvatarUrl());
-                }
-
-                radioChannel.sendFile(NetworkSong.NETWORK_ALBUM).embed(embed.build()).queue();
+            if (error != null) {
+                songEventListeners.forEach(l -> l.onNetworkSongQueueError(song, track, suggestedBy, error));
                 return;
             }
         }
 
-        NetworkSong song = new NetworkSong(SongType.SONG, track, suggestedBy);
+        final int index;
 
-        int index = 0;
+        if (pushToStart || playInstantly) {
+            index = 0;
+        } else {
+            index = activePlaylist.getSongs().addNetworkSong(song);
+        }
+
+        songEventListeners.forEach(l -> l.onNetworkSongQueued(song, track, suggestedBy, index));
 
         if (pushToStart || playInstantly) {
             activePlaylist.getSongs().getQueue().add(0, song);
@@ -374,29 +366,9 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
                 player.stopTrack();
                 playNextSong(true, false);
             }
-        } else {
-            index = activePlaylist.getSongs().addNetworkSong(song);
         }
 
         System.out.println("Network track is in the queue: #" + (index + 1));
-
-        EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
-                .setDescription("Added song to the queue")
-                .setColor(new Color(230, 230, 230))
-                .addField("Title", track.getInfo().title, true)
-                .addField("URL", track.getInfo().uri, true)
-                .addField("Queue Position", "#" + (index + 1), false)
-                .setTimestamp(new Date().toInstant());
-
-        if (suggestedBy != null) {
-            embed.setFooter(suggestedBy.getName(), suggestedBy.getAvatarUrl());
-            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
-        }
-
-        AlbumArtUtils.attachAlbumArt(embed, song, djChannel_temp).queue(m -> {
-            m.addReaction("❌").queue();
-            songSuggestionMessages.put(m.getIdLong(), song);
-        });
     }
 
     public void addNetworkTrack(User author, TextChannel channel, String identifier, boolean allowStream, boolean playInstantly, boolean pushToStart, boolean alertOnFailure) {
@@ -726,33 +698,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
             if (e.getUser().isBot()) return;
 
-            if (songSuggestionMessages.containsKey(e.getMessageIdLong())) {
-                NetworkSong song = songSuggestionMessages.get(e.getMessageIdLong());
-
-                song.getQueue().remove(song);
-
-                songSuggestionMessages.remove(e.getMessageIdLong());
-
-                e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("YouTube radio song suggestion removed").queue();
-
-                EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
-                        .setDescription("Song has been removed from the queue")
-                        .setColor(new Color(230, 230, 230))
-                        .setThumbnail("attachment://" + NetworkSong.NETWORK_ALBUM.getName())
-                        .addField("Name", song.getTrack().getInfo().title, true)
-                        .addField("URL", song.getTrack().getInfo().uri, true)
-                        .setTimestamp(new Date().toInstant());
-
-                if (song.getSuggestedBy() != null) {
-                    embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
-                }
-
-                MessageEmbed built = embed.build();
-
-                radioChannel.sendFile(song.getAlbumArtFile()).embed(built).queue();
-                djChannel_temp.sendFile(song.getAlbumArtFile()).embed(built).queue();
-
-            } else if (searchPlaylists.containsKey(e.getMessageIdLong())) {
+            if (searchPlaylists.containsKey(e.getMessageIdLong())) {
                 if (searchPlaylists.get(e.getMessageIdLong()).handleReaction(e)) {
                     searchPlaylists.remove(e.getMessageIdLong());
                 }
