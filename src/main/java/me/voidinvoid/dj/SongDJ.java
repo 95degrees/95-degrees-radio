@@ -214,11 +214,15 @@ public class SongDJ implements SongEventListener, EventListener {
 
     @Override
     public void onSuggestionsToggle(boolean enabled, User source) {
-        textChannel.sendMessage(new EmbedBuilder().setTitle("Song Suggestions")
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Song Suggestions")
                 .setDescription("Song suggestions " + (enabled ? "enabled" : "disabled"))
-                .setFooter(source.getName(), source.getAvatarUrl())
-                .setTimestamp(OffsetDateTime.now())
-                .build()).queue();
+                .setTimestamp(OffsetDateTime.now());
+
+        if (source != null) {
+            embed.setFooter(source.getName(), source.getAvatarUrl());
+        }
+
+        textChannel.sendMessage(embed.build()).queue();
     }
 
     @Override

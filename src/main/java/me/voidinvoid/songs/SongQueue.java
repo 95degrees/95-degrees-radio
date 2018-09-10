@@ -4,6 +4,7 @@ import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import me.voidinvoid.utils.ConsoleColor;
+import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
@@ -152,7 +153,7 @@ public class SongQueue extends AudioEventAdapter {
             output.append(i).append(i < 10 ? "  " : i < 100 ? " " : "").append(": ").append(loc, 0, Math.min(loc.length(), 150)).append("\n");
         }
 
-        String res = output.toString();
+        String res = FormattingUtils.escapeMarkup(output.toString());
         return res.substring(0, Math.min(res.length(), 1980));
     }
 
@@ -191,5 +192,10 @@ public class SongQueue extends AudioEventAdapter {
 
     public void clearNetworkTracks() {
         queue = queue.stream().filter(s -> !(s instanceof NetworkSong)).collect(Collectors.toList());
+    }
+
+    public void shuffleQueue() {
+        Collections.shuffle(queue);
+        queueCache = null;
     }
 }

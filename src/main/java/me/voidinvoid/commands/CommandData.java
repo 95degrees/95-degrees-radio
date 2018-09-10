@@ -14,17 +14,21 @@ public class CommandData {
     private final TextChannel textChannel;
     private final Message rawMessage;
     private final String[] args;
+    private final Command command;
+    private String usedAlias;
 
-    public CommandData(User user, TextChannel textChannel, Message rawMessage) {
+    public CommandData(User user, TextChannel textChannel, Message rawMessage, Command command, String usedAlias) {
 
         this.user = user;
         this.textChannel = textChannel;
         this.rawMessage = rawMessage;
+        this.command = command;
+        this.usedAlias = usedAlias;
 
         String rawString = rawMessage.getContentRaw();
         int argsIndex = rawString.indexOf(" ");
 
-        this.args = argsIndex == -1 ? new String[] {} : rawMessage.getContentRaw().substring(argsIndex, rawString.length()).split(" ");
+        this.args = argsIndex == -1 ? new String[] {} : getArgsString().split(" ");
     }
 
     public User getUser() {
@@ -37,6 +41,13 @@ public class CommandData {
 
     public Message getRawMessage() {
         return rawMessage;
+    }
+
+    public String getArgsString() {
+        String raw = rawMessage.getContentRaw();
+        raw = raw.substring(Command.COMMAND_PREFIX.length() + usedAlias.length()).trim();
+
+        return raw;
     }
 
     public String[] getArgs() {
@@ -57,7 +68,12 @@ public class CommandData {
                 .setTitle("Command Error")
                 .setColor(Color.RED)
                 .setDescription(message)
-                .setFooter(rawMessage.getContentStripped(), user.getAvatarUrl())
+                .appendDescription(command.getUsageMessage() == null ? "" : "\n\n`Usage: " + Command.COMMAND_PREFIX + usedAlias + " " + command.getUsageMessage() + "`") //todo maybe adapt to specific alias used
+                .setFooter(rawMessage.getContentDisplay(), user.getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
+    }
+
+    public String getUsedAlias() {
+        return usedAlias;
     }
 }

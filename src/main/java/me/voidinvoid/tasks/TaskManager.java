@@ -93,7 +93,7 @@ public class TaskManager implements Job {
             System.out.println(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
             comp.getTasks().forEach(r -> r.invoke(DiscordRadio.instance.getOrchestrator()));
         } catch (Exception e) {
-            System.out.println(TASK_LOG_PREFIX + "TError invoking task");
+            System.out.println(TASK_LOG_PREFIX + "Error invoking task");
             e.printStackTrace();
         }
     }
