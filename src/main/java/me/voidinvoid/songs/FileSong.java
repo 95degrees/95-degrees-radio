@@ -13,8 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FileSong extends Song {
-    private static final File FALLBACK_FILE;
-    private static final File FALLBACK_JINGLE_FILE;
+    public static final File FALLBACK_FILE;
+    public static final File FALLBACK_JINGLE_FILE;
 
     static {
         FALLBACK_FILE = new File(RadioConfig.config.images.fallbackAlbumArt);
@@ -67,7 +67,12 @@ public class FileSong extends Song {
 
     @Override
     public File getAlbumArtFile() {
-        return albumArtFile == null ? getType() == SongType.JINGLE ? FALLBACK_JINGLE_FILE : FALLBACK_FILE : albumArtFile;
+        File f = getType().getAlbumArt(this);
+        if (f == null) {
+            f = albumArtFile == null ? FALLBACK_FILE : albumArtFile;
+        }
+
+        return f;
     }
 
     @Override

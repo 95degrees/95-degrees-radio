@@ -1,19 +1,24 @@
 package me.voidinvoid.songs;
 
+import java.io.File;
+import java.util.function.Function;
+
 public enum SongType {
 
-    SONG("Song", true),
-    JINGLE("Jingle", false),
-    SPECIAL("Special", false),
-    ADVERTISEMENT("Advert", false);
+    SONG("Song", true, s -> null),
+    JINGLE("Jingle", false, s -> FileSong.FALLBACK_JINGLE_FILE),
+    SPECIAL("Special", false, s -> FileSong.FALLBACK_JINGLE_FILE), //todo
+    ADVERTISEMENT("Advert", false, s -> FileSong.FALLBACK_JINGLE_FILE); //todo
 
     private final String displayName;
     private final boolean useStatus;
+    private final Function<FileSong, File> getAlbumArt;
 
-    SongType(String displayName, boolean useStatus) {
+    SongType(String displayName, boolean useStatus, Function<FileSong, File> getAlbumArt) {
 
         this.displayName = displayName;
         this.useStatus = useStatus;
+        this.getAlbumArt = getAlbumArt;
     }
 
     public String getDisplayName() {
@@ -22,5 +27,9 @@ public enum SongType {
 
     public boolean usesStatus() {
         return useStatus;
+    }
+
+    public File getAlbumArt(FileSong song) {
+        return getAlbumArt.apply(song);
     }
 }
