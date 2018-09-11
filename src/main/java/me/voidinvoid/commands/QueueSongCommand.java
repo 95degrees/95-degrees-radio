@@ -23,22 +23,25 @@ public class QueueSongCommand extends Command {
             return;
         }
 
-        int song;
+        int songId;
         try {
-            song = Integer.valueOf(args[0]);
+            songId = Integer.valueOf(args[0]);
         } catch (Exception ignored) {
             data.error("Invalid song number. Use `!songs` to list songs");
             return;
         }
 
-        song--;
+        songId--;
         List<Song> map = active.getSongs().getSongMap();
 
-        if (song < 0 || song >= map.size()) {
+        if (songId < 0 || songId >= map.size()) {
             data.error("Invalid song number. Use !songs to list songs");
             return;
         }
 
-        Radio.instance.getOrchestrator().getActivePlaylist().getSongs().moveSongToFront(map.get(song));
+        Song song = map.get(songId);
+
+        Radio.instance.getOrchestrator().getActivePlaylist().getSongs().moveSongToFront(song);
+        data.success("Queued `" + song.getIdentifier().replace("`", "") + "`");
     }
 }
