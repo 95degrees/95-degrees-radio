@@ -120,7 +120,14 @@ public class SongOrchestrator extends AudioEventAdapter {
             this.activePlaylist.getSongs().clearNetworkTracks();
         }
 
-        songEventListeners.forEach(l -> l.onPlaylistChange(this.activePlaylist, activePlaylist));
+        songEventListeners.forEach(l -> {
+            try {
+                l.onPlaylistChange(this.activePlaylist, activePlaylist);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
 
         this.activePlaylist = activePlaylist;
     }
@@ -218,7 +225,14 @@ public class SongOrchestrator extends AudioEventAdapter {
                 e.printStackTrace();
                 playNextSong(false, false);
 
-                songEventListeners.forEach(l -> l.onSongLoadError(song, e));
+                songEventListeners.forEach(l -> {
+                    try {
+                        l.onSongLoadError(song, e);
+                    } catch (Exception ex) {
+                        System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                        ex.printStackTrace();
+                    }
+                });
             }
         });
     }
@@ -227,14 +241,28 @@ public class SongOrchestrator extends AudioEventAdapter {
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         final Song song = track.getUserData(Song.class);
 
-        songEventListeners.forEach(l -> l.onSongStart(song, track, player, timeUntilJingle));
+        songEventListeners.forEach(l -> {
+            try {
+                l.onSongStart(song, track, player, timeUntilJingle);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
     }
 
     @Override
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext || endReason == AudioTrackEndReason.REPLACED) {
             Song song = track.getUserData(Song.class);
-            songEventListeners.forEach(l -> l.onSongEnd(song, track));
+            songEventListeners.forEach(l -> {
+                try {
+                    l.onSongEnd(song, track);
+                } catch (Exception ex) {
+                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    ex.printStackTrace();
+                }
+            });
         }
 
         if (endReason.mayStartNext) {
@@ -279,7 +307,14 @@ public class SongOrchestrator extends AudioEventAdapter {
             }
 
             if (error != null) {
-                songEventListeners.forEach(l -> l.onNetworkSongQueueError(song, track, suggestedBy, error));
+                songEventListeners.forEach(l -> {
+                    try {
+                        l.onNetworkSongQueueError(song, track, suggestedBy, error);
+                    } catch (Exception ex) {
+                        System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                        ex.printStackTrace();
+                    }
+                });
                 return;
             }
         }
@@ -292,7 +327,14 @@ public class SongOrchestrator extends AudioEventAdapter {
             index = activePlaylist.getSongs().addNetworkSong(song);
         }
 
-        songEventListeners.forEach(l -> l.onNetworkSongQueued(song, track, suggestedBy, index));
+        songEventListeners.forEach(l -> {
+            try {
+                l.onNetworkSongQueued(song, track, suggestedBy, index);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
 
         if (pushToStart || playInstantly) {
             activePlaylist.getSongs().getQueue().add(0, song);
@@ -312,7 +354,14 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public boolean setSuggestionsEnabled(boolean enabled, User source) {
-        songEventListeners.forEach(l -> l.onSuggestionsToggle(enabled, source));
+        songEventListeners.forEach(l -> {
+            try {
+                l.onSuggestionsToggle(enabled, source);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
 
         return suggestionsEnabled = enabled;
     }

@@ -79,20 +79,16 @@ public class Radio implements EventListener {
 
     private void startRadio() {
 
-        commandManager = new CommandManager();
-        jda.addEventListener(commandManager);
+        jda.addEventListener(commandManager = new CommandManager());
+        jda.addEventListener(suggestionManager = new SongSuggestionManager());
+        if (RadioConfig.config.useCoinGain) jda.addEventListener(coinCreditorManager = new CoinCreditorManager(jda));
 
         orchestrator = new SongOrchestrator(this, config);
 
-        orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
+        orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
-        if (RadioConfig.config.useStatus)
-            orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
-
-        if (RadioConfig.config.useCoinGain)
-            jda.addEventListener(coinCreditorManager = new CoinCreditorManager(orchestrator));
-        jda.addEventListener(suggestionManager = new SongSuggestionManager());
+        if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 

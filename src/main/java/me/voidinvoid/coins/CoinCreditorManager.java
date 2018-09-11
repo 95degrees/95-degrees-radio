@@ -1,10 +1,10 @@
 package me.voidinvoid.coins;
 
-import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
@@ -23,8 +23,6 @@ import java.util.Map;
 
 public class CoinCreditorManager implements EventListener {
 
-    private SongOrchestrator orchestrator;
-
     private VoiceChannel voiceChannel;
 
     private TextChannel textChannel;
@@ -33,12 +31,10 @@ public class CoinCreditorManager implements EventListener {
 
     private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
 
-    public CoinCreditorManager(SongOrchestrator orchestrator) {
+    public CoinCreditorManager(JDA jda) {
 
-        this.orchestrator = orchestrator;
-
-        voiceChannel = orchestrator.getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
-        textChannel = orchestrator.getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+        voiceChannel = jda.getVoiceChannelById(RadioConfig.config.channels.voice);
+        textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat);
 
         for (Member m : voiceChannel.getMembers()) {
             User u = m.getUser();
