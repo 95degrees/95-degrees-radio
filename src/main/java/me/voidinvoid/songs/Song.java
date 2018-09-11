@@ -26,9 +26,7 @@ public abstract class Song {
 
     public abstract AlbumArtType getAlbumArtType();
 
-    public File getAlbumArtFile() {
-        return null;
-    }
+    public abstract File getAlbumArtFile();
 
     public String getAlbumArtURL() {
         return null;

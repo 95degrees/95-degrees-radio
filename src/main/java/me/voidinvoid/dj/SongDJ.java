@@ -138,7 +138,7 @@ public class SongDJ implements SongEventListener, EventListener {
                     public void run() {
                         if (updateMsg != null) updateMsg.cancel(true);
 
-                        updateMsg = SongDJ.this.editMessage(track, player, timeUntilJingle, m).submit();
+                        updateMsg = SongDJ.this.editMessage(song, track, player, timeUntilJingle, m).submit();
                     }
                 }, 0, 5, TimeUnit.SECONDS);
             }
@@ -174,10 +174,10 @@ public class SongDJ implements SongEventListener, EventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        return textChannel.sendMessage(embed.build());
+        return AlbumArtUtils.attachAlbumArt(embed, song, textChannel, true);
     }
 
-    public MessageAction editMessage(AudioTrack track, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
+    public MessageAction editMessage(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle, Message originalMessage) {
         EmbedBuilder embed = new EmbedBuilder(originalMessage.getEmbeds().get(0))
                 .setColor(player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN);
 
@@ -189,7 +189,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
         embed.setTimestamp(OffsetDateTime.now());
 
-        return originalMessage.editMessage(embed.build());
+        return AlbumArtUtils.attachAlbumArtToEdit(embed, song, originalMessage, true);
     }
 
     @Override
@@ -214,13 +214,12 @@ public class SongDJ implements SongEventListener, EventListener {
 
     @Override
     public void onSuggestionsToggle(boolean enabled, User source) {
-        EmbedBuilder embed = new EmbedBuilder().setTitle("Song Suggestions")
-                .setDescription("Song suggestions " + (enabled ? "enabled" : "disabled"))
-                .setTimestamp(OffsetDateTime.now());
+        if (source == null) return;
 
-        if (source != null) {
-            embed.setFooter(source.getName(), source.getAvatarUrl());
-        }
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Song Suggestions")
+                .setDescription("Song suggestions have been " + (enabled ? "enabled" : "disabled"))
+                .setTimestamp(OffsetDateTime.now())
+                .setFooter(source.getName(), source.getAvatarUrl());
 
         textChannel.sendMessage(embed.build()).queue();
     }

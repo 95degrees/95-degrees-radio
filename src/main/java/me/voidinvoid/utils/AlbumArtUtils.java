@@ -17,8 +17,8 @@ public final class AlbumArtUtils {
     public static final int ALBUM_ART_SCALE_SIZE = 128;
 
     @CheckReturnValue
-    public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel) {
-        if (song.getAlbumArtType() == AlbumArtType.FILE) {
+    public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel, boolean forceLocal) {
+        if (forceLocal || song.getAlbumArtType() == AlbumArtType.FILE) {
             File albumArt = song.getAlbumArtFile();
             embed.setThumbnail("attachment://" + albumArt.getName());
             return channel.sendFile(albumArt).embed(embed.build());
@@ -30,8 +30,13 @@ public final class AlbumArtUtils {
     }
 
     @CheckReturnValue
-    public static MessageAction attachAlbumArtToEdit(EmbedBuilder embed, Song song, Message existingMessage) {
-        if (song.getAlbumArtType() == AlbumArtType.FILE) {
+    public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel) {
+        return attachAlbumArt(embed, song, channel, false);
+    }
+
+    @CheckReturnValue
+    public static MessageAction attachAlbumArtToEdit(EmbedBuilder embed, Song song, Message existingMessage, boolean forceLocal) {
+        if (forceLocal || song.getAlbumArtType() == AlbumArtType.FILE) {
             File albumArt = song.getAlbumArtFile();
             embed.setThumbnail("attachment://" + albumArt.getName());
             return existingMessage.editMessage(embed.build());
@@ -40,6 +45,11 @@ public final class AlbumArtUtils {
             embed.setThumbnail(song.getAlbumArtURL());
             return existingMessage.editMessage(embed.build());
         }
+    }
+
+    @CheckReturnValue
+    public static MessageAction attachAlbumArtToEdit(EmbedBuilder embed, Song song, Message existingMessage) {
+        return attachAlbumArtToEdit(embed, song, existingMessage, false);
     }
 
     public static BufferedImage scaleAlbumArt(BufferedImage img) {
