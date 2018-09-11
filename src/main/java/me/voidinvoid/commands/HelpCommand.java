@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public class HelpCommand extends Command {
 
-    private List<Command> commands;
+    private final List<Command> commands;
 
     HelpCommand(List<Command> commands) {
         super("radio-commands", "Lists all commands", null, ChannelScope.DJ_CHAT, "rc");

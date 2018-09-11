@@ -2,17 +2,17 @@ package me.voidinvoid.commands;
 
 import me.voidinvoid.utils.ChannelScope;
 
-public abstract class Command {
+abstract class Command {
 
     public static final String COMMAND_PREFIX = "!";
 
     private final String name;
     private final String description;
-    private String usageMessage;
-    private ChannelScope scope;
+    private final String usageMessage;
+    private final ChannelScope scope;
     private final String[] aliases;
 
-    public Command(String name, String description, String usageMessage, ChannelScope scope, String... aliases) {
+    Command(String name, String description, String usageMessage, ChannelScope scope, String... aliases) {
 
         this.name = name;
         this.description = description;
@@ -25,7 +25,7 @@ public abstract class Command {
         return name;
     }
 
-    public String getDescription() {
+    String getDescription() {
         return description;
     }
 

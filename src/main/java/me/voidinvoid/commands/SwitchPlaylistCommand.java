@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class SwitchPlaylistCommand extends Command {
 
-    public SwitchPlaylistCommand() {
+    SwitchPlaylistCommand() {
         super("switch-playlist", "Switches to a playlist (based on folder name)", "<name>", ChannelScope.DJ_CHAT);
     }
 

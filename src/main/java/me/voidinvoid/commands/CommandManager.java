@@ -11,7 +11,7 @@ import java.util.List;
 
 public class CommandManager implements EventListener {
 
-    private List<Command> commands = new ArrayList<>();
+    private final List<Command> commands = new ArrayList<>();
 
     public CommandManager() {
         register(new QueueCommand());

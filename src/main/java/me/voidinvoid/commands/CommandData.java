@@ -8,14 +8,14 @@ import net.dv8tion.jda.core.entities.User;
 import java.awt.*;
 import java.time.OffsetDateTime;
 
-public class CommandData {
+class CommandData {
 
     private final User user;
     private final TextChannel textChannel;
     private final Message rawMessage;
     private final String[] args;
     private final Command command;
-    private String usedAlias;
+    private final String usedAlias;
 
     public CommandData(User user, TextChannel textChannel, Message rawMessage, Command command, String usedAlias) {
 

@@ -6,7 +6,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class TasksCommand extends Command {
 
-    public TasksCommand() {
+    TasksCommand() {
         super("tasks", "Lists all active tasks", null, ChannelScope.DJ_CHAT);
     }
 

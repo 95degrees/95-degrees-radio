@@ -6,7 +6,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class YouTubeSearchCommand extends Command {
 
-    public YouTubeSearchCommand() {
+    YouTubeSearchCommand() {
         super("play", "Searches for a specified song on YouTube", "<search ...>", ChannelScope.RADIO_AND_DJ_CHAT, "search");
     }
 

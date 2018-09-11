@@ -5,7 +5,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class ReloadCommand extends Command {
 
-    public ReloadCommand() {
+    ReloadCommand() {
         super("reload", "Reloads playlists, tasks and adverts", "[playlists|tasks|adverts]", ChannelScope.DJ_CHAT);
     }
 
