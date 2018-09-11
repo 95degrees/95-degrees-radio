@@ -5,7 +5,8 @@ import net.dv8tion.jda.core.entities.User;
 
 public class UserCoinTracker {
 
-    private static final long COINS_PER_MINUTE = 1;
+    private static final int COINS_PER_MINUTE = 1;
+    private static final int MAX_COINS = 300;
 
     private User user;
     private long startTime;
@@ -52,7 +53,7 @@ public class UserCoinTracker {
     public int getTotal() {
         credit();
 
-        return earnedCoins;
+        return Math.min(MAX_COINS, earnedCoins);
     }
 
     public long getTotalTime() {

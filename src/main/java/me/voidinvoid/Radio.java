@@ -7,6 +7,7 @@ import me.voidinvoid.dj.SongDJ;
 import me.voidinvoid.events.RadioMessageListener;
 import me.voidinvoid.karaoke.KaraokeManager;
 import me.voidinvoid.status.StatusManager;
+import me.voidinvoid.suggestions.SongSuggestionManager;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
@@ -51,6 +52,7 @@ public class Radio implements EventListener {
     private CommandManager commandManager;
     private StatusManager statusManager;
     private CoinCreditorManager coinCreditorManager;
+    private SongSuggestionManager suggestionManager;
 
     public Radio(RadioConfig config) {
         try {
@@ -85,9 +87,10 @@ public class Radio implements EventListener {
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
-        if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(new StatusManager());
+        if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
 
         if (RadioConfig.config.useCoinGain) jda.addEventListener(coinCreditorManager = new CoinCreditorManager(orchestrator));
+        jda.addEventListener(suggestionManager = new SongSuggestionManager());
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
@@ -133,5 +136,9 @@ public class Radio implements EventListener {
 
     public static void shutdown(boolean restart) {
         System.exit(restart ? 1 : 0);
+    }
+
+    public SongSuggestionManager getSuggestionManager() {
+        return suggestionManager;
     }
 }

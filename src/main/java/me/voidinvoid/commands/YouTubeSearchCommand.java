@@ -18,7 +18,6 @@ public class YouTubeSearchCommand extends Command {
             return;
         }
 
-        //todo cleanup as part of orchestrator cleanup
-        Radio.instance.getOrchestrator().addNetworkTrack(data.getUser(), data.getTextChannel(), "ytsearch:" + data.getArgsString(), ChannelScope.DJ_CHAT.check(data.getTextChannel()), false, false, true);
+        Radio.instance.getSuggestionManager().addSuggestion("ytsearch:" + data.getArgsString(), data.getTextChannel(), data.getUser(), true);
     }
 }

@@ -1,8 +1,10 @@
 package me.voidinvoid.tasks.types;
 
+import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.songs.SongQueue;
 import me.voidinvoid.songs.Song;
+import me.voidinvoid.suggestions.SuggestionQueueMode;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
 
@@ -23,7 +25,7 @@ public class PlaySongTask extends RadioTaskExecutor {
         boolean force = params.get("play_instantly", Boolean.class);
 
         if (!jingle && params.get("remote", Boolean.class)) {
-            orch.addNetworkTrack(null, null, song, true, force, true, false);
+            Radio.instance.getSuggestionManager().addSuggestion(song, null, null, false, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
             return;
         }
 

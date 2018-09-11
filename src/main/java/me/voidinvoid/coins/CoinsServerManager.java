@@ -36,7 +36,7 @@ public class CoinsServerManager {
                 JsonObject obj = new JsonObject();
                 obj.addProperty("id", u.getIdLong());
                 obj.addProperty("username", u.getName());
-                obj.addProperty("coin_gain", Math.min(1000, c)); //coin cap of 1000
+                obj.addProperty("coin_gain", c);
                 obj.addProperty("timestamp", timestamp);
                 creditArray.add(obj);
             });
