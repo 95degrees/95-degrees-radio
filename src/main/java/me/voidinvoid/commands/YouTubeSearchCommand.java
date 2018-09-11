@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.suggestions.SuggestionQueueMode;
 import me.voidinvoid.utils.ChannelScope;
 
 public class YouTubeSearchCommand extends Command {
@@ -18,6 +19,6 @@ public class YouTubeSearchCommand extends Command {
             return;
         }
 
-        Radio.instance.getSuggestionManager().addSuggestion("ytsearch:" + data.getArgsString(), data.getTextChannel(), data.getUser(), true);
+        Radio.instance.getSuggestionManager().addSuggestion("ytsearch:" + data.getArgsString(), data.getTextChannel(), data.getUser(), true, SuggestionQueueMode.NORMAL);
     }
 }
