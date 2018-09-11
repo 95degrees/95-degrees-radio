@@ -51,7 +51,11 @@ public class AdvertisementManager implements SongEventListener {
     public void pushAdvertisement() {
         if (advertQueue.getQueue().size() == 0) return;
 
-        Radio.instance.getOrchestrator().getAwaitingSpecialSongs().add(advertQueue.getNextAndMoveToEnd());
+        List<Song> awaitingSongs = Radio.instance.getOrchestrator().getAwaitingSpecialSongs();
+
+        if (awaitingSongs.stream().noneMatch(s -> s.getType() == SongType.ADVERTISEMENT)) { //only queue one ad at a time
+            awaitingSongs.add(advertQueue.getNextAndMoveToEnd());
+        }
     }
 
     @Override
