@@ -1,7 +1,7 @@
 package me.voidinvoid.coins;
 
-import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.SongOrchestrator;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;

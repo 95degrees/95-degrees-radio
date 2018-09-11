@@ -14,6 +14,7 @@ public class RadioConfig {
     public boolean useCoinGain;
     public boolean debug;
     public boolean useStatus;
+    @Deprecated
     public boolean liveFileUpdates;
 
     public Channels channels;

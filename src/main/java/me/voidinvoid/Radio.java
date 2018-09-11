@@ -77,7 +77,7 @@ public class Radio implements EventListener {
         }
     }
 
-    public void startRadio() {
+    private void startRadio() {
 
         commandManager = new CommandManager();
         jda.addEventListener(commandManager);
@@ -87,9 +87,11 @@ public class Radio implements EventListener {
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
-        if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
+        if (RadioConfig.config.useStatus)
+            orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
 
-        if (RadioConfig.config.useCoinGain) jda.addEventListener(coinCreditorManager = new CoinCreditorManager(orchestrator));
+        if (RadioConfig.config.useCoinGain)
+            jda.addEventListener(coinCreditorManager = new CoinCreditorManager(orchestrator));
         jda.addEventListener(suggestionManager = new SongSuggestionManager());
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);

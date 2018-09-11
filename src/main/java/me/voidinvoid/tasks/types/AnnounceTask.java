@@ -21,7 +21,9 @@ public class AnnounceTask extends RadioTaskExecutor {
 
         MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(message).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
-        if (announceToDj) Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
-        if (announceToText) Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
+        if (announceToDj)
+            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
+        if (announceToText)
+            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
     }
 }

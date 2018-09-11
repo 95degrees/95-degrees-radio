@@ -2,8 +2,8 @@ package me.voidinvoid.tasks.types;
 
 import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
-import me.voidinvoid.songs.SongQueue;
 import me.voidinvoid.songs.Song;
+import me.voidinvoid.songs.SongQueue;
 import me.voidinvoid.suggestions.SuggestionQueueMode;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
@@ -15,7 +15,7 @@ public class PlaySongTask extends RadioTaskExecutor {
 
     private boolean jingle;
 
-    public PlaySongTask(boolean jingle) {
+    PlaySongTask(boolean jingle) {
         this.jingle = jingle;
     }
 

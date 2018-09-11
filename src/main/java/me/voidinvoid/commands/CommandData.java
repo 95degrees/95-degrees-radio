@@ -28,7 +28,7 @@ public class CommandData {
         String rawString = rawMessage.getContentRaw();
         int argsIndex = rawString.indexOf(" ");
 
-        this.args = argsIndex == -1 ? new String[] {} : getArgsString().split(" ");
+        this.args = argsIndex == -1 ? new String[]{} : getArgsString().split(" ");
     }
 
     public User getUser() {
@@ -68,7 +68,7 @@ public class CommandData {
                 .setTitle("Command Error")
                 .setColor(Color.RED)
                 .setDescription(message)
-                .appendDescription(command.getUsageMessage() == null ? "" : "\n\n`Usage: " + Command.COMMAND_PREFIX + usedAlias + " " + command.getUsageMessage() + "`") //todo maybe adapt to specific alias used
+                .appendDescription(command.getUsageMessage() == null ? "" : "\n\n`Usage: " + Command.COMMAND_PREFIX + usedAlias + " " + command.getUsageMessage() + "`")
                 .setFooter(rawMessage.getContentDisplay(), user.getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
     }

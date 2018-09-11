@@ -53,7 +53,8 @@ public class KaraokeManager implements SongEventListener {
     }
 
     private boolean initialiseKaraoke() {
-        if (textChannel == null) textChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
+        if (textChannel == null)
+            textChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
         if (textChannel == null) return false;
 
         List<Message> lyricsMsgs = textChannel.getHistory().retrievePast(10).complete(); //clear out old messages if for whatever reason there's some there
@@ -76,6 +77,11 @@ public class KaraokeManager implements SongEventListener {
             SongLyrics lyrics = LyricsFetcher.findLyricsFor(videoId[0]);
 
             if (lyrics != null) {
+                radioChannel.sendMessage(new EmbedBuilder()
+                        .setDescription("Lyrics are available for this song in <#" + textChannel.getId() + ">")
+                        .setColor(Colors.ACCENT_KARAOKE_LYRICS)
+                        .build()).queue();
+
                 activeMessage = textChannel.sendMessage(new EmbedBuilder()
                         .setTitle("📜 Live song lyrics for **" + FormattingUtils.escapeMarkup(song.getTrack().getInfo().title) + "**")
                         .setColor(Colors.ACCENT_KARAOKE_LYRICS)
@@ -90,7 +96,7 @@ public class KaraokeManager implements SongEventListener {
         textChannel.sendMessage(new EmbedBuilder().setDescription("⚠ Couldn't find song lyrics for " + song.getTrack().getInfo().title).build()).queue();
     }
 
-    public void runLyricTracker(final YoutubeAudioTrack track, final SongLyrics lyrics, Message message) {
+    private void runLyricTracker(final YoutubeAudioTrack track, final SongLyrics lyrics, Message message) {
 
         taskTimer = executor.scheduleAtFixedRate(new Runnable() {
 

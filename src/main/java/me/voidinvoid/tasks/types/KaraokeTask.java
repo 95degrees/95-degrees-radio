@@ -4,17 +4,12 @@ import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-
-import java.awt.*;
-import java.time.OffsetDateTime;
 
 public class KaraokeTask extends RadioTaskExecutor {
 
     private boolean start;
 
-    public KaraokeTask(boolean start) {
+    KaraokeTask(boolean start) {
         this.start = start;
     }
 

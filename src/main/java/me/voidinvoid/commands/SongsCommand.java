@@ -5,7 +5,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class SongsCommand extends Command {
 
-    public SongsCommand() {
+    SongsCommand() {
         super("songs", "Lists all songs and their IDs", "[page#]", ChannelScope.DJ_CHAT);
     }
 
@@ -32,5 +32,5 @@ public class SongsCommand extends Command {
         }
 
         data.getTextChannel().sendMessage("```" + map + "```").queue();
-     }
+    }
 }

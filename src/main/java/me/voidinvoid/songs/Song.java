@@ -26,13 +26,19 @@ public abstract class Song {
 
     public abstract AlbumArtType getAlbumArtType();
 
-    public File getAlbumArtFile() { return null; }
+    public File getAlbumArtFile() {
+        return null;
+    }
 
-    public String getAlbumArtURL() { return null; }
+    public String getAlbumArtURL() {
+        return null;
+    }
 
     public abstract boolean isPersistent();
 
-    public SongType getType() { return songType; }
+    public SongType getType() {
+        return songType;
+    }
 
     public SongQueue getQueue() {
         return queue;

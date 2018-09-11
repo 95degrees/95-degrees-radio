@@ -24,7 +24,7 @@ public class FileSong extends Song {
     private File file;
     private File albumArtFile;
 
-    public FileSong(SongType type, File file) {
+    FileSong(SongType type, File file) {
         super(type);
 
         this.file = file;
@@ -46,7 +46,8 @@ public class FileSong extends Song {
 
                 ImageIO.write(artImg, mime, albumArtFile);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     @Override

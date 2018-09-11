@@ -7,8 +7,13 @@ public class LyricLine {
     private String text;
     private double entryTime, length;
 
-    public LyricLine(String text, double entryTime, double length) {
-        this.text = FormattingUtils.escapeMarkup(text.replace("&apos;", "'").replace("&quot;", "\"")); //todo temp
+    LyricLine(String text, double entryTime, double length) {
+        this.text = FormattingUtils.escapeMarkup(text
+                .replace("&apos;", "'")
+                .replace("&amp;", "&")
+                .replace("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replace("&quot;", "\""));
         this.entryTime = entryTime;
         this.length = length;
     }

@@ -7,7 +7,7 @@ import me.voidinvoid.utils.FormattingUtils;
 
 public class SeekCommand extends Command {
 
-    public SeekCommand() {
+    SeekCommand() {
         super("seek", "Seeks the current song to a specified position (in seconds)", "<seconds>", ChannelScope.DJ_CHAT);
     }
 
@@ -42,5 +42,5 @@ public class SeekCommand extends Command {
 
         track.setPosition(time);
         data.success("Seeked track to " + FormattingUtils.getFormattedMsTime(time));
-     }
+    }
 }

@@ -40,9 +40,6 @@ public class RadioMessageListener implements SongEventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        //TODO REIMPLEMENT
-        //embed.addField("\u200b", "Song lyrics are available for this song in <#" + lyricsChannel.getId() + ">", false);
-
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
     }
 
@@ -50,6 +47,7 @@ public class RadioMessageListener implements SongEventListener {
     public void onNetworkSongQueueError(NetworkSong song, AudioTrack track, User user, NetworkSongError error) {
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Song Queue")
+                .setDescription(error.getErrorMessage())
                 .addField("Title", track.getInfo().title, true)
                 .addField("URL", track.getInfo().uri, true)
                 .setColor(Colors.ACCENT_ERROR)

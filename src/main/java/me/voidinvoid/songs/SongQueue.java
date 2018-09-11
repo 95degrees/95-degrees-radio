@@ -8,7 +8,7 @@ import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
-import java.nio.file.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -22,18 +22,16 @@ public class SongQueue extends AudioEventAdapter {
     private File directory;
     private SongType queueType;
     private boolean shuffleSongs;
-    
+
     private String queueCache;
 
     public SongQueue(Path directoryLocation, SongType queueType, boolean shuffleSongs) {
         directory = directoryLocation.toFile();
         this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
-
-        //if (RadioConfig.config.liveFileUpdates) listenForChanges(); todo maybe reimplement
     }
 
-    public CompletableFuture<List<Song>> loadSongsAsync() {
+    CompletableFuture<List<Song>> loadSongsAsync() {
         CompletableFuture<List<Song>> files = CompletableFuture.supplyAsync(this::initSongs); //find all files async
         files.whenComplete((l, e) -> {
 
@@ -80,7 +78,7 @@ public class SongQueue extends AudioEventAdapter {
 
         Song song = queue.get(0);
         queue.remove(0);
-        
+
         queueCache = null;
 
         return song;
@@ -89,7 +87,7 @@ public class SongQueue extends AudioEventAdapter {
     public Song getNextAndMoveToEnd() {
         Song song = getNextAndRemove();
         if (song.isPersistent()) queue.add(song);
-        
+
         queueCache = null;
 
         return song;
@@ -107,7 +105,7 @@ public class SongQueue extends AudioEventAdapter {
 
     public int addNetworkSong(NetworkSong song) {
         queueCache = null;
-        
+
         song.setQueue(this);
 
         int pos = 0; //push the song to the bottom of all network songs but above regular songs
@@ -177,7 +175,8 @@ public class SongQueue extends AudioEventAdapter {
                         output.append(tag.getArtist()).append(" - ").append(tag.getTitle());
                         addedDesc = true;
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
 
                 if (!addedDesc) output.append(s.getLocation());
             }

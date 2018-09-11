@@ -1,15 +1,8 @@
 package me.voidinvoid.utils;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.songs.AlbumArtType;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongType;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.requests.restaction.MessageAction;
-
-import java.io.File;
 
 public final class FormattingUtils {
 

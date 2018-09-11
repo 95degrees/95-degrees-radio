@@ -22,7 +22,6 @@ import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.NetworkSongError;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.*;
-import me.voidinvoid.suggestions.SongSearchResult;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.User;
@@ -30,9 +29,7 @@ import net.dv8tion.jda.core.entities.User;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class SongOrchestrator extends AudioEventAdapter {
 

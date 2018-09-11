@@ -45,7 +45,8 @@ public class CommandManager implements EventListener {
             String id = e.getChannel().getId();
             String msg = e.getMessage().getContentRaw();
 
-            if (!id.equals(RadioConfig.config.channels.djChat) && !id.equals(RadioConfig.config.channels.radioChat)) return;
+            if (!id.equals(RadioConfig.config.channels.djChat) && !id.equals(RadioConfig.config.channels.radioChat))
+                return;
             if (!msg.startsWith(Command.COMMAND_PREFIX) || msg.length() == Command.COMMAND_PREFIX.length()) return;
 
             String fullCmd = msg.contains(" ") ? msg.substring(0, msg.indexOf(" ")) : msg;
