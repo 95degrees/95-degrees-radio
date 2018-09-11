@@ -42,6 +42,6 @@ public class QueueSongCommand extends Command {
         Song song = map.get(songId);
 
         Radio.instance.getOrchestrator().getActivePlaylist().getSongs().moveSongToFront(song);
-        data.success("Queued `" + song.getIdentifier().replace("`", "") + "`");
+        data.success("Queued `" + song.getLocation().replace("`", "") + "`");
     }
 }

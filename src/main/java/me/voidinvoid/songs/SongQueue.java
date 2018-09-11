@@ -214,5 +214,7 @@ public class SongQueue extends AudioEventAdapter {
 
         queue.remove(song);
         queue.add(getNetworkSongs().size(), song);
+
+        queueCache = null;
     }
 }
