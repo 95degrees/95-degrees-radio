@@ -1,14 +1,12 @@
 package me.voidinvoid.commands;
 
-import me.voidinvoid.DiscordRadio;
-import me.voidinvoid.songs.SongPlaylist;
-
-import java.util.stream.Collectors;
+import me.voidinvoid.Radio;
+import me.voidinvoid.utils.ChannelScope;
 
 public class SongsCommand extends Command {
 
     public SongsCommand() {
-        super("songs", "Lists all songs and their IDs", "[page#]", CommandScope.DJ_CHAT);
+        super("songs", "Lists all songs and their IDs", "[page#]", ChannelScope.DJ_CHAT);
     }
 
     @Override
@@ -27,7 +25,7 @@ public class SongsCommand extends Command {
             }
         }
 
-        String map = DiscordRadio.instance.getOrchestrator().getActivePlaylist().getSongs().getFormattedMap(page);
+        String map = Radio.instance.getOrchestrator().getActivePlaylist().getSongs().getFormattedMap(page);
         if (map == null) {
             data.error("Invalid page number");
             return;

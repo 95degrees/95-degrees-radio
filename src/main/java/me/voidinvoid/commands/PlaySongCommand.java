@@ -1,21 +1,22 @@
 package me.voidinvoid.commands;
 
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
+import me.voidinvoid.utils.ChannelScope;
 
 import java.util.List;
 
 public class PlaySongCommand extends Command {
 
     public PlaySongCommand() {
-        super("play-song", "Plays a song in the current playlist", "<song#>", CommandScope.DJ_CHAT);
+        super("play-song", "Plays a song in the current playlist", "<song#>", ChannelScope.DJ_CHAT);
     }
 
     @Override
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
-        SongPlaylist active = DiscordRadio.instance.getOrchestrator().getActivePlaylist();
+        SongPlaylist active = Radio.instance.getOrchestrator().getActivePlaylist();
 
         if (args.length < 1) {
             data.error("Song number required. Use `!songs` to list songs");
@@ -38,6 +39,6 @@ public class PlaySongCommand extends Command {
             return;
         }
 
-        DiscordRadio.instance.getOrchestrator().playSong(map.get(song));
+        Radio.instance.getOrchestrator().playSong(map.get(song));
     }
 }

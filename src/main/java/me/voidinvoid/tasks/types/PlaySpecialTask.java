@@ -1,5 +1,6 @@
 package me.voidinvoid.tasks.types;
 
+import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.tasks.ParameterList;
@@ -24,7 +25,7 @@ public class PlaySpecialTask extends RadioTaskExecutor {
         }
 
         if (listeningTo != null) {
-            orch.getNowPlayingSongOverrides().put(foundSongs.get(0), listeningTo);
+            Radio.instance.getStatusManager().addSongOverride(foundSongs.get(0), listeningTo);
         }
 
         if (force) {

@@ -1,6 +1,8 @@
 package me.voidinvoid.tasks.types;
 
+import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -19,7 +21,7 @@ public class AnnounceTask extends RadioTaskExecutor {
 
         MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(message).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
-        if (announceToDj) orch.djChannel_temp.sendMessage(embed).queue();
-        //todo if (announceToText) orch.getRadioChannel().sendMessage(embed).queue();
+        if (announceToDj) Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
+        if (announceToText) Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
     }
 }

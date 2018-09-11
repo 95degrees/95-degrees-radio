@@ -5,6 +5,7 @@ import me.voidinvoid.tasks.RadioTaskExecutor;
 
 import static me.voidinvoid.tasks.Parameter.*;
 
+@SuppressWarnings("unused")
 public enum TaskType {
 
     PLAY_SONG(new PlaySongTask(false), string("song_name"), bool("remote", false), bool("play_instantly", false)),

@@ -3,7 +3,7 @@ package me.voidinvoid.karaoke;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.karaoke.lyrics.LyricLine;
@@ -48,12 +48,12 @@ public class KaraokeManager implements SongEventListener {
 
         executor = Executors.newScheduledThreadPool(1);
 
-        radioChannel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-        djChannel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat);
+        radioChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+        djChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat);
     }
 
     private boolean initialiseKaraoke() {
-        if (textChannel == null) textChannel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
+        if (textChannel == null) textChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
         if (textChannel == null) return false;
 
         List<Message> lyricsMsgs = textChannel.getHistory().retrievePast(10).complete(); //clear out old messages if for whatever reason there's some there

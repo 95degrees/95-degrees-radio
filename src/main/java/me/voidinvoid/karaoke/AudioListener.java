@@ -2,14 +2,10 @@ package me.voidinvoid.karaoke;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import de.sciss.jump3r.lowlevel.LameEncoder;
-import me.voidinvoid.DiscordRadio;
 import me.voidinvoid.config.RadioConfig;
-import me.voidinvoid.SongOrchestrator;
 import net.dv8tion.jda.core.audio.AudioReceiveHandler;
 import net.dv8tion.jda.core.audio.CombinedAudio;
 import net.dv8tion.jda.core.audio.UserAudio;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.requests.RequestFuture;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
@@ -47,7 +43,7 @@ public class AudioListener implements AudioReceiveHandler {
         Thread t = new Thread(() -> {
             try {
                 if (save && !empty) {
-                    //RequestFuture<Message> msg = DiscordRadio.instance.getOrchestrator().onRecordingStarted(title);
+                    //RequestFuture<Message> msg = Radio.instance.getOrchestrator().onRecordingStarted(title);
 
                     try (ByteArrayOutputStream encOutput = new ByteArrayOutputStream()) {
 
@@ -70,7 +66,7 @@ public class AudioListener implements AudioReceiveHandler {
                             encOutput.writeTo(fileOut);
                         }
 
-                        //DiscordRadio.instance.getOrchestrator().onRecordingReady(msg.get(), title, fileName);
+                        //Radio.instance.getOrchestrator().onRecordingReady(msg.get(), title, fileName);
                     }
                 }
             } catch (Exception e) {

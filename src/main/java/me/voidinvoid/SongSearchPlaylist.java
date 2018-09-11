@@ -68,7 +68,7 @@ public class SongSearchPlaylist {
 
                     m.addReaction(CANCEL_EMOJI).queue();
 
-                    DiscordRadio.instance.getOrchestrator().addSearchMessage(this, m);
+                    Radio.instance.getOrchestrator().addSearchMessage(this, m);
                 });
     }
 
@@ -82,7 +82,7 @@ public class SongSearchPlaylist {
                     AudioTrack track = playlist.get(index);
                     e.getTextChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
 
-                    DiscordRadio.instance.getOrchestrator().addLoadedNetworkTrack(e.getUser(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
+                    Radio.instance.getOrchestrator().addLoadedNetworkTrack(e.getUser(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
                     return true;
                 } catch (Exception ex) {
                     System.out.println("Error handling search reaction event");

@@ -1,7 +1,8 @@
 package me.voidinvoid.commands;
 
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.utils.ChannelScope;
 import me.voidinvoid.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
@@ -12,7 +13,7 @@ import java.time.OffsetDateTime;
 public class AnnounceCommand extends Command {
 
     AnnounceCommand() {
-        super("radio-announce", "Announces a message to radio and DJ channels", "[hex-colour] <announcement ...>", CommandScope.DJ_CHAT);
+        super("radio-announce", "Announces a message to radio and DJ channels", "[hex-colour] <announcement ...>", ChannelScope.DJ_CHAT);
     }
 
     @Override
@@ -41,7 +42,7 @@ public class AnnounceCommand extends Command {
 
         MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(announcement).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
-        DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
-        DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
+        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
+        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
     }
 }

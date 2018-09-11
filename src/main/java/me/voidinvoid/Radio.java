@@ -1,11 +1,12 @@
 package me.voidinvoid;
 
-import me.voidinvoid.coins.CoinCreditorListener;
+import me.voidinvoid.coins.CoinCreditorManager;
 import me.voidinvoid.commands.CommandManager;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
 import me.voidinvoid.events.RadioMessageListener;
 import me.voidinvoid.karaoke.KaraokeManager;
+import me.voidinvoid.status.StatusManager;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
@@ -20,9 +21,9 @@ import net.dv8tion.jda.core.managers.AudioManager;
 import javax.security.auth.login.LoginException;
 import java.io.File;
 
-public class DiscordRadio implements EventListener {
+public class Radio implements EventListener {
 
-    public static DiscordRadio instance;
+    public static Radio instance;
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -37,7 +38,7 @@ public class DiscordRadio implements EventListener {
 
         System.out.println(ConsoleColor.BLUE_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
 
-        instance = new DiscordRadio(RadioConfig.config);
+        instance = new Radio(RadioConfig.config);
     }
 
     private RadioConfig config;
@@ -48,8 +49,10 @@ public class DiscordRadio implements EventListener {
     private SongDJ dj;
     private KaraokeManager karaokeManager;
     private CommandManager commandManager;
+    private StatusManager statusManager;
+    private CoinCreditorManager coinCreditorManager;
 
-    public DiscordRadio(RadioConfig config) {
+    public Radio(RadioConfig config) {
         try {
             jda = new JDABuilder(AccountType.BOT).setToken(config.botToken).addEventListener(this).build();
 
@@ -79,11 +82,12 @@ public class DiscordRadio implements EventListener {
 
         orchestrator = new SongOrchestrator(this, config);
 
-        orchestrator.registerSongEventListener(new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
+        orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
+        if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(new StatusManager());
 
-        if (RadioConfig.config.useCoinGain) jda.addEventListener(new CoinCreditorListener(orchestrator));
+        if (RadioConfig.config.useCoinGain) jda.addEventListener(coinCreditorManager = new CoinCreditorManager(orchestrator));
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
@@ -113,6 +117,14 @@ public class DiscordRadio implements EventListener {
 
     public CommandManager getCommandManager() {
         return commandManager;
+    }
+
+    public StatusManager getStatusManager() {
+        return statusManager;
+    }
+
+    public CoinCreditorManager getCoinCreditorManager() {
+        return coinCreditorManager;
     }
 
     public void startTaskManager() {

@@ -1,5 +1,7 @@
 package me.voidinvoid.commands;
 
+import me.voidinvoid.utils.ChannelScope;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -8,7 +10,7 @@ public class HelpCommand extends Command {
     private List<Command> commands;
 
     public HelpCommand(List<Command> commands) {
-        super("radio-commands", "Lists all commands", null, CommandScope.DJ_CHAT, "rc");
+        super("radio-commands", "Lists all commands", null, ChannelScope.DJ_CHAT, "rc");
         this.commands = commands;
     }
 

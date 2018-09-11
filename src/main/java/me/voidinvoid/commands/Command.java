@@ -1,5 +1,7 @@
 package me.voidinvoid.commands;
 
+import me.voidinvoid.utils.ChannelScope;
+
 public abstract class Command {
 
     public static final String COMMAND_PREFIX = "!";
@@ -7,10 +9,10 @@ public abstract class Command {
     private final String name;
     private final String description;
     private String usageMessage;
-    private CommandScope scope;
+    private ChannelScope scope;
     private final String[] aliases;
 
-    public Command(String name, String description, String usageMessage, CommandScope scope, String... aliases) {
+    public Command(String name, String description, String usageMessage, ChannelScope scope, String... aliases) {
 
         this.name = name;
         this.description = description;
@@ -31,7 +33,7 @@ public abstract class Command {
         return usageMessage;
     }
 
-    public CommandScope getScope() {
+    public ChannelScope getScope() {
         return scope;
     }
 

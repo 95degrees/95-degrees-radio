@@ -2,11 +2,12 @@ package me.voidinvoid.commands;
 
 import me.voidinvoid.tasks.RadioTaskComposition;
 import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.ChannelScope;
 
 public class CancelTaskCommand extends Command {
 
     public CancelTaskCommand() {
-        super("cancel-task", "Cancels the next execution of a task", "<task#>", CommandScope.DJ_CHAT);
+        super("cancel-task", "Cancels the next execution of a task", "<task#>", ChannelScope.DJ_CHAT);
     }
 
     @Override

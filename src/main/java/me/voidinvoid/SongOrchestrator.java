@@ -22,13 +22,13 @@ import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.NetworkSongError;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.*;
-import me.voidinvoid.tasks.RadioTaskComposition;
-import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.ChannelScope;
 import me.voidinvoid.utils.ConsoleColor;
-import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
@@ -38,9 +38,10 @@ import java.awt.*;
 import java.io.File;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class SongOrchestrator extends AudioEventAdapter implements EventListener {
 
@@ -56,9 +57,6 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     private AudioPlayerSendHandler audioSendHandler;
 
     @Deprecated
-    private TextChannel radioChannel;
-
-    @Deprecated
     public TextChannel djChannel_temp; //todo temp
 
     private JDA jda;
@@ -66,17 +64,15 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     private boolean suggestionsEnabled = true;
     private SongQueue specialQueue;
 
-    private DiscordRadio radio;
+    private Radio radio;
 
     private List<Song> awaitingSpecialSongs = new ArrayList<>();
-
-    private Map<Song, String> nowPlayingSongOverrides = new HashMap<>();
 
     private Map<Long, SongSearchPlaylist> searchPlaylists = new HashMap<>();
 
     private List<SongEventListener> songEventListeners = new ArrayList<>();
 
-    public SongOrchestrator(DiscordRadio radio, RadioConfig config) {
+    public SongOrchestrator(Radio radio, RadioConfig config) {
 
         this.radio = radio;
         jda = radio.getJda();
@@ -216,7 +212,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     }
 
     public void playSong(final Song song) {
-        System.out.println(ConsoleColor.WHITE_BACKGROUND + ConsoleColor.BLACK + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getLocation() + ConsoleColor.RESET);
+        System.out.println(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getLocation() + ConsoleColor.RESET);
         System.out.println("              Jingle after " + timeUntilJingle + " more songs");
 
         if (song.getTrack() != null) {
@@ -249,41 +245,10 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
     }
 
     @Override
-    public void onPlayerPause(AudioPlayer player) {
-        if (RadioConfig.config.useStatus) jda.getPresence().setIdle(true);
-    }
-
-    @Override
-    public void onPlayerResume(AudioPlayer player) {
-        if (RadioConfig.config.useStatus) jda.getPresence().setIdle(false);
-    }
-
-    @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         final Song song = track.getUserData(Song.class);
-        String overrideListeningTo = nowPlayingSongOverrides.remove(song);
 
         songEventListeners.forEach(l -> l.onSongStart(song, track, player, timeUntilJingle));
-
-        if (song.getType() != SongType.SONG) {
-            if (RadioConfig.config.useStatus) {
-                if (overrideListeningTo != null) {
-                    jda.getPresence().setGame(Game.listening(overrideListeningTo));
-                } else {
-                    jda.getPresence().setGame(null);
-                }
-            }
-        } else {
-            if (RadioConfig.config.useStatus) {
-                if (overrideListeningTo != null) {
-                    jda.getPresence().setGame(Game.listening(overrideListeningTo));
-                } else if (track.getInfo().isStream) {
-                    jda.getPresence().setGame(Game.streaming(track.getInfo().title, track.getInfo().uri));
-                } else {
-                    jda.getPresence().setGame(Game.listening(song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
-                }
-            }
-        }
     }
 
     @Override
@@ -386,20 +351,8 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         });
     }
 
-    private void commandSuccess(TextChannel channel, User author, String error) {
-        channel.sendMessage(new EmbedBuilder().setTitle("Command Successful").setColor(Color.GREEN).setDescription(error).setFooter(author.getName(), author.getAvatarUrl()).setTimestamp(OffsetDateTime.now()).build()).queue();
-    }
-
     private void commandError(TextChannel channel, User author, String error) {
         channel.sendMessage(new EmbedBuilder().setTitle("Command Error").setColor(Color.RED).setDescription(error).setFooter(author.getName(), author.getAvatarUrl()).setTimestamp(OffsetDateTime.now()).build()).queue();
-    }
-
-    private void commandSuccess(Message message, User author, String error) {
-        commandSuccess(message.getTextChannel(), author, error);
-    }
-
-    private void commandError(Message message, User author, String error) {
-        commandError(message.getTextChannel(), author, error);
     }
 
     @Override
@@ -407,24 +360,14 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         if (ev instanceof MessageReceivedEvent) {
             MessageReceivedEvent e = (MessageReceivedEvent) ev;
 
-            if (e.getChannel() instanceof PrivateChannel) {
-                PrivateChannel pc = (PrivateChannel) e.getChannel();
-                if ("121387133821911040".equals(pc.getUser().getId()) && e.getMessage().getContentRaw().trim().equalsIgnoreCase("!restart-radio")) {
-                    pc.sendMessage("Shutting down and restarting...").queue();
-
-                    DiscordRadio.shutdown(true);
-                    return;
-                }
-            }
-
-            if (!e.getChannel().equals(radioChannel) && !e.getChannel().equals(djChannel_temp)) return;
+            if (!ChannelScope.RADIO_AND_DJ_CHAT.check(e.getTextChannel())) return;
             if (e.getAuthor().isBot()) return;
 
             User author = e.getAuthor();
             Message message = e.getMessage();
             TextChannel channel = (TextChannel) e.getChannel();
 
-            addNetworkTrack(author, channel, message.getContentRaw(), channel.equals(djChannel_temp), false, false, false);
+            addNetworkTrack(author, channel, message.getContentRaw(), ChannelScope.DJ_CHAT.check(e.getTextChannel()), false, false, false);
         } else if (ev instanceof MessageReactionAddEvent) {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
             if (e.getUser().isBot()) return;
@@ -451,7 +394,7 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
         return specialQueue;
     }
 
-    public DiscordRadio getRadio() {
+    public Radio getRadio() {
         return radio;
     }
 
@@ -461,9 +404,5 @@ public class SongOrchestrator extends AudioEventAdapter implements EventListener
 
     public void addSearchMessage(SongSearchPlaylist playlist, Message msg) {
         searchPlaylists.put(msg.getIdLong(), playlist);
-    }
-
-    public Map<Song, String> getNowPlayingSongOverrides() {
-        return nowPlayingSongOverrides;
     }
 }

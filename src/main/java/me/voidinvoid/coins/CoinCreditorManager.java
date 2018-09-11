@@ -1,6 +1,5 @@
 package me.voidinvoid.coins;
 
-import me.voidinvoid.DiscordRadio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.utils.ConsoleColor;
@@ -22,7 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CoinCreditorListener implements EventListener {
+public class CoinCreditorManager implements EventListener {
 
     private SongOrchestrator orchestrator;
 
@@ -34,7 +33,7 @@ public class CoinCreditorListener implements EventListener {
 
     private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
 
-    public CoinCreditorListener(SongOrchestrator orchestrator) {
+    public CoinCreditorManager(SongOrchestrator orchestrator) {
 
         this.orchestrator = orchestrator;
 
@@ -68,10 +67,10 @@ public class CoinCreditorListener implements EventListener {
 
             UserCoinTracker coins = coinGains.get(user.getIdLong());
             if (coins == null) {
-                coinGains.put(user.getIdLong(), coins = new UserCoinTracker(user, false));
+                coinGains.put(user.getIdLong(), new UserCoinTracker(user, false));
+            } else {
+                coins.setFrozen(e.isDeafened()); //stop tracking coins if they're deafened, resume if undeafened
             }
-
-            coins.setFrozen(e.isDeafened()); //stop tracking coins if they're deafened, resume if undeafened
         } else if (ev instanceof GuildVoiceLeaveEvent) { //left radio vc
             GuildVoiceLeaveEvent e = (GuildVoiceLeaveEvent) ev;
 
@@ -108,6 +107,20 @@ public class CoinCreditorListener implements EventListener {
 
         if (amount < 1) return;
 
+        if (!clump) {
+            CoinsServerManager.addCredit(user, amount);
+
+            textChannel.sendMessage(new EmbedBuilder()
+                    .setTitle("Earned Coins")
+                    .setColor(new Color(110, 230, 140))
+                    .setDescription(user.getName() + " has earned <:degreecoin:431982714212843521> " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))
+                    .setTimestamp(OffsetDateTime.now())
+                    .setFooter(user.getName(), user.getAvatarUrl()).build())
+                    .queue();
+        } else {
+            pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);
+        }
+
         if (RadioConfig.config.notificationsOptOutRole == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(RadioConfig.config.notificationsOptOutRole))) {
             user.openPrivateChannel().queue(c -> c.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Coins")
@@ -116,19 +129,6 @@ public class CoinCreditorListener implements EventListener {
                     .setDescription("You have earned Đ" + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()) + "!")
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter("95 Degrees", "https://cdn.discordapp.com/icons/202600401281744896/40d9b8c72e0a288f8f3f5c99ce1691ca.webp").build()).queue());
-        }
-
-        if (!clump) {
-            textChannel.sendMessage(new EmbedBuilder()
-                    .setTitle("Earned Coins")
-                    .setColor(new Color(110, 230, 140))
-                    .setDescription(user.getName() + " has earned <:degreecoin:431982714212843521> " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))
-                    .setTimestamp(OffsetDateTime.now())
-                    .setFooter(user.getName(), user.getAvatarUrl()).build())
-                    .queue();
-            CoinsServerManager.addCredit(user, amount);
-        } else {
-            pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);
         }
     }
 }

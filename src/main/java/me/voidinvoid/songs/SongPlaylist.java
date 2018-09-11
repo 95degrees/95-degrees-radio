@@ -20,6 +20,8 @@ public class SongPlaylist {
     private boolean shuffleSongs;
     private boolean jinglesEnabled;
 
+    private String statusOverrideMessage;
+
     private CompletableFuture<List<Song>> songsFuture, jinglesFuture;
 
     public SongPlaylist(File dir) {
@@ -37,6 +39,7 @@ public class SongPlaylist {
             name = prop.getProperty("name", dir.getName());
             isDefault = Boolean.parseBoolean(prop.getProperty("default", "false"));
             jinglesEnabled = Boolean.parseBoolean(prop.getProperty("use-jingles", "true"));
+            statusOverrideMessage = prop.getProperty("discord-status", null);
 
         } catch (Exception ex) {
             name = dir.getName();
@@ -83,5 +86,9 @@ public class SongPlaylist {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String getStatusOverrideMessage() {
+        return statusOverrideMessage;
     }
 }

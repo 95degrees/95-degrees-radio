@@ -2,11 +2,12 @@ package me.voidinvoid.commands;
 
 import me.voidinvoid.tasks.RadioTaskComposition;
 import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.ChannelScope;
 
 public class RunTaskCommand extends Command {
 
     public RunTaskCommand() {
-        super("run-task", "Manually runs a task", "<task#>", CommandScope.DJ_CHAT);
+        super("run-task", "Manually runs a task", "<task#>", ChannelScope.DJ_CHAT);
     }
 
     @Override

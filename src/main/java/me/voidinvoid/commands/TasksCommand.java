@@ -2,11 +2,12 @@ package me.voidinvoid.commands;
 
 import me.voidinvoid.tasks.RadioTaskComposition;
 import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.ChannelScope;
 
 public class TasksCommand extends Command {
 
     public TasksCommand() {
-        super("tasks", "Lists all active tasks", null, CommandScope.DJ_CHAT);
+        super("tasks", "Lists all active tasks", null, ChannelScope.DJ_CHAT);
     }
 
     @Override

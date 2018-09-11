@@ -1,15 +1,14 @@
 package me.voidinvoid.commands;
 
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
-import me.voidinvoid.tasks.RadioTaskComposition;
-import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 public class KaraokeCommand extends Command {
 
     public KaraokeCommand() {
-        super("karaoke", "Starts or stops karaoke mode (shows song lyrics)", "[lyrics-channel#]", CommandScope.DJ_CHAT);
+        super("karaoke", "Starts or stops karaoke mode (shows song lyrics)", "[lyrics-channel#]", ChannelScope.DJ_CHAT);
     }
 
     @Override
@@ -22,9 +21,9 @@ public class KaraokeCommand extends Command {
             data.error("No lyrics channel ID supplied and no default lyrics channel is configured");
             return;
         } else if (args.length == 0) {
-            channel = DiscordRadio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
+            channel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
         } else {
-            channel = DiscordRadio.instance.getJda().getTextChannelById(args[0]);
+            channel = Radio.instance.getJda().getTextChannelById(args[0]);
 
             if (channel == null) {
                 data.error("Specified lyrics channel ID is invalid");
@@ -32,6 +31,6 @@ public class KaraokeCommand extends Command {
             }
         }
 
-        DiscordRadio.instance.getKaraokeManager().setKaraokeMode(!DiscordRadio.instance.getKaraokeManager().isKaraokeMode(), channel);
+        Radio.instance.getKaraokeManager().setKaraokeMode(!Radio.instance.getKaraokeManager().isKaraokeMode(), channel);
     }
 }

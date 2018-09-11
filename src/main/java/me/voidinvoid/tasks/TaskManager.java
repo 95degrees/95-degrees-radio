@@ -4,9 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
 import me.voidinvoid.utils.ConsoleColor;
-import me.voidinvoid.SongOrchestrator;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -91,7 +90,7 @@ public class TaskManager implements Job {
                 return;
             }
             System.out.println(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
-            comp.getTasks().forEach(r -> r.invoke(DiscordRadio.instance.getOrchestrator()));
+            comp.getTasks().forEach(r -> r.invoke(Radio.instance.getOrchestrator()));
         } catch (Exception e) {
             System.out.println(TASK_LOG_PREFIX + "Error invoking task");
             e.printStackTrace();

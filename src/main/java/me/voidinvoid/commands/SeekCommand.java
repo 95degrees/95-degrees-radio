@@ -1,20 +1,21 @@
 package me.voidinvoid.commands;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
+import me.voidinvoid.utils.ChannelScope;
 import me.voidinvoid.utils.FormattingUtils;
 
 public class SeekCommand extends Command {
 
     public SeekCommand() {
-        super("seek", "Seeks the current song to a specified position (in seconds)", "<seconds>", CommandScope.DJ_CHAT);
+        super("seek", "Seeks the current song to a specified position (in seconds)", "<seconds>", ChannelScope.DJ_CHAT);
     }
 
     @Override
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
 
-        AudioTrack track = DiscordRadio.instance.getOrchestrator().getPlayer().getPlayingTrack();
+        AudioTrack track = Radio.instance.getOrchestrator().getPlayer().getPlayingTrack();
 
         if (args.length < 1) {
             data.error("Time to seek to required (in secs)");

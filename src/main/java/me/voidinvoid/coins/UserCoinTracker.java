@@ -36,16 +36,17 @@ public class UserCoinTracker {
     }
 
     public void credit() {
-        long time = System.currentTimeMillis();
-        totalTime += time - resumedTime;
+        if (!frozen) {
+            long time = System.currentTimeMillis();
+            totalTime += time - resumedTime;
+        }
 
-        int coinGain = (int) Math.floor(totalTime / 1000 / 60); //calculate difference in mins
-        System.out.println(coinGain);
+        int coinGain = (int) Math.floor(totalTime / 1000 / 60); //convert total from ms to minutes
         coinGain *= COINS_PER_MINUTE;
 
         earnedCoins += coinGain;
 
-        System.out.println("COINS: Credited " + user + ", " + earnedCoins);
+        System.out.println(ConsoleColor.YELLOW_BACKGROUND_BRIGHT + " COINS " + ConsoleColor.RESET_SPACE + "Credited " + user + ", " + earnedCoins);
     }
 
     public int getTotal() {

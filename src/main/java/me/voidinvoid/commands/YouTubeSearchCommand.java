@@ -1,11 +1,12 @@
 package me.voidinvoid.commands;
 
-import me.voidinvoid.DiscordRadio;
+import me.voidinvoid.Radio;
+import me.voidinvoid.utils.ChannelScope;
 
 public class YouTubeSearchCommand extends Command {
 
     public YouTubeSearchCommand() {
-        super("play", "Searches for a specified song on YouTube", "<search ...>", CommandScope.RADIO_AND_DJ_CHAT, "search");
+        super("play", "Searches for a specified song on YouTube", "<search ...>", ChannelScope.RADIO_AND_DJ_CHAT, "search");
     }
 
     @Override
@@ -18,6 +19,6 @@ public class YouTubeSearchCommand extends Command {
         }
 
         //todo cleanup as part of orchestrator cleanup
-        DiscordRadio.instance.getOrchestrator().addNetworkTrack(data.getUser(), data.getTextChannel(), "ytsearch:" + data.getArgsString(), CommandScope.DJ_CHAT.check(data.getTextChannel()), false, false, true);
+        Radio.instance.getOrchestrator().addNetworkTrack(data.getUser(), data.getTextChannel(), "ytsearch:" + data.getArgsString(), ChannelScope.DJ_CHAT.check(data.getTextChannel()), false, false, true);
     }
 }
