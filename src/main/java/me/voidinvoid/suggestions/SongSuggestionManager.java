@@ -47,7 +47,7 @@ public class SongSuggestionManager implements EventListener {
         Radio.instance.getOrchestrator().getAudioManager().loadItem(message, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                Radio.instance.getOrchestrator().addNetworkTrack(user, track, ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
+                Radio.instance.getOrchestrator().addNetworkTrack(user, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
             }
 
             @Override

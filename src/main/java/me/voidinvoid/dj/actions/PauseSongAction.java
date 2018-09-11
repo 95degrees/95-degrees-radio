@@ -12,11 +12,6 @@ public class PauseSongAction extends DJAction {
     }
 
     @Override
-    public boolean shouldShow(AudioTrack track) {
-        return track.isSeekable();
-    }
-
-    @Override
     public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
         orch.getPlayer().setPaused(!orch.getPlayer().isPaused());
     }

@@ -31,7 +31,7 @@ public class SongQueue extends AudioEventAdapter {
         this.shuffleSongs = shuffleSongs;
     }
 
-    CompletableFuture<List<Song>> loadSongsAsync() {
+    public CompletableFuture<List<Song>> loadSongsAsync() {
         CompletableFuture<List<Song>> files = CompletableFuture.supplyAsync(this::initSongs); //find all files async
         files.whenComplete((l, e) -> {
 

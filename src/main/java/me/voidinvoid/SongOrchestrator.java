@@ -136,6 +136,7 @@ public class SongOrchestrator extends AudioEventAdapter {
     public void loadPlaylists() {
         System.out.println("Loading special queue...");
         specialQueue = new SongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), SongType.SPECIAL, false);
+        specialQueue.loadSongsAsync();
 
         System.out.println("Loading playlists...");
         File[] playlistFiles = playlistsRoot.listFiles(File::isDirectory);
