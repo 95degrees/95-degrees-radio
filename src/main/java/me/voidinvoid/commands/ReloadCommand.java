@@ -13,7 +13,8 @@ public class ReloadCommand extends Command {
     public void invoke(CommandData data) {
         Radio.instance.startTaskManager();
         Radio.instance.getOrchestrator().loadPlaylists();
+        if (Radio.instance.getAdvertisementManager() != null) Radio.instance.getAdvertisementManager().reload();
 
-        data.getTextChannel().sendMessage("Reloaded playlists and tasks").queue();
+        data.getTextChannel().sendMessage("Reloaded playlists, tasks and adverts").queue();
     }
 }

@@ -4,7 +4,8 @@ public enum SongType {
 
     SONG("Song", true),
     JINGLE("Jingle", false),
-    SPECIAL("Special", false);
+    SPECIAL("Special", false),
+    ADVERTISEMENT("Advert", false);
 
     private final String displayName;
     private final boolean useStatus;

@@ -93,7 +93,7 @@ public class KaraokeManager implements SongEventListener {
             return;
         }
 
-        textChannel.sendMessage(new EmbedBuilder().setDescription("⚠ Couldn't find song lyrics for " + track.getInfo().title).build()).queue();
+        textChannel.sendMessage(new EmbedBuilder().setDescription("⚠ Couldn't find song lyrics for " + track.getInfo().title).build()).queue(m -> m.delete().queueAfter(15, TimeUnit.SECONDS));
     }
 
     private void runLyricTracker(final YoutubeAudioTrack track, final SongLyrics lyrics, Message message) {

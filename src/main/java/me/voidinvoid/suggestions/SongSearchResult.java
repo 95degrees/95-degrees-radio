@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -52,7 +53,7 @@ public class SongSearchResult {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Song Search")
-                .setColor(new Color(240, 150, 60))
+                .setColor(Colors.ACCENT_SEARCH)
                 .setDescription((amount == 1 ? "Here is the top match" : "Here are the top " + amount + " matches") + " from your search\n" + "React with the corresponding number to add to the queue\n\n" + (songsOverLengthLimit ? "⚠ Some results were omitted for being over the length limit\n\n" : ""))
                 .setTimestamp(OffsetDateTime.now());
 

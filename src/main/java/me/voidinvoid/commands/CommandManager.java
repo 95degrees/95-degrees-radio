@@ -21,10 +21,13 @@ public class CommandManager implements EventListener {
         register(new SeekCommand());
         register(new ShuffleCommand());
         register(new SongsCommand());
+        register(new FindSongCommand());
+        register(new QueueSongCommand());
         register(new SwitchPlaylistCommand());
         register(new AnnounceCommand());
         register(new KaraokeCommand());
         register(new TasksCommand());
+        register(new AdvertisementCommand());
         register(new RunTaskCommand());
         register(new CancelTaskCommand());
         register(new ReloadCommand());

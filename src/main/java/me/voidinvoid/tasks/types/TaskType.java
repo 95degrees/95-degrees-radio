@@ -20,7 +20,8 @@ public enum TaskType {
     ANNOUNCE(new AnnounceTask(), string("message"), bool("announce_to_dj_channel", true), bool("announce_to_text_channel", true), integer("colour", -1)), //white
     CLEAR_QUEUE(new ClearQueueTask()),
     START_KARAOKE(new KaraokeTask(true)),
-    STOP_KARAOKE(new KaraokeTask(false));
+    STOP_KARAOKE(new KaraokeTask(false)),
+    RUN_ADVERT(new AdvertisementTask());
 
     private RadioTaskExecutor executor;
     private Parameter[] params;

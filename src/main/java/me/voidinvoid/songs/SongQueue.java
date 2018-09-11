@@ -119,6 +119,10 @@ public class SongQueue extends AudioEventAdapter {
         return pos;
     }
 
+    public void addNetworkSongs(List<NetworkSong> songs) {
+        songs.forEach(this::addNetworkSong);
+    }
+
     public List<Song> getQueue() {
         return queue;
     }
@@ -189,12 +193,26 @@ public class SongQueue extends AudioEventAdapter {
         return queueCache = res.substring(0, Math.min(res.length(), 1900));
     }
 
-    public void clearNetworkTracks() {
-        queue = queue.stream().filter(s -> !(s instanceof NetworkSong)).collect(Collectors.toList());
+    public List<NetworkSong> getNetworkSongs() {
+        return queue.stream().filter(NetworkSong.class::isInstance).map(NetworkSong.class::cast).collect(Collectors.toList());
+    }
+
+    public List<NetworkSong> clearNetworkSongs() {
+        List<NetworkSong> songs = getNetworkSongs();
+        queue.removeAll(songs);
+
+        return songs;
     }
 
     public void shuffleQueue() {
         Collections.shuffle(queue);
         queueCache = null;
+    }
+
+    public void moveSongToFront(Song song) {
+        if (song.getQueue() != this) return;
+
+        queue.remove(song);
+        queue.add(getNetworkSongs().size(), song);
     }
 }

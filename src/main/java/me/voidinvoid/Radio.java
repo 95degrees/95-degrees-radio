@@ -1,5 +1,6 @@
 package me.voidinvoid;
 
+import me.voidinvoid.advertisements.AdvertisementManager;
 import me.voidinvoid.coins.CoinCreditorManager;
 import me.voidinvoid.commands.CommandManager;
 import me.voidinvoid.config.RadioConfig;
@@ -53,6 +54,7 @@ public class Radio implements EventListener {
     private StatusManager statusManager;
     private CoinCreditorManager coinCreditorManager;
     private SongSuggestionManager suggestionManager;
+    private AdvertisementManager advertisementManager;
 
     public Radio(RadioConfig config) {
         try {
@@ -89,6 +91,7 @@ public class Radio implements EventListener {
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
         if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
+        if (RadioConfig.config.useAdverts) orchestrator.registerSongEventListener(advertisementManager = new AdvertisementManager(jda));
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
@@ -138,5 +141,9 @@ public class Radio implements EventListener {
 
     public SongSuggestionManager getSuggestionManager() {
         return suggestionManager;
+    }
+
+    public AdvertisementManager getAdvertisementManager() {
+        return advertisementManager;
     }
 }

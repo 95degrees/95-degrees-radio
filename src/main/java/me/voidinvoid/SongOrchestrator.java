@@ -117,7 +117,8 @@ public class SongOrchestrator extends AudioEventAdapter {
 
     public void setActivePlaylist(SongPlaylist activePlaylist) {
         if (this.activePlaylist != null) {
-            this.activePlaylist.getSongs().clearNetworkTracks();
+            List<NetworkSong> networkSongs = this.activePlaylist.getSongs().clearNetworkSongs();
+            activePlaylist.getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
         }
 
         songEventListeners.forEach(l -> {

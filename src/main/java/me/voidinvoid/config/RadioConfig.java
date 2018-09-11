@@ -14,6 +14,7 @@ public class RadioConfig {
     public boolean useCoinGain;
     public boolean debug;
     public boolean useStatus;
+    public boolean useAdverts;
     @Deprecated
     public boolean liveFileUpdates;
 
@@ -28,7 +29,7 @@ public class RadioConfig {
     }
 
     public class Locations {
-        public String coinUpdates, playlists, specialPlaylist, tasks, recordings;
+        public String coinUpdates, playlists, specialPlaylist, advertPlaylist, tasks, adverts, recordings;
     }
 
     public class Images {

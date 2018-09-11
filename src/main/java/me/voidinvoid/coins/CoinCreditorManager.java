@@ -14,6 +14,7 @@ import net.dv8tion.jda.core.events.ShutdownEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceDeafenEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 
 import java.awt.*;
@@ -74,6 +75,16 @@ public class CoinCreditorManager implements EventListener {
             if (!voiceChannel.equals(e.getChannelLeft())) return;
 
             giveCoins(e.getMember(), false);
+        } else if (ev instanceof GuildVoiceMoveEvent) {
+            GuildVoiceMoveEvent e = (GuildVoiceMoveEvent) ev;
+
+            if (e.getMember().getUser().isBot()) return;
+
+            if (voiceChannel.equals(e.getChannelJoined())) {
+                coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened()));
+            } else if (voiceChannel.equals(e.getChannelLeft())) {
+                giveCoins(e.getMember(), false);
+            }
         } else if (ev instanceof ShutdownEvent) {
             shutdown();
         }
