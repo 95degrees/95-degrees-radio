@@ -62,17 +62,16 @@ public class RadioMessageListener implements SongEventListener {
 
     @Override
     public void onNetworkSongQueued(NetworkSong song, AudioTrack track, User user, int queuePosition) {
+        if (user == null) return;
+
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")
                 .setColor(new Color(230, 230, 230))
                 .addField("Title", track.getInfo().title, true)
                 .addField("URL", track.getInfo().uri, true)
                 .addField("Queue Position", "#" + (queuePosition + 1), false)
-                .setTimestamp(OffsetDateTime.now());
-
-        if (user != null) {
-            embed.setFooter(user.getName(), user.getAvatarUrl());
-        }
+                .setTimestamp(OffsetDateTime.now())
+                .setFooter(user.getName(), user.getAvatarUrl());
 
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
     }
