@@ -68,7 +68,7 @@ public class KaraokeManager implements SongEventListener {
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!karaokeMode) return;
 
-        if (song.getType() == SongType.JINGLE) return;
+        if (song.getType() != SongType.SONG) return;
 
         if (track instanceof YoutubeAudioTrack) {
             String[] videoId = track.getIdentifier().split("\\?v=");

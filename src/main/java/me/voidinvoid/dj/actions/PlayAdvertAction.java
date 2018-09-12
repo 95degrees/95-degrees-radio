@@ -26,7 +26,7 @@ public class PlayAdvertAction extends DJAction {
 
         djChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Queued Advert")
-                .setTitle("An advert has been queued. It will play after this song")
+                .setDescription("An advert has been queued. It will play after this song")
                 .setFooter(invoker.getName(), invoker.getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .build()).queue();
