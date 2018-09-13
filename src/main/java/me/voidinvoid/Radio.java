@@ -6,6 +6,7 @@ import me.voidinvoid.commands.CommandManager;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
 import me.voidinvoid.events.RadioMessageListener;
+import me.voidinvoid.events.TotoAfricaSongListener;
 import me.voidinvoid.karaoke.KaraokeManager;
 import me.voidinvoid.status.StatusManager;
 import me.voidinvoid.suggestions.SongSuggestionManager;
@@ -90,6 +91,7 @@ public class Radio implements EventListener {
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
+        orchestrator.registerSongEventListener(new TotoAfricaSongListener(jda.getTextChannelById(config.channels.radioChat)));
         if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) orchestrator.registerSongEventListener(advertisementManager = new AdvertisementManager(jda));
 
