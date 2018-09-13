@@ -156,6 +156,8 @@ public class SongOrchestrator extends AudioEventAdapter {
 
         playlists = new ArrayList<>();
 
+        SongPlaylist prevActive = activePlaylist;
+
         for (File f : playlistFiles) {
             System.out.println(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " PLAYLIST " + ConsoleColor.RESET_SPACE + f.getName());
             SongPlaylist s = new SongPlaylist(f);
@@ -172,6 +174,10 @@ public class SongOrchestrator extends AudioEventAdapter {
         if (activePlaylist == null) {
             activePlaylist = playlists.get(0);
             System.out.println(ConsoleColor.YELLOW + "Warning: no default song directory found. Defaulted to " + activePlaylist.getName() + ConsoleColor.RESET);
+        }
+
+        if (prevActive != null) { //keep using the same playlist we had previously
+            activePlaylist = playlists.stream().filter(p -> p.getInternal().equals(prevActive.getInternal())).findFirst().orElse(activePlaylist);
         }
 
         activePlaylist.awaitLoad();
