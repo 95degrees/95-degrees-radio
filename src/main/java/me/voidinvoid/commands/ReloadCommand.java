@@ -31,8 +31,9 @@ public class ReloadCommand extends Command {
                 }
             } else {
                 data.error("Unknown parameter. Use `playlists`, `tasks`, or `adverts`");
-                return;
             }
+
+            return;
         }
 
         Radio.instance.getOrchestrator().loadPlaylists();

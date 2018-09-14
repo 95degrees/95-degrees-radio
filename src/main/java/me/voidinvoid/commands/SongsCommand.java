@@ -13,7 +13,7 @@ public class SongsCommand extends Command {
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
 
-        int page = 0;
+        int page = 1;
 
         if (args.length >= 1) {
 

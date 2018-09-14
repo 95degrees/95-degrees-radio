@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.SongOrchestrator;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.actions.*;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.NetworkSong;
@@ -95,7 +96,7 @@ public class SongDJ implements SongEventListener, EventListener {
                 }
 
                 AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(); //TODO split into another event? and remove via orchestrator
-                AlbumArtUtils.attachAlbumArt(embed, song, e.getTextChannel()).queue();
+                AlbumArtUtils.attachAlbumArt(embed, song, e.getJDA().getTextChannelById(RadioConfig.config.channels.radioChat)).queue();
                 return;
             }
 
