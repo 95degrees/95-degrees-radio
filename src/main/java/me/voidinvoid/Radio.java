@@ -88,10 +88,13 @@ public class Radio implements EventListener {
 
         orchestrator = new SongOrchestrator(this, config);
 
+        RadioMessageListener rm = new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat));
+        jda.addEventListener(rm);
+
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
-        orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
-        orchestrator.registerSongEventListener(new TotoAfricaSongListener(jda.getTextChannelById(config.channels.radioChat)));
+        orchestrator.registerSongEventListener(rm);
+        if (!RadioConfig.config.debug) orchestrator.registerSongEventListener(new TotoAfricaSongListener(jda.getTextChannelById(config.channels.radioChat)));
         if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) orchestrator.registerSongEventListener(advertisementManager = new AdvertisementManager(jda));
 
