@@ -15,6 +15,6 @@ public class PlaylistsCommand extends Command {
     @Override
     public void invoke(CommandData data) {
         SongPlaylist active = Radio.instance.getOrchestrator().getActivePlaylist();
-        data.getTextChannel().sendMessage("```[Playlists]\n\n" + Radio.instance.getOrchestrator().getPlaylists().stream().map(p -> p.getName() + (active.equals(p) ? " (ACTIVE) [" : " [") + p.getInternal() + "]").collect(Collectors.joining("\n")) + "```").queue();
+        data.getTextChannel().sendMessage("```[Playlists]\n\n" + Radio.instance.getOrchestrator().getPlaylists().stream().map(p -> p.getName() + (p.isTestingMode() ? " [TEST MODE]" : "") + (active.equals(p) ? " (ACTIVE) [" : " [") + p.getInternal() + "]").collect(Collectors.joining("\n")) + "```").queue();
     }
 }
