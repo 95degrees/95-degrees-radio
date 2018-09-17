@@ -143,7 +143,7 @@ public class SongOrchestrator extends AudioEventAdapter {
 
     public void loadPlaylists() {
         System.out.println("Loading special queue...");
-        specialQueue = new SongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), SongType.SPECIAL, false);
+        specialQueue = new SongQueue(null, Paths.get(RadioConfig.config.locations.specialPlaylist), SongType.SPECIAL, false);
         specialQueue.loadSongsAsync();
 
         System.out.println("Loading playlists...");
@@ -205,6 +205,18 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void playSong(final Song song) {
+        if (song == null) {
+            songEventListeners.forEach(l -> {
+                try {
+                    l.onNoSongsInQueue(activePlaylist);
+                } catch (Exception ex) {
+                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    ex.printStackTrace();
+                }
+            });
+            return;
+        }
+
         System.out.println(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getLocation() + ConsoleColor.RESET);
         System.out.println("              Jingle after " + timeUntilJingle + " more songs");
 

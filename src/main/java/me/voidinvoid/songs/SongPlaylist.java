@@ -19,6 +19,7 @@ public class SongPlaylist {
     private boolean isDefault;
     private boolean shuffleSongs;
     private boolean jinglesEnabled;
+    private boolean testingMode;
 
     private String statusOverrideMessage;
 
@@ -40,14 +41,15 @@ public class SongPlaylist {
             isDefault = Boolean.parseBoolean(prop.getProperty("default", "false"));
             jinglesEnabled = Boolean.parseBoolean(prop.getProperty("use-jingles", "true"));
             statusOverrideMessage = prop.getProperty("discord-status", null);
+            testingMode = Boolean.parseBoolean(prop.getProperty("testing", "false"));
 
         } catch (Exception ex) {
             name = dir.getName();
             ex.printStackTrace();
         }
 
-        songs = new SongQueue(Paths.get(dirName, "Songs"), SongType.SONG, shuffleSongs);
-        jingles = new SongQueue(Paths.get(dirName, "Jingles"), SongType.JINGLE, true);
+        songs = new SongQueue(this, Paths.get(dirName, "Songs"), SongType.SONG, shuffleSongs);
+        jingles = new SongQueue(this, Paths.get(dirName, "Jingles"), SongType.JINGLE, true);
 
         songsFuture = songs.loadSongsAsync();
         jinglesFuture = jingles.loadSongsAsync();
@@ -75,6 +77,10 @@ public class SongPlaylist {
 
     public boolean isJinglesEnabled() {
         return jinglesEnabled;
+    }
+
+    public boolean isTestingMode() {
+        return testingMode;
     }
 
     public void awaitLoad() {

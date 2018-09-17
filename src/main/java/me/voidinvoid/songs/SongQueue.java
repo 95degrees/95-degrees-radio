@@ -19,14 +19,16 @@ public class SongQueue extends AudioEventAdapter {
 
     private List<Song> queue;
     private List<Song> songMap;
+    private SongPlaylist playlist;
     private File directory;
     private SongType queueType;
     private boolean shuffleSongs;
 
     private String queueCache;
 
-    public SongQueue(Path directoryLocation, SongType queueType, boolean shuffleSongs) {
+    public SongQueue(SongPlaylist playlist, Path directoryLocation, SongType queueType, boolean shuffleSongs) {
         directory = directoryLocation.toFile();
+        this.playlist = playlist;
         this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
     }
@@ -85,6 +87,8 @@ public class SongQueue extends AudioEventAdapter {
     }
 
     public Song getNextAndMoveToEnd() {
+        if (queue.size() == 0) return null;
+
         Song song = getNextAndRemove();
         if (song.isPersistent()) queue.add(song);
 
@@ -216,5 +220,9 @@ public class SongQueue extends AudioEventAdapter {
         queue.add(getNetworkSongs().size(), song);
 
         queueCache = null;
+    }
+
+    public SongPlaylist getPlaylist() {
+        return playlist;
     }
 }

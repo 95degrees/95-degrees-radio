@@ -5,6 +5,7 @@ import me.voidinvoid.coins.CoinCreditorManager;
 import me.voidinvoid.commands.CommandManager;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
+import me.voidinvoid.events.PlaylistTesterListener;
 import me.voidinvoid.events.RadioMessageListener;
 import me.voidinvoid.events.TotoAfricaSongListener;
 import me.voidinvoid.karaoke.KaraokeManager;
@@ -88,12 +89,13 @@ public class Radio implements EventListener {
 
         orchestrator = new SongOrchestrator(this, config);
 
-        RadioMessageListener rm = new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat));
-        jda.addEventListener(rm);
+        PlaylistTesterListener tester = new PlaylistTesterListener(jda.getTextChannelById(config.channels.radioChat));
+        jda.addEventListener(tester);
 
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
-        orchestrator.registerSongEventListener(rm);
+        orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
+        orchestrator.registerSongEventListener(tester);
         if (!RadioConfig.config.debug) orchestrator.registerSongEventListener(new TotoAfricaSongListener(jda.getTextChannelById(config.channels.radioChat)));
         if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) orchestrator.registerSongEventListener(advertisementManager = new AdvertisementManager(jda));
