@@ -9,6 +9,7 @@ import me.voidinvoid.events.PlaylistTesterListener;
 import me.voidinvoid.events.RadioMessageListener;
 import me.voidinvoid.events.TotoAfricaSongListener;
 import me.voidinvoid.karaoke.KaraokeManager;
+import me.voidinvoid.server.SocketServer;
 import me.voidinvoid.status.StatusManager;
 import me.voidinvoid.suggestions.SongSuggestionManager;
 import me.voidinvoid.tasks.TaskManager;
@@ -92,6 +93,7 @@ public class Radio implements EventListener {
         PlaylistTesterListener tester = new PlaylistTesterListener(jda.getTextChannelById(config.channels.radioChat));
         jda.addEventListener(tester);
 
+        orchestrator.registerSongEventListener(new SocketServer());
         orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
         orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
         orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
