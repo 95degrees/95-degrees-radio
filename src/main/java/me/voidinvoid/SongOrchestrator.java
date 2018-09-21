@@ -256,6 +256,24 @@ public class SongOrchestrator extends AudioEventAdapter {
         });
     }
 
+    public void seekTrack(long seekTime) {
+        AudioTrack track = player.getPlayingTrack();
+
+        final long pos = Math.max(0, Math.min(seekTime, track.getDuration())); //normalise
+
+        if (!track.isSeekable()) return;
+        track.setPosition(pos);
+
+        songEventListeners.forEach(l -> {
+            try {
+                l.onSongSeek(track, pos, player);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
+    }
+
     @Override
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         final Song song = track.getUserData(Song.class);

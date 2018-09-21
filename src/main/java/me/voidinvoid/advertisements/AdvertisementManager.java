@@ -36,7 +36,7 @@ public class AdvertisementManager implements SongEventListener {
     }
 
     public void reload() {
-        advertQueue = new SongQueue(Paths.get(RadioConfig.config.locations.advertPlaylist), SongType.ADVERTISEMENT, false);
+        advertQueue = new SongQueue(null, Paths.get(RadioConfig.config.locations.advertPlaylist), SongType.ADVERTISEMENT, false);
         advertQueue.loadSongsAsync();
 
         try {

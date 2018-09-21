@@ -66,8 +66,6 @@ public class SongDJ implements SongEventListener, EventListener {
         actions.add(new PlayAdvertAction());
 
         executor = Executors.newScheduledThreadPool(1);
-
-        textChannel.getJDA().addEventListener(this);
     }
 
     @Override

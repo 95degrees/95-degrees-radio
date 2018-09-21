@@ -23,6 +23,10 @@ public interface SongEventListener {
     default void onNoSongsInQueue(SongPlaylist playlist) {
     }
 
+    default void onSongSeek(AudioTrack track, long seekTime, AudioPlayer player) {
+
+    }
+
     default void onNetworkSongQueueError(NetworkSong song, AudioTrack track, User user, NetworkSongError error) {
     }
 

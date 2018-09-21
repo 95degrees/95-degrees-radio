@@ -40,7 +40,7 @@ public class SeekCommand extends Command {
             return;
         }
 
-        track.setPosition(time);
+        Radio.instance.getOrchestrator().seekTrack(time);
         data.success("Seeked track to " + FormattingUtils.getFormattedMsTime(time));
     }
 }

@@ -3,29 +3,18 @@ package me.voidinvoid.events;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.Radio;
-import me.voidinvoid.songs.FileSong;
 import me.voidinvoid.songs.NetworkSong;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongType;
 import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
 
 import java.awt.*;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class RadioMessageListener implements SongEventListener {
 
@@ -44,7 +33,6 @@ public class RadioMessageListener implements SongEventListener {
                 .setColor(new Color(230, 230, 230))
                 .addField("Title", track.getInfo().title, true)
                 .addField(song instanceof NetworkSong ? "Uploader" : "Artist", track.getInfo().author, true)
-                .addField("\u200e", "Does this song feature music video specific elements?\n✅ - song is fine\n❌ - music video elements", false)
                 .setTimestamp(new Date().toInstant());
 
         if (song instanceof NetworkSong) {
@@ -53,7 +41,11 @@ public class RadioMessageListener implements SongEventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
+            if (Radio.instance.getSocketServer() != null) {
+                Radio.instance.getSocketServer().updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl());
+            }
+        });
     }
 
     @Override

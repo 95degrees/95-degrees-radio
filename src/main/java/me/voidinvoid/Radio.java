@@ -7,6 +7,7 @@ import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.SongDJ;
 import me.voidinvoid.events.PlaylistTesterListener;
 import me.voidinvoid.events.RadioMessageListener;
+import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.events.TotoAfricaSongListener;
 import me.voidinvoid.karaoke.KaraokeManager;
 import me.voidinvoid.server.SocketServer;
@@ -17,6 +18,7 @@ import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ReadyEvent;
@@ -58,6 +60,9 @@ public class Radio implements EventListener {
     private CoinCreditorManager coinCreditorManager;
     private SongSuggestionManager suggestionManager;
     private AdvertisementManager advertisementManager;
+    private SocketServer socketServer;
+
+    private boolean loaded;
 
     public Radio(RadioConfig config) {
         try {
@@ -77,32 +82,33 @@ public class Radio implements EventListener {
 
     @Override
     public void onEvent(Event e) {
-        if (e instanceof ReadyEvent) {
+        if (!loaded && e instanceof ReadyEvent) {
+            loaded = true;
             startRadio();
         }
     }
 
     private void startRadio() {
+        TextChannel radioChannel = jda.getTextChannelById(config.channels.radioChat);
+        TextChannel djChannel = jda.getTextChannelById(config.channels.djChat);
 
-        jda.addEventListener(commandManager = new CommandManager());
-        jda.addEventListener(suggestionManager = new SongSuggestionManager());
-        if (RadioConfig.config.useCoinGain) jda.addEventListener(coinCreditorManager = new CoinCreditorManager(jda));
+        VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
         orchestrator = new SongOrchestrator(this, config);
 
-        PlaylistTesterListener tester = new PlaylistTesterListener(jda.getTextChannelById(config.channels.radioChat));
-        jda.addEventListener(tester);
+        register(commandManager = new CommandManager());
+        register(suggestionManager = new SongSuggestionManager());
+        register(new PlaylistTesterListener(radioChannel));
+        register(socketServer = new SocketServer(radioVoiceChannel));
 
-        orchestrator.registerSongEventListener(new SocketServer());
-        orchestrator.registerSongEventListener(karaokeManager = new KaraokeManager());
-        orchestrator.registerSongEventListener(dj = new SongDJ(orchestrator, jda.getTextChannelById(config.channels.djChat)));
-        orchestrator.registerSongEventListener(new RadioMessageListener(jda.getTextChannelById(config.channels.radioChat)));
-        orchestrator.registerSongEventListener(tester);
-        if (!RadioConfig.config.debug) orchestrator.registerSongEventListener(new TotoAfricaSongListener(jda.getTextChannelById(config.channels.radioChat)));
-        if (RadioConfig.config.useStatus) orchestrator.registerSongEventListener(statusManager = new StatusManager(jda));
-        if (RadioConfig.config.useAdverts) orchestrator.registerSongEventListener(advertisementManager = new AdvertisementManager(jda));
+        register(karaokeManager = new KaraokeManager());
+        register(dj = new SongDJ(orchestrator, djChannel));
+        register(new RadioMessageListener(radioChannel));
 
-        VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
+        if (RadioConfig.config.useCoinGain) register(coinCreditorManager = new CoinCreditorManager(jda));
+        if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));
+        if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
+        if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));
 
         AudioManager mgr = radioVoiceChannel.getGuild().getAudioManager();
 
@@ -110,6 +116,11 @@ public class Radio implements EventListener {
         mgr.openAudioConnection(radioVoiceChannel);
 
         orchestrator.playNextSong();
+    }
+
+    private void register(Object listener) {
+        if (listener instanceof SongEventListener) orchestrator.registerSongEventListener(((SongEventListener) listener));
+        if (listener instanceof EventListener) jda.addEventListener(listener);
     }
 
     public JDA getJda() {
@@ -138,6 +149,10 @@ public class Radio implements EventListener {
 
     public CoinCreditorManager getCoinCreditorManager() {
         return coinCreditorManager;
+    }
+
+    public SocketServer getSocketServer() {
+        return socketServer;
     }
 
     public void startTaskManager() {

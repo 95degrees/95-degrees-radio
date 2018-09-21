@@ -45,14 +45,4 @@ public abstract class Song {
     public void setQueue(SongQueue queue) {
         this.queue = queue;
     }
-
-    private static BufferedImage scaleAlbumArt(BufferedImage img) {
-        BufferedImage output = new BufferedImage(128, 128, img.getType());
-
-        Graphics2D g2d = output.createGraphics();
-        g2d.drawImage(img, 0, 0, 128, 128, null);
-        g2d.dispose();
-
-        return output;
-    }
 }
