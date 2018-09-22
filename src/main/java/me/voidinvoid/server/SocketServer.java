@@ -4,6 +4,7 @@ import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.Song;
 import net.dv8tion.jda.core.entities.Guild;
@@ -35,7 +36,7 @@ public class SocketServer implements SongEventListener, EventListener {
 
         Configuration config = new Configuration();
         config.setHostname("0.0.0.0");
-        config.setPort(9500);
+        config.setPort(RadioConfig.config.debug ? 9300 : 9500);
 
         server = new SocketIOServer(config);
 
