@@ -13,12 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class FileSong extends Song {
-    public static final File FALLBACK_FILE;
-    public static final File FALLBACK_JINGLE_FILE;
+    static final File FALLBACK_FILE;
+    static final File JINGLE_FILE;
+    static final File ADVERT_FILE;
 
     static {
         FALLBACK_FILE = new File(RadioConfig.config.images.fallbackAlbumArt);
-        FALLBACK_JINGLE_FILE = new File(RadioConfig.config.images.jingleAlbumArt);
+        JINGLE_FILE = new File(RadioConfig.config.images.jingleAlbumArt);
+        ADVERT_FILE = new File(RadioConfig.config.images.advertAlbumArt);
     }
 
     private File file;

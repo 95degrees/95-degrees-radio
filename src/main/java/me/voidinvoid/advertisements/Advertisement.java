@@ -10,6 +10,7 @@ public class Advertisement {
     private String url;
     private String description;
     private int colour;
+    private String authorIconUrl;
     private String iconUrl;
     private String imageUrl;
     private boolean partnerAd;
@@ -40,13 +41,17 @@ public class Advertisement {
 
     public EmbedBuilder constructAdvertMessage() {
         EmbedBuilder embed = new EmbedBuilder()
-                .setAuthor(title, url, iconUrl)
+                .setAuthor(title, url, authorIconUrl)
                 .setDescription(description)
-                .setFooter(partnerAd ? "95 Degrees Partner Advertisement" : "95 Degrees", "https://cdn.discordapp.com/icons/202600401281744896/40d9b8c72e0a288f8f3f5c99ce1691ca.webp");
+                .setFooter(partnerAd ? "95 Degrees Partner Advertisement" : "95 Degrees Advertisement", "https://cdn.discordapp.com/icons/202600401281744896/40d9b8c72e0a288f8f3f5c99ce1691ca.webp");
 
         if (imageUrl != null) embed.setImage(imageUrl);
         if (iconUrl != null) embed.setThumbnail(iconUrl);
-        if (colour == 0) embed.setColor(Colors.ACCENT_ADVERTISEMENT);
+        if (colour == 0) {
+            embed.setColor(Colors.ACCENT_ADVERTISEMENT);
+        } else {
+            embed.setColor(colour);
+        }
 
         return embed;
     }

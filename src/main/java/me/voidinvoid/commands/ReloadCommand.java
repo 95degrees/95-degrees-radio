@@ -22,7 +22,7 @@ public class ReloadCommand extends Command {
                 Radio.instance.startTaskManager();
                 data.success("Reloaded tasks");
 
-            } else if (args[0].equalsIgnoreCase("adverts")) {
+            } else if (args[0].equalsIgnoreCase("adverts") || args[0].equalsIgnoreCase("ads")) {
                 if (Radio.instance.getAdvertisementManager() != null) {
                     Radio.instance.getAdvertisementManager().reload();
                     data.success("Reloaded adverts");

@@ -343,7 +343,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                 error = NetworkSongError.IS_STREAM;
             } else if (track.getDuration() > MAX_SONG_LENGTH) {
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
-            } else if (suggestedBy.getVoiceState().inVoiceChannel() && ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel())) {
+            } else if (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel())) {
                 error = NetworkSongError.NOT_IN_VOICE_CHANNEL;
             } else {
                 error = null;

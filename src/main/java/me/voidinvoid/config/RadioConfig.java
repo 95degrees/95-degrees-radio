@@ -33,7 +33,7 @@ public class RadioConfig {
     }
 
     public class Images {
-        public String fallbackAlbumArt, jingleAlbumArt, networkAlbumArt;
+        public String fallbackAlbumArt, jingleAlbumArt, advertAlbumArt, networkAlbumArt;
     }
 
     public static boolean loadFromFile(File file) {

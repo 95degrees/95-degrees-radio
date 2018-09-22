@@ -33,7 +33,7 @@ public class StatusManager implements SongEventListener {
         } else if ((statusOverride = Radio.instance.getOrchestrator().getActivePlaylist().getStatusOverrideMessage()) != null) { //normally for scheduled playlists
             jda.getPresence().setGame(Game.playing(statusOverride));
 
-        } else if (song.getType() == SongType.SONG) {
+        } else if (song.getType().usesStatus()) {
             if (track.getInfo().isStream) {
                 jda.getPresence().setGame(Game.streaming(track.getInfo().title, track.getInfo().uri));
             } else {
