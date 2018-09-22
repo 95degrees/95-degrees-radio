@@ -14,10 +14,7 @@ import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -225,7 +222,7 @@ public class SongDJ implements SongEventListener, EventListener {
     }
 
     @Override
-    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, User user, int queuePosition) {
+    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")
                 .setColor(new Color(230, 230, 230))
@@ -234,7 +231,8 @@ public class SongDJ implements SongEventListener, EventListener {
                 .addField("Queue Position", "#" + (queuePosition + 1), false)
                 .setTimestamp(OffsetDateTime.now());
 
-        if (user != null) {
+        if (member != null) {
+            User user = member.getUser();
             embed.setFooter(user.getName(), user.getAvatarUrl());
         }
 

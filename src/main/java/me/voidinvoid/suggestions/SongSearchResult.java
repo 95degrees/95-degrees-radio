@@ -92,7 +92,7 @@ public class SongSearchResult {
                     AudioTrack track = playlist.get(index);
                     e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
 
-                    Radio.instance.getOrchestrator().addNetworkTrack(e.getUser(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
+                    Radio.instance.getOrchestrator().addNetworkTrack(e.getMember(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
                     return true;
                 } catch (Exception ex) {
                     System.out.println("Error handling search reaction event");

@@ -22,8 +22,10 @@ import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.NetworkSongError;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.*;
+import me.voidinvoid.utils.ChannelScope;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.JDA;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
@@ -318,27 +320,31 @@ public class SongOrchestrator extends AudioEventAdapter {
         playNextSong();
     }
 
-    public void addNetworkTrack(User suggestedBy, AudioTrack track, boolean allowStream, boolean playInstantly, boolean pushToStart) {
+    public void addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
         System.out.println("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
 
-        if (!allowStream && track instanceof LocalAudioTrack) {
+        User user = suggestedBy.getUser();
+
+        if (!bypassErrors && track instanceof LocalAudioTrack) {
             System.out.println(suggestedBy + " tried to play a local track - disallowed");
             return;
         }
 
-        NetworkSong song = new NetworkSong(SongType.SONG, track, suggestedBy);
+        NetworkSong song = new NetworkSong(SongType.SONG, track, user);
 
-        if (!allowStream) {
+        if (!bypassErrors) {
             final NetworkSongError error;
 
             if (!suggestionsEnabled) {
                 error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
-            } else if (activePlaylist.getSongs().suggestionsBy(suggestedBy).size() >= USER_QUEUE_LIMIT) {
+            } else if (activePlaylist.getSongs().suggestionsBy(user).size() >= USER_QUEUE_LIMIT) {
                 error = NetworkSongError.QUEUE_LIMIT_REACHED;
             } else if (track.getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
             } else if (track.getDuration() > MAX_SONG_LENGTH) {
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
+            } else if (suggestedBy.getVoiceState().inVoiceChannel() && ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel())) {
+                error = NetworkSongError.NOT_IN_VOICE_CHANNEL;
             } else {
                 error = null;
             }

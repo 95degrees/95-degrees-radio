@@ -59,7 +59,7 @@ public class CommandManager implements EventListener {
                     .filter(c -> c.getName().equalsIgnoreCase(cmd) || Arrays.stream(c.getAliases()).anyMatch(a -> a.equalsIgnoreCase(cmd))) //check cmd name and aliases
                     .filter(c -> c.getScope().check(e.getChannel())) //check if allowed to run in this channel
                     .findFirst()
-                    .ifPresent(c -> c.invoke(new CommandData(e.getAuthor(), e.getChannel(), e.getMessage(), c, cmd))); //invokes cmd if matched
+                    .ifPresent(c -> c.invoke(new CommandData(e.getMember(), e.getChannel(), e.getMessage(), c, cmd))); //invokes cmd if matched
         }
     }
 }

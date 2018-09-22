@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
@@ -10,16 +11,16 @@ import java.time.OffsetDateTime;
 
 class CommandData {
 
-    private final User user;
+    private final Member member;
     private final TextChannel textChannel;
     private final Message rawMessage;
     private final String[] args;
     private final Command command;
     private final String usedAlias;
 
-    public CommandData(User user, TextChannel textChannel, Message rawMessage, Command command, String usedAlias) {
+    public CommandData(Member member, TextChannel textChannel, Message rawMessage, Command command, String usedAlias) {
 
-        this.user = user;
+        this.member = member;
         this.textChannel = textChannel;
         this.rawMessage = rawMessage;
         this.command = command;
@@ -31,8 +32,8 @@ class CommandData {
         this.args = argsIndex == -1 ? new String[]{} : getArgsString().split(" ");
     }
 
-    public User getUser() {
-        return user;
+    public Member getMember() {
+        return member;
     }
 
     public TextChannel getTextChannel() {
@@ -55,6 +56,8 @@ class CommandData {
     }
 
     public void success(String message) {
+        User user = member.getUser();
+
         textChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Command Successful")
                 .setColor(Color.GREEN)
@@ -64,6 +67,8 @@ class CommandData {
     }
 
     public void error(String message) {
+        User user = member.getUser();
+
         textChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Command Error")
                 .setColor(Color.RED)

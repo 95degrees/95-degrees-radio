@@ -9,6 +9,7 @@ import me.voidinvoid.songs.SongType;
 import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 
@@ -49,7 +50,7 @@ public class RadioMessageListener implements SongEventListener {
     }
 
     @Override
-    public void onNetworkSongQueueError(NetworkSong song, AudioTrack track, User user, NetworkSongError error) {
+    public void onNetworkSongQueueError(NetworkSong song, AudioTrack track, Member member, NetworkSongError error) {
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Song Queue")
                 .setDescription(error.getErrorMessage())
@@ -58,7 +59,8 @@ public class RadioMessageListener implements SongEventListener {
                 .setColor(Colors.ACCENT_ERROR)
                 .setTimestamp(OffsetDateTime.now());
 
-        if (user != null) {
+        if (member != null) {
+            User user = member.getUser();
             embed.setFooter(user.getName(), user.getAvatarUrl());
         }
 
@@ -66,8 +68,9 @@ public class RadioMessageListener implements SongEventListener {
     }
 
     @Override
-    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, User user, int queuePosition) {
-        if (user == null) return;
+    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+        if (member == null) return;
+        User user = member.getUser();
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")

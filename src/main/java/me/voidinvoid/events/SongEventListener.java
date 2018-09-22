@@ -7,6 +7,7 @@ import me.voidinvoid.songs.NetworkSong;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.songs.SongQueue;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
 
 public interface SongEventListener {
@@ -27,10 +28,10 @@ public interface SongEventListener {
 
     }
 
-    default void onNetworkSongQueueError(NetworkSong song, AudioTrack track, User user, NetworkSongError error) {
+    default void onNetworkSongQueueError(NetworkSong song, AudioTrack track, Member member, NetworkSongError error) {
     }
 
-    default void onNetworkSongQueued(NetworkSong song, AudioTrack track, User user, int queuePosition) {
+    default void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
 
     }
 
