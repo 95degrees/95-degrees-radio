@@ -5,8 +5,8 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class AdvertisementCommand extends Command {
 
-    public AdvertisementCommand() {
-        super("ad", "Runs an advertisement in the text channel", null, ChannelScope.DJ_CHAT);
+    AdvertisementCommand() {
+        super("ad", "Runs an advertisement in the text channel", null, ChannelScope.DJ_CHAT, "advert", "advertisement");
     }
 
     @Override

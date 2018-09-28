@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class FindSongCommand extends Command {
 
-    public FindSongCommand() {
+    FindSongCommand() {
         super("find-song", "Searches for a local song", "<song-name ...>", ChannelScope.DJ_CHAT);
     }
 

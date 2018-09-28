@@ -9,7 +9,7 @@ import java.util.List;
 
 public class QueueSongCommand extends Command {
 
-    public QueueSongCommand() {
+    QueueSongCommand() {
         super("queue-song", "Moves a song to the front of the queue (after network songs)", "<song#>", ChannelScope.DJ_CHAT);
     }
 

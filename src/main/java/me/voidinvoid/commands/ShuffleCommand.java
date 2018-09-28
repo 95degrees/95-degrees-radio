@@ -6,7 +6,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class ShuffleCommand extends Command {
 
-    public ShuffleCommand() {
+    ShuffleCommand() {
         super("shuffle", "Shuffles all songs in the current playlist", null, ChannelScope.DJ_CHAT);
     }
 

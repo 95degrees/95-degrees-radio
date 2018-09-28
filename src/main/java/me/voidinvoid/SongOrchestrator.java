@@ -320,14 +320,14 @@ public class SongOrchestrator extends AudioEventAdapter {
         playNextSong();
     }
 
-    public void addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
+    public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
         System.out.println("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
 
         User user = suggestedBy.getUser();
 
         if (!bypassErrors && track instanceof LocalAudioTrack) {
             System.out.println(suggestedBy + " tried to play a local track - disallowed");
-            return;
+            return false;
         }
 
         NetworkSong song = new NetworkSong(SongType.SONG, track, user);
@@ -358,7 +358,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                         ex.printStackTrace();
                     }
                 });
-                return;
+                return false;
             }
         }
 
@@ -390,6 +390,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         }
 
         System.out.println("Network track is in the queue: #" + (index + 1));
+        return true;
     }
 
     public boolean areSuggestionsEnabled() {

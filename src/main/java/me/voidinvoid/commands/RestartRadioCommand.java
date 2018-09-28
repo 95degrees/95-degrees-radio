@@ -5,7 +5,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class RestartRadioCommand extends Command {
 
-    public RestartRadioCommand() {
+    RestartRadioCommand() {
         super("restart-radio", "Restarts the radio", null, ChannelScope.DJ_CHAT);
     }
 

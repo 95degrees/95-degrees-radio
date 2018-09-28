@@ -6,7 +6,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class CancelTaskCommand extends Command {
 
-    public CancelTaskCommand() {
+    CancelTaskCommand() {
         super("cancel-task", "Cancels the next execution of a task", "<task#>", ChannelScope.DJ_CHAT);
     }
 

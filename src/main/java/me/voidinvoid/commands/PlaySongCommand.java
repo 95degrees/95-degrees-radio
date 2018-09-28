@@ -9,7 +9,7 @@ import java.util.List;
 
 public class PlaySongCommand extends Command {
 
-    public PlaySongCommand() {
+    PlaySongCommand() {
         super("play-song", "Plays a song in the current playlist", "<song#>", ChannelScope.DJ_CHAT);
     }
 

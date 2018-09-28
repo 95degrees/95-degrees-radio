@@ -1,5 +1,6 @@
 package me.voidinvoid.coins;
 
+import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
@@ -124,6 +125,10 @@ public class CoinCreditorManager implements EventListener {
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl()).build())
                     .queue();
+
+            if (Radio.instance.getSocketServer() != null) {
+                Radio.instance.getSocketServer().sendCoinNotification(user.getId(), amount, coins.getTotalTime());
+            }
         } else {
             pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);
         }

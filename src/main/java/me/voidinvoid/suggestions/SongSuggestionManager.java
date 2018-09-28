@@ -8,9 +8,7 @@ import me.voidinvoid.Radio;
 import me.voidinvoid.utils.ChannelScope;
 import me.voidinvoid.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
@@ -31,7 +29,7 @@ public class SongSuggestionManager implements EventListener {
             if (!ChannelScope.RADIO_AND_DJ_CHAT.check(e.getChannel())) return;
             if (e.getAuthor().isBot()) return;
 
-            addSuggestion(e.getMessage().getContentRaw(), e.getChannel(), e.getMember(), false, SuggestionQueueMode.NORMAL);
+            addSuggestion(e.getMessage().getContentRaw(), e.getMessage(), e.getChannel(), e.getMember(), false, SuggestionQueueMode.NORMAL);
         } else if (ev instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent e = (GuildMessageReactionAddEvent) ev;
 
@@ -44,11 +42,12 @@ public class SongSuggestionManager implements EventListener {
         }
     }
 
-    public void addSuggestion(String message, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
-        Radio.instance.getOrchestrator().getAudioManager().loadItem(message, new AudioLoadResultHandler() {
+    public void addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
+        Radio.instance.getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 Radio.instance.getOrchestrator().addNetworkTrack(member, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
+                if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
             }
 
             @Override
@@ -67,6 +66,8 @@ public class SongSuggestionManager implements EventListener {
                 } else {
                     search.sendMessage(channel).whenComplete((m, e) -> searches.put(m.getId(), search));
                 }
+
+                if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
             }
 
             @Override
@@ -77,6 +78,8 @@ public class SongSuggestionManager implements EventListener {
                             .setColor(Colors.ACCENT_ERROR)
                             .setDescription("No song results found for your search")
                             .build()).queue();
+
+                    if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
                 }
             }
 

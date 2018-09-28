@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class PlaylistsCommand extends Command {
 
-    public PlaylistsCommand() {
+    PlaylistsCommand() {
         super("playlists", "Lists all playlists", null, ChannelScope.DJ_CHAT);
     }
 

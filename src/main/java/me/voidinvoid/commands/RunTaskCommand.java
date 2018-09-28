@@ -6,7 +6,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class RunTaskCommand extends Command {
 
-    public RunTaskCommand() {
+    RunTaskCommand() {
         super("run-task", "Manually runs a task", "<task#>", ChannelScope.DJ_CHAT);
     }
 

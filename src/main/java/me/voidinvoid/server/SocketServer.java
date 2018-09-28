@@ -1,13 +1,16 @@
 package me.voidinvoid.server;
 
 import com.corundumstudio.socketio.Configuration;
+import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.Song;
+import me.voidinvoid.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
@@ -30,6 +33,7 @@ public class SocketServer implements SongEventListener, EventListener {
 
     public SocketServer(VoiceChannel voiceChannel) {
         this.voiceChannel = voiceChannel;
+
         guild = voiceChannel.getGuild();
 
         listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList());
@@ -37,6 +41,11 @@ public class SocketServer implements SongEventListener, EventListener {
         Configuration config = new Configuration();
         config.setHostname("0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9300 : 9500);
+
+        SocketConfig sockets = new SocketConfig();
+        sockets.setReuseAddress(true);
+
+        config.setSocketConfig(sockets);
 
         server = new SocketIOServer(config);
 
@@ -70,13 +79,28 @@ public class SocketServer implements SongEventListener, EventListener {
     public void onEvent(Event ev) {
         if (ev instanceof GuildVoiceJoinEvent || ev instanceof GuildVoiceMoveEvent || ev instanceof GuildVoiceLeaveEvent) {
 
-            if (ev instanceof GuildVoiceJoinEvent) {
-                if (!((GuildVoiceJoinEvent) ev).getChannelJoined().equals(voiceChannel)) return;
-            } else if (ev instanceof GuildVoiceMoveEvent) {
+            Member leftMember = null;
+
+            if (ev instanceof GuildVoiceJoinEvent) { // -> JOINED
+                if (!ChannelScope.RADIO_VOICE.check(((GuildVoiceJoinEvent) ev).getChannelJoined())) return;
+
+            } else if (ev instanceof GuildVoiceMoveEvent) { // <- LEFT or -> JOINED
                 GuildVoiceMoveEvent e = (GuildVoiceMoveEvent) ev;
-                if (!e.getChannelJoined().equals(voiceChannel) && !e.getChannelLeft().equals(voiceChannel)) return;
-            } else {
-                if (!((GuildVoiceLeaveEvent) ev).getChannelLeft().equals(voiceChannel)) return;
+
+                if (ChannelScope.RADIO_VOICE.check(e.getChannelLeft())) {
+                    leftMember = e.getMember();
+                } else if (!ChannelScope.RADIO_VOICE.check(e.getChannelJoined())) {
+                    return;
+                }
+
+            } else { // <- LEFT
+                GuildVoiceLeaveEvent e = (GuildVoiceLeaveEvent) ev;
+
+                if (ChannelScope.RADIO_VOICE.check(e.getChannelLeft())) {
+                    leftMember = e.getMember();
+                } else {
+                    return;
+                }
             }
 
             if (((GenericGuildVoiceEvent) ev).getMember().getUser().isBot()) return;
@@ -85,5 +109,9 @@ public class SocketServer implements SongEventListener, EventListener {
 
             server.getAllClients().forEach(c -> c.sendEvent("listeners", listeners));
         }
+    }
+
+    public void sendCoinNotification(String id, int amount, long totalTime) {
+        server.getAllClients().forEach(c -> c.sendEvent("coins", new CoinsUpdateInfo(id, amount, totalTime)));
     }
 }

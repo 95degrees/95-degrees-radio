@@ -5,7 +5,7 @@ import me.voidinvoid.utils.ChannelScope;
 
 public class StopRadioCommand extends Command {
 
-    public StopRadioCommand() {
+    StopRadioCommand() {
         super("stop-radio", "Shuts down the radio - only do this if something breaks", null, ChannelScope.DJ_CHAT);
     }
 
