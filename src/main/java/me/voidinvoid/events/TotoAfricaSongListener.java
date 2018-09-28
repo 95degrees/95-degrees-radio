@@ -21,7 +21,7 @@ public class TotoAfricaSongListener implements SongEventListener {
         if (track instanceof LocalAudioTrack && track.getInfo().title.equals("Africa") && track.getInfo().author.equals("Toto")) {
             int i = 0;
             for (Member m : textChannel.getGuild().getMembersWithRoles(mentionRole)) {
-                if (++i >= 50) {
+                if (++i >= 75) {
                     return; //try not to get rate limited
                 }
                 m.getUser().openPrivateChannel().queue(p -> p.sendMessage("Toto - Africa is now playing on the radio!").queue());
