@@ -16,17 +16,21 @@ import me.voidinvoid.suggestions.SongSuggestionManager;
 import me.voidinvoid.tasks.TaskManager;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
+import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.managers.AudioManager;
+import net.dv8tion.jda.core.requests.RequestFuture;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
+import java.time.OffsetDateTime;
 
 public class Radio implements EventListener {
 
@@ -94,7 +98,11 @@ public class Radio implements EventListener {
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
+        Message msg = djChannel.sendMessage(new EmbedBuilder().setTitle("Loading").setDescription("95 Degrees Radio is starting up...\n`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl()).setTimestamp(OffsetDateTime.now()).build()).complete();
+
         orchestrator = new SongOrchestrator(this, config);
+
+        msg.editMessage(new EmbedBuilder().setTitle("Loading").setDescription("95 Degrees Radio is starting up...\n`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl()).setTimestamp(OffsetDateTime.now()).build()).queue();
 
         register(commandManager = new CommandManager());
         register(suggestionManager = new SongSuggestionManager());

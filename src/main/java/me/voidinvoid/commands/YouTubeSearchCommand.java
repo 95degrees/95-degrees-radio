@@ -19,6 +19,6 @@ public class YouTubeSearchCommand extends Command {
             return;
         }
 
-        Radio.instance.getSuggestionManager().addSuggestion("ytsearch:" + data.getArgsString(), data.getTextChannel(), data.getMember(), true, SuggestionQueueMode.NORMAL);
+        Radio.instance.getSuggestionManager().addSuggestion("ytsearch:" + data.getArgsString(), data.getRawMessage(), data.getTextChannel(), data.getMember(), true, SuggestionQueueMode.NORMAL);
     }
 }

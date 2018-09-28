@@ -19,8 +19,8 @@ public class FileSong extends Song {
 
     static {
         FALLBACK_FILE = new File(RadioConfig.config.images.fallbackAlbumArt);
-        JINGLE_FILE = new File(RadioConfig.config.images.jingleAlbumArt);
-        ADVERT_FILE = new File(RadioConfig.config.images.advertAlbumArt);
+        JINGLE_FILE = RadioConfig.config.images.jingleAlbumArt == null ? FALLBACK_FILE : new File(RadioConfig.config.images.jingleAlbumArt);
+        ADVERT_FILE = RadioConfig.config.images.advertAlbumArt == null ? FALLBACK_FILE : new File(RadioConfig.config.images.advertAlbumArt);
     }
 
     private File file;
