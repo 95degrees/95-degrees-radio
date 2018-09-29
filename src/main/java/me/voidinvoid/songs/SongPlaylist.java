@@ -20,6 +20,7 @@ public class SongPlaylist {
     private boolean shuffleSongs;
     private boolean jinglesEnabled;
     private boolean testingMode;
+    private boolean directMessageNotifications;
 
     private String statusOverrideMessage;
 
@@ -42,6 +43,7 @@ public class SongPlaylist {
             jinglesEnabled = Boolean.parseBoolean(prop.getProperty("use-jingles", "true"));
             statusOverrideMessage = prop.getProperty("discord-status", null);
             testingMode = Boolean.parseBoolean(prop.getProperty("testing", "false"));
+            directMessageNotifications = Boolean.parseBoolean(prop.getProperty("direct-message-notifications", "true"));
 
         } catch (Exception ex) {
             name = dir.getName();
@@ -96,5 +98,9 @@ public class SongPlaylist {
 
     public String getStatusOverrideMessage() {
         return statusOverrideMessage;
+    }
+
+    public boolean isDirectMessageNotifications() {
+        return directMessageNotifications;
     }
 }

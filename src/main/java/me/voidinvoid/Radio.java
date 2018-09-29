@@ -14,6 +14,7 @@ import me.voidinvoid.server.SocketServer;
 import me.voidinvoid.status.StatusManager;
 import me.voidinvoid.suggestions.SongSuggestionManager;
 import me.voidinvoid.tasks.TaskManager;
+import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -31,6 +32,7 @@ import net.dv8tion.jda.core.requests.RequestFuture;
 import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.time.OffsetDateTime;
+import java.util.concurrent.TimeUnit;
 
 public class Radio implements EventListener {
 
@@ -98,11 +100,12 @@ public class Radio implements EventListener {
 
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
-        Message msg = djChannel.sendMessage(new EmbedBuilder().setTitle("Loading").setDescription("95 Degrees Radio is starting up...\n`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl()).setTimestamp(OffsetDateTime.now()).build()).complete();
+        EmbedBuilder loading = new EmbedBuilder().setTitle("⏱ Loading").setColor(Colors.ACCENT_LOADING).setDescription("`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
+        Message msg = djChannel == null ? null : djChannel.sendMessage(loading.setTimestamp(OffsetDateTime.now()).build()).complete();
 
         orchestrator = new SongOrchestrator(this, config);
 
-        msg.editMessage(new EmbedBuilder().setTitle("Loading").setDescription("95 Degrees Radio is starting up...\n`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl()).setTimestamp(OffsetDateTime.now()).build()).queue();
+        if (djChannel != null) msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
         register(commandManager = new CommandManager());
         register(suggestionManager = new SongSuggestionManager());
@@ -118,10 +121,16 @@ public class Radio implements EventListener {
         if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));
 
+        if (djChannel != null) msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();
+
         AudioManager mgr = radioVoiceChannel.getGuild().getAudioManager();
 
         mgr.setSendingHandler(orchestrator.getAudioSendHandler());
         mgr.openAudioConnection(radioVoiceChannel);
+
+        if (djChannel != null) msg.editMessage(loading.appendDescription("\n`Load complete!`").setTimestamp(OffsetDateTime.now()).build()).queue();
+
+        if (djChannel != null) msg.delete().queueAfter(8, TimeUnit.SECONDS);
 
         orchestrator.playNextSong();
     }

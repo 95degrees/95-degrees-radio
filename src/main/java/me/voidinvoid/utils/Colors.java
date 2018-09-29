@@ -11,4 +11,5 @@ public final class Colors {
     public static final Color ACCENT_ANNOUNCEMENT = new Color(64, 99, 255);
     public static final Color ACCENT_ADVERTISEMENT = new Color(64, 99, 255);
     public static final Color ACCENT_ERROR = Color.RED;
+    public static final Color ACCENT_LOADING = new Color(0, 179, 255);
 }
