@@ -28,7 +28,7 @@ public class RadioMessageListener implements SongEventListener {
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        if (song.getType() != SongType.SONG) return;
+        if (!song.getType().useAnnouncement()) return;
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
                 .setColor(new Color(230, 230, 230))
