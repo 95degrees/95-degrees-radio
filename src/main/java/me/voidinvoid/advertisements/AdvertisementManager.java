@@ -61,7 +61,7 @@ public class AdvertisementManager implements SongEventListener {
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (song.getType() == SongType.ADVERTISEMENT) {
-            Advertisement ad = adverts.stream().filter(a -> a.getFileName().equalsIgnoreCase(song.getLocation())).findFirst().orElse(null);
+            Advertisement ad = adverts.stream().filter(a -> a.getFileName().equalsIgnoreCase(song.getLocation())).findAny().orElse(null);
 
             if (ad == null) {
                 System.out.println(AD_LOG_PREFIX + "Error: couldn't find advert for song");

@@ -8,6 +8,7 @@ import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -65,7 +66,8 @@ public class SongQueue extends AudioEventAdapter {
         File[] files = directory.listFiles();
         if (files == null) return songs;
 
-        for (File f : files) {
+        for (File f : files) { //todo convert to fully new path api
+            if (Files.isDirectory(f.toPath())) continue;
             Song s = new FileSong(queueType, f);
             s.setQueue(this);
             songs.add(s);

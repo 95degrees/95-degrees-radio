@@ -14,7 +14,7 @@ public class SwitchPlaylistTask extends RadioTaskExecutor {
         String playlist = params.get("playlist_name", String.class);
         boolean force = params.get("switch_instantly", Boolean.class);
 
-        Optional<SongPlaylist> first = orch.getPlaylists().stream().filter(p -> p.getInternal().equalsIgnoreCase(playlist)).findFirst();
+        Optional<SongPlaylist> first = orch.getPlaylists().stream().filter(p -> p.getInternal().equalsIgnoreCase(playlist)).findAny();
 
         if (!first.isPresent()) {
             System.out.println("TASK: no playlist (internal name) found matching playlist_name: " + playlist);

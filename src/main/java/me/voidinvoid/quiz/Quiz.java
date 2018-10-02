@@ -8,15 +8,13 @@ import java.util.List;
  */
 public class Quiz {
 
+    private String internal;
     private String title;
     private List<QuizQuestion> questions;
     private QuizType type;
 
-    public Quiz(String title, List<QuizQuestion> questions, QuizType type) {
-        this.title = title;
-
-        this.questions = questions;
-        this.type = type;
+    public String getInternal() {
+        return internal;
     }
 
     public String getTitle() {

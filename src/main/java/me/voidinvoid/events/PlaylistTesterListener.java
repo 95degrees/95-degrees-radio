@@ -85,6 +85,7 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
             }
 
             song.getQueue().getQueue().remove(song);
+            song.getQueue().getSongMap().remove(song);
 
             if (song.equals(currentSong)) {
                 Radio.instance.getOrchestrator().playNextSong();

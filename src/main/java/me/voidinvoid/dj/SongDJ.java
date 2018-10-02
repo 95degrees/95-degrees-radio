@@ -101,7 +101,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
             String emote = e.getReaction().getReactionEmote().getName();
 
-            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(activeTrack)).findFirst().ifPresent(r -> r.invoke(orchestrator, activeTrack, textChannel, e.getUser()));
+            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(activeTrack)).findAny().ifPresent(r -> r.invoke(orchestrator, activeTrack, textChannel, e.getUser()));
 
             e.getReaction().removeReaction(e.getUser()).queue();
         }

@@ -179,7 +179,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         }
 
         if (prevActive != null) { //keep using the same playlist we had previously
-            activePlaylist = playlists.stream().filter(p -> p.getInternal().equals(prevActive.getInternal())).findFirst().orElse(activePlaylist);
+            activePlaylist = playlists.stream().filter(p -> p.getInternal().equals(prevActive.getInternal())).findAny().orElse(activePlaylist);
         }
 
         activePlaylist.awaitLoad();
