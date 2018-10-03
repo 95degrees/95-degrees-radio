@@ -2,6 +2,8 @@ package me.voidinvoid.coins;
 
 import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
+import me.voidinvoid.events.SongEventListener;
+import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -23,7 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CoinCreditorManager implements EventListener {
+public class CoinCreditorManager implements EventListener, SongEventListener {
 
     private VoiceChannel voiceChannel;
 
@@ -43,6 +45,11 @@ public class CoinCreditorManager implements EventListener {
             if (u.isBot()) continue;
             coinGains.put(u.getIdLong(), new UserCoinTracker(u, m.getVoiceState().isDeafened()));
         }
+    }
+
+    @Override
+    public void onPlaylistChange(SongPlaylist oldPlaylist, SongPlaylist newPlaylist) {
+
     }
 
     @Override

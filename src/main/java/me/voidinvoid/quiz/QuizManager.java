@@ -3,8 +3,6 @@ package me.voidinvoid.quiz;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 
 import java.io.IOException;

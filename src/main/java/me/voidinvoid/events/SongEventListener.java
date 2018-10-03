@@ -4,9 +4,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.songs.NetworkSong;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
-import me.voidinvoid.songs.SongPlaylist;
-import me.voidinvoid.songs.SongQueue;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
 
@@ -21,7 +20,7 @@ public interface SongEventListener {
     default void onSongLoadError(Song song, FriendlyException error) {
     }
 
-    default void onNoSongsInQueue(SongPlaylist playlist) {
+    default void onNoSongsInQueue(Playlist playlist) {
     }
 
     default void onSongSeek(AudioTrack track, long seekTime, AudioPlayer player) {
@@ -35,7 +34,7 @@ public interface SongEventListener {
 
     }
 
-    default void onPlaylistChange(SongPlaylist oldPlaylist, SongPlaylist newPlaylist) {
+    default void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
     }
 
     default void onSuggestionsToggle(boolean enabled, User source) {

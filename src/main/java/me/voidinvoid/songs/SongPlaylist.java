@@ -1,80 +1,50 @@
 package me.voidinvoid.songs;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
-public class SongPlaylist {
+public class SongPlaylist extends Playlist {
 
-    private SongQueue songs;
-    private SongQueue jingles;
-
-    private String name;
-    private String internal;
-
-    private boolean isDefault;
     private boolean shuffleSongs;
     private boolean jinglesEnabled;
     private boolean testingMode;
     private boolean directMessageNotifications;
 
-    private String statusOverrideMessage;
-
     private CompletableFuture<List<Song>> songsFuture, jinglesFuture;
 
-    public SongPlaylist(File dir) {
-        String dirName = dir.toString();
-        internal = dir.getName();
+    public SongPlaylist(Path path) {
+        super(path.getFileName().toString()); //playlist dir name
 
         Properties prop = new Properties();
 
         try {
 
-            InputStream input = new FileInputStream(Paths.get(dir.toString(), "playlist-info.txt").toString());
+            InputStream input = new FileInputStream(path.resolve("playlist-info.txt").toString());
             prop.load(input);
 
             shuffleSongs = Boolean.parseBoolean(prop.getProperty("shuffle", "true"));
-            name = prop.getProperty("name", dir.getName());
+            name = prop.getProperty("name", path.getFileName().toString());
             isDefault = Boolean.parseBoolean(prop.getProperty("default", "false"));
             jinglesEnabled = Boolean.parseBoolean(prop.getProperty("use-jingles", "true"));
             statusOverrideMessage = prop.getProperty("discord-status", null);
             testingMode = Boolean.parseBoolean(prop.getProperty("testing", "false"));
             directMessageNotifications = Boolean.parseBoolean(prop.getProperty("direct-message-notifications", "true"));
+            coinMultiplier = Double.parseDouble(prop.getProperty("coin-multiplier", "1.0"));
 
         } catch (Exception ex) {
-            name = dir.getName();
+            name = path.getFileName().toString();
             ex.printStackTrace();
         }
 
-        songs = new SongQueue(this, Paths.get(dirName, "Songs"), SongType.SONG, shuffleSongs);
-        jingles = new SongQueue(this, Paths.get(dirName, "Jingles"), SongType.JINGLE, true);
+        songs = new SongQueue(this, path.resolve("Songs"), SongType.SONG, shuffleSongs);
+        jingles = new SongQueue(this, path.resolve("Jingles"), SongType.JINGLE, true);
 
         songsFuture = songs.loadSongsAsync();
         jinglesFuture = jingles.loadSongsAsync();
-    }
-
-    public SongQueue getSongs() {
-        return songs;
-    }
-
-    public SongQueue getJingles() {
-        return jingles;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isDefault() {
-        return isDefault;
-    }
-
-    public String getInternal() {
-        return internal;
     }
 
     public boolean isJinglesEnabled() {
@@ -83,6 +53,10 @@ public class SongPlaylist {
 
     public boolean isTestingMode() {
         return testingMode;
+    }
+
+    public boolean isDirectMessageNotifications() {
+        return directMessageNotifications;
     }
 
     public void awaitLoad() {
@@ -96,11 +70,8 @@ public class SongPlaylist {
         }
     }
 
-    public String getStatusOverrideMessage() {
-        return statusOverrideMessage;
-    }
-
-    public boolean isDirectMessageNotifications() {
-        return directMessageNotifications;
+    @Override
+    public Song provideNextSong() {
+        return null;
     }
 }
