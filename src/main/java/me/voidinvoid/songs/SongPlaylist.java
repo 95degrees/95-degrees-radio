@@ -71,7 +71,7 @@ public class SongPlaylist extends Playlist {
     }
 
     @Override
-    public Song provideNextSong() {
+    public Song provideNextSong(boolean playJingle) {
         return null;
     }
 }

@@ -1,8 +1,8 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
-import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public class FindSongCommand extends Command {
     @Override
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
-        SongPlaylist active = Radio.instance.getOrchestrator().getActivePlaylist();
+        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
 
         if (args.length < 1) {
             data.error("Song search required");

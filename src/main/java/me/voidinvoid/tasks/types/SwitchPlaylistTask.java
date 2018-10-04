@@ -1,6 +1,7 @@
 package me.voidinvoid.tasks.types;
 
 import me.voidinvoid.SongOrchestrator;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.tasks.ParameterList;
 import me.voidinvoid.tasks.RadioTaskExecutor;
@@ -14,7 +15,7 @@ public class SwitchPlaylistTask extends RadioTaskExecutor {
         String playlist = params.get("playlist_name", String.class);
         boolean force = params.get("switch_instantly", Boolean.class);
 
-        Optional<SongPlaylist> first = orch.getPlaylists().stream().filter(p -> p.getInternal().equalsIgnoreCase(playlist)).findAny();
+        Optional<Playlist> first = orch.getPlaylists().stream().filter(SongPlaylist.class::isInstance).filter(p -> p.getInternal().equalsIgnoreCase(playlist)).findAny();
 
         if (!first.isPresent()) {
             System.out.println("TASK: no playlist (internal name) found matching playlist_name: " + playlist);

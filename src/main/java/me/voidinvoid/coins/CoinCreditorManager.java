@@ -3,6 +3,7 @@ package me.voidinvoid.coins;
 import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
@@ -48,7 +49,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
     }
 
     @Override
-    public void onPlaylistChange(SongPlaylist oldPlaylist, SongPlaylist newPlaylist) {
+    public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
 
     }
 

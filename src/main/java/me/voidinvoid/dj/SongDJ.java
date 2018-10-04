@@ -8,8 +8,8 @@ import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.actions.*;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.NetworkSong;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
-import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
@@ -200,7 +200,7 @@ public class SongDJ implements SongEventListener, EventListener {
     }
 
     @Override
-    public void onPlaylistChange(SongPlaylist oldPlaylist, SongPlaylist newPlaylist) {
+    public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
         textChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Playlist")
                 .setDescription("Active playlist has been changed")

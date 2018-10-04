@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
@@ -16,7 +17,12 @@ public class QueueSongCommand extends Command {
     @Override
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
-        SongPlaylist active = Radio.instance.getOrchestrator().getActivePlaylist();
+        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+
+        if (!(active instanceof SongPlaylist)) {
+            data.error("This command can only be used when a song playlist is active");
+            return;
+        }
 
         if (args.length < 1) {
             data.error("Song number required. Use `!songs` to list songs");

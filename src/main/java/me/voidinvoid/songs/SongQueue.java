@@ -20,14 +20,14 @@ public class SongQueue extends AudioEventAdapter {
 
     private List<Song> queue;
     private List<Song> songMap;
-    private SongPlaylist playlist;
+    private Playlist playlist;
     private File directory;
     private SongType queueType;
     private boolean shuffleSongs;
 
     private String queueCache;
 
-    public SongQueue(SongPlaylist playlist, Path directoryLocation, SongType queueType, boolean shuffleSongs) {
+    public SongQueue(Playlist playlist, Path directoryLocation, SongType queueType, boolean shuffleSongs) {
         directory = directoryLocation.toFile();
         this.playlist = playlist;
         this.queueType = queueType;
@@ -224,7 +224,7 @@ public class SongQueue extends AudioEventAdapter {
         queueCache = null;
     }
 
-    public SongPlaylist getPlaylist() {
+    public Playlist getPlaylist() {
         return playlist;
     }
 }

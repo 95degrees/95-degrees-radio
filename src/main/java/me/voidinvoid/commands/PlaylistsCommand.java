@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
 
@@ -14,7 +15,7 @@ public class PlaylistsCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        SongPlaylist active = Radio.instance.getOrchestrator().getActivePlaylist();
-        data.getTextChannel().sendMessage("```[Playlists]\n\n" + Radio.instance.getOrchestrator().getPlaylists().stream().map(p -> p.getName() + (p.isTestingMode() ? " [TEST MODE]" : "") + (active.equals(p) ? " (ACTIVE) [" : " [") + p.getInternal() + "]").collect(Collectors.joining("\n")) + "```").queue();
+        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+        data.getTextChannel().sendMessage("```[Playlists]\n\n" + Radio.instance.getOrchestrator().getPlaylists().stream().filter(SongPlaylist.class::isInstance).map(SongPlaylist.class::cast).map(p -> p.getName() + (p.isTestingMode() ? " [TEST MODE]" : "") + (active.equals(p) ? " (ACTIVE) [" : " [") + p.getInternal() + "]").collect(Collectors.joining("\n")) + "```").queue();
     }
 }

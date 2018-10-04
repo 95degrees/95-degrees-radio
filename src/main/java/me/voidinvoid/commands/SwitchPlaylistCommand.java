@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
 
@@ -18,14 +19,14 @@ public class SwitchPlaylistCommand extends Command {
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
 
-        List<SongPlaylist> playlists = Radio.instance.getOrchestrator().getPlaylists();
+        List<Playlist> playlists = Radio.instance.getOrchestrator().getPlaylists().stream().filter(SongPlaylist.class::isInstance).collect(Collectors.toList());
 
         if (args.length < 1) {
-            data.error("Playlist name required. Valid playlists: " + String.join(", ", playlists.stream().map(SongPlaylist::getInternal).collect(Collectors.toList())));
+            data.error("Playlist name required. Valid playlists: " + String.join(", ", playlists.stream().map(Playlist::getInternal).collect(Collectors.toList())));
             return;
         }
 
-        Optional<SongPlaylist> playlist = playlists.stream().filter(p -> p.getInternal().equalsIgnoreCase(data.getArgsString())).findAny();
+        Optional<Playlist> playlist = playlists.stream().filter(p -> p.getInternal().equalsIgnoreCase(data.getArgsString())).findAny();
 
         if (!playlist.isPresent()) {
             data.error("Couldn't find that playlist");

@@ -43,5 +43,5 @@ public abstract class Playlist {
 
     public abstract void awaitLoad();
 
-    public abstract Song provideNextSong(); //TODO
+    public abstract Song provideNextSong(boolean playJingle); //TODO
 }
