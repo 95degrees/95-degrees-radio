@@ -137,6 +137,8 @@ public class SongOrchestrator extends AudioEventAdapter {
         });
 
         this.activePlaylist = activePlaylist;
+
+        activePlaylist.onActivate();
     }
 
     public AudioPlayer getPlayer() {
@@ -189,6 +191,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         }
 
         activePlaylist.awaitLoad();
+        activePlaylist.onActivate();
     }
 
     public void playNextSong() {
@@ -196,15 +199,12 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void playNextSong(boolean skipJingle, boolean decrementJingleCounter) {
-        if (activePlaylist instanceof SongPlaylist) {
-            SongPlaylist sp = (SongPlaylist) activePlaylist;
-            if (sp.isJinglesEnabled() && decrementJingleCounter) timeUntilJingle--;
+        if (decrementJingleCounter) timeUntilJingle--;
+        boolean play = !skipJingle && timeUntilJingle < 0;
 
-            if (!skipJingle && (timeUntilJingle < 0)) {
-                timeUntilJingle = JINGLE_FREQUENCY;
-                playSong(activePlaylist.getJingles().getRandom());
-                return;
-            }
+        if (play) {
+            timeUntilJingle = JINGLE_FREQUENCY;
+            activePlaylist.provideNextSong(true);
         }
 
         if (awaitingSpecialSongs.size() > 0) {
@@ -212,7 +212,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             return;
         }
 
-        playSong(activePlaylist.getSongs().getNextAndMoveToEnd());
+        activePlaylist.provideNextSong(false);
     }
 
     public void playSong(final Song song) {

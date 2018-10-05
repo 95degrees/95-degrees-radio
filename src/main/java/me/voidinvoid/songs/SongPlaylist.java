@@ -72,6 +72,8 @@ public class SongPlaylist extends Playlist {
 
     @Override
     public Song provideNextSong(boolean playJingle) {
-        return null;
+        if (jinglesEnabled && playJingle) return jingles.getRandom();
+
+        return songs.getNextAndMoveToEnd();
     }
 }

@@ -41,7 +41,9 @@ public abstract class Playlist {
         return coinMultiplier;
     }
 
+    public void onActivate() {}
+
     public abstract void awaitLoad();
 
-    public abstract Song provideNextSong(boolean playJingle); //TODO
+    public abstract Song provideNextSong(boolean playJingle);
 }

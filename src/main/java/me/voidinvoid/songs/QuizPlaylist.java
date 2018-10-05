@@ -9,6 +9,7 @@ import me.voidinvoid.quiz.Quiz;
 public class QuizPlaylist extends Playlist {
 
     private final Quiz quiz;
+    private int currentQuestion = 0;
 
     public QuizPlaylist(Quiz quiz) {
         super(quiz.getInternal());
@@ -18,6 +19,11 @@ public class QuizPlaylist extends Playlist {
     @Override
     public void awaitLoad() {
 
+    }
+
+    @Override
+    public void onActivate() {
+        currentQuestion = 0;
     }
 
     @Override
