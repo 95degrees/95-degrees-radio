@@ -12,7 +12,7 @@ public class TasksCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        StringBuilder built = new StringBuilder("```[Tasks]\n\n");
+        StringBuilder built = new StringBuilder("[Tasks]\n\n");
         int i = 0;
         for (RadioTaskComposition c : TaskManager.getTasks()) {
             i++;
@@ -20,7 +20,6 @@ public class TasksCommand extends Command {
             built.append(i).append(": ").append(c.getName()).append(" (").append(c.getExecutionCron()).append(")\n");
         }
 
-        built.append("```");
-        data.getTextChannel().sendMessage(built.toString()).queue();
+        data.code(built.toString());
     }
 }

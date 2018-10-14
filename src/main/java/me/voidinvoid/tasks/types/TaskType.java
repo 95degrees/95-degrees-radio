@@ -21,7 +21,9 @@ public enum TaskType {
     CLEAR_QUEUE(new ClearQueueTask()),
     START_KARAOKE(new KaraokeTask(true)),
     STOP_KARAOKE(new KaraokeTask(false)),
-    RUN_ADVERT(new AdvertisementTask());
+    RUN_ADVERT(new AdvertisementTask()),
+    ENABLE_QUEUE_COMMAND(new ToggleQueueTask(true)),
+    DISABLE_QUEUE_COMMAND(new ToggleQueueTask(false));
 
     private RadioTaskExecutor executor;
     private Parameter[] params;

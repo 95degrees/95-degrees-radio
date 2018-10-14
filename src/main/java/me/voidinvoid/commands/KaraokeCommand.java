@@ -31,6 +31,8 @@ public class KaraokeCommand extends Command {
             }
         }
 
-        Radio.instance.getKaraokeManager().setKaraokeMode(!Radio.instance.getKaraokeManager().isKaraokeMode(), channel);
+        boolean enabled;
+        Radio.instance.getKaraokeManager().setKaraokeMode(enabled = !Radio.instance.getKaraokeManager().isKaraokeMode(), channel);
+        data.success("Karaoke mode " + (enabled ? "enabled" : "disabled"));
     }
 }

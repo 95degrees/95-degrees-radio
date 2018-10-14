@@ -69,7 +69,7 @@ public class RadioMessageListener implements SongEventListener {
 
     @Override
     public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
-        if (member == null) return;
+        if (member == null || !Radio.instance.getOrchestrator().areSuggestionsEnabled()) return;
         User user = member.getUser();
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")

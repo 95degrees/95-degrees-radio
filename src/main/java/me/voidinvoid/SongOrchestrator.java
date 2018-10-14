@@ -55,6 +55,7 @@ public class SongOrchestrator extends AudioEventAdapter {
     private JDA jda;
     private Path playlistsRoot;
     private boolean suggestionsEnabled = true;
+    private boolean queueCommandEnabled = true;
     private SongQueue specialQueue;
 
     private Radio radio;
@@ -457,6 +458,14 @@ public class SongOrchestrator extends AudioEventAdapter {
 
     public List<Song> getAwaitingSpecialSongs() {
         return awaitingSpecialSongs;
+    }
+
+    public boolean isQueueCommandEnabled() {
+        return queueCommandEnabled;
+    }
+
+    public void setQueueCommandEnabled(boolean queueCommandEnabled) {
+        this.queueCommandEnabled = queueCommandEnabled;
     }
 
     public boolean isPausePending() {

@@ -39,7 +39,7 @@ public class SocketServer implements SongEventListener, EventListener {
         listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList());
 
         Configuration config = new Configuration();
-        config.setHostname("0.0.0.0");
+        config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9300 : 9500);
 
         SocketConfig sockets = new SocketConfig();

@@ -12,6 +12,11 @@ public class YouTubeSearchCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
+        if (data.isConsole()) {
+            data.error("This command can't be ran by console"); //todo move into command parameter?
+            return;
+        }
+
         String[] args = data.getArgs();
 
         if (args.length < 1) {

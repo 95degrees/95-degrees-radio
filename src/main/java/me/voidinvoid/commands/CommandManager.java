@@ -8,6 +8,8 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
+import java.util.concurrent.Executors;
 
 public class CommandManager implements EventListener {
 
@@ -35,6 +37,30 @@ public class CommandManager implements EventListener {
         register(new RestartRadioCommand());
         register(new StopRadioCommand());
         register(new HelpCommand(commands));
+
+        Executors.newSingleThreadExecutor().submit(() -> {
+            Scanner s = new Scanner(System.in);
+            while (s.hasNextLine()) {
+                try {
+                    String msg = s.nextLine();
+
+                    String cmdName = msg.contains(" ") ? msg.substring(0, msg.indexOf(" ")) : msg;
+
+                    Command match = commands.stream()
+                            .filter(c -> c.getName().equalsIgnoreCase(cmdName) || Arrays.stream(c.getAliases()).anyMatch(a -> a.equalsIgnoreCase(cmdName))) //check cmd name and aliases
+                            .findFirst()
+                            .orElse(null);
+
+                    if (match == null) {
+                        System.out.println("Unknown command. Use 'radio-commands' to list commands");
+                    } else {
+                        match.invoke(new CommandData(msg, match, cmdName));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     private void register(Command cmd) {
@@ -54,7 +80,7 @@ public class CommandManager implements EventListener {
             if (!msg.startsWith(Command.COMMAND_PREFIX) || msg.length() == Command.COMMAND_PREFIX.length()) return;
 
             String fullCmd = msg.contains(" ") ? msg.substring(0, msg.indexOf(" ")) : msg;
-            String cmd = fullCmd.substring(Command.COMMAND_PREFIX.length(), fullCmd.length()); //get rid of prefix
+            String cmd = fullCmd.substring(Command.COMMAND_PREFIX.length()); //get rid of prefix
 
             commands.stream()
                     .filter(c -> c.getName().equalsIgnoreCase(cmd) || Arrays.stream(c.getAliases()).anyMatch(a -> a.equalsIgnoreCase(cmd))) //check cmd name and aliases

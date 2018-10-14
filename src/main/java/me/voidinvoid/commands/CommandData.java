@@ -1,5 +1,6 @@
 package me.voidinvoid.commands;
 
+import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
@@ -17,6 +18,8 @@ class CommandData {
     private final String[] args;
     private final Command command;
     private final String usedAlias;
+    private final boolean isConsole;
+    private final String argsString;
 
     public CommandData(Member member, TextChannel textChannel, Message rawMessage, Command command, String usedAlias) {
 
@@ -26,10 +29,31 @@ class CommandData {
         this.command = command;
         this.usedAlias = usedAlias;
 
+        isConsole = false;
+
         String rawString = rawMessage.getContentRaw();
         int argsIndex = rawString.indexOf(" ");
 
-        this.args = argsIndex == -1 ? new String[]{} : getArgsString().split(" ");
+        argsString = rawString.substring(Command.COMMAND_PREFIX.length() + usedAlias.length()).trim();
+
+        this.args = argsIndex == -1 ? new String[]{} : argsString.split(" ");
+    }
+
+    public CommandData(String rawString, Command command, String usedAlias) {
+
+        this.member = null;
+        this.textChannel = null;
+        this.rawMessage = null;
+        this.command = command;
+        this.usedAlias = usedAlias;
+
+        isConsole = true;
+
+        int argsIndex = rawString.indexOf(" ");
+
+        argsString = rawString.substring(usedAlias.length()).trim();
+
+        this.args = argsIndex == -1 ? new String[]{} : argsString.split(" ");
     }
 
     public Member getMember() {
@@ -45,17 +69,28 @@ class CommandData {
     }
 
     public String getArgsString() {
-        String raw = rawMessage.getContentRaw();
-        raw = raw.substring(Command.COMMAND_PREFIX.length() + usedAlias.length()).trim();
-
-        return raw;
+        return argsString;
     }
 
     public String[] getArgs() {
         return args;
     }
 
+    public void code(String message) {
+        if (textChannel == null) {
+            System.out.println(message);
+            return;
+        }
+
+        textChannel.sendMessage("```" + message.substring(Math.min(1994, message.length())).replaceAll("`", "") + "```").queue();
+    }
+
     public void success(String message) {
+        if (member == null) {
+            System.out.println(ConsoleColor.GREEN_BACKGROUND + " SUCCESS " + ConsoleColor.RESET_SPACE + message.replaceAll("`", ""));
+            return;
+        }
+
         User user = member.getUser();
 
         textChannel.sendMessage(new EmbedBuilder()
@@ -67,6 +102,11 @@ class CommandData {
     }
 
     public void error(String message) {
+        if (member == null) {
+            System.out.println(ConsoleColor.RED_BACKGROUND + " ERROR " + ConsoleColor.RESET_SPACE + message.replaceAll("`", ""));
+            return;
+        }
+
         User user = member.getUser();
 
         textChannel.sendMessage(new EmbedBuilder()
@@ -80,5 +120,9 @@ class CommandData {
 
     public String getUsedAlias() {
         return usedAlias;
+    }
+
+    public boolean isConsole() {
+        return isConsole;
     }
 }

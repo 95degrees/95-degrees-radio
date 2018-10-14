@@ -46,6 +46,13 @@ public class PlaySongCommand extends Command {
             return;
         }
 
-        Radio.instance.getOrchestrator().playSong(map.get(song));
+        Song toPlay = map.get(song);
+        if (toPlay == null) { //shouldn't happen
+            data.error("Song not found");
+            return;
+        }
+
+        Radio.instance.getOrchestrator().playSong(toPlay);
+        data.success("Now playing " + toPlay.getLocation());
     }
 }

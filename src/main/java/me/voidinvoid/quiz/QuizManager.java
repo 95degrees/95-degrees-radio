@@ -1,8 +1,9 @@
 package me.voidinvoid.quiz;
 
-import com.corundumstudio.socketio.*;
-import com.corundumstudio.socketio.listener.ConnectListener;
-import com.corundumstudio.socketio.listener.DataListener;
+import com.corundumstudio.socketio.Configuration;
+import com.corundumstudio.socketio.SocketConfig;
+import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -11,8 +12,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
-import me.voidinvoid.server.MemberInfo;
-import me.voidinvoid.server.RadioInfo;
 import me.voidinvoid.songs.FileSong;
 import me.voidinvoid.songs.QuizPlaylist;
 import me.voidinvoid.songs.Song;
@@ -58,7 +57,7 @@ public class QuizManager implements SongEventListener {
 
     public void runServer() {
         Configuration config = new Configuration();
-        config.setHostname("0.0.0.0");
+        config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9301 : 9501);
 
         SocketConfig sockets = new SocketConfig();

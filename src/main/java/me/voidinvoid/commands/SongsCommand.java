@@ -40,6 +40,6 @@ public class SongsCommand extends Command {
             return;
         }
 
-        data.getTextChannel().sendMessage("```" + map + "```").queue();
+        data.code(map);
     }
 }

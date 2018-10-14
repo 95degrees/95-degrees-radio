@@ -28,7 +28,6 @@ import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.managers.AudioManager;
-import net.dv8tion.jda.core.requests.RequestFuture;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
@@ -108,7 +107,8 @@ public class Radio implements EventListener {
 
         orchestrator = new SongOrchestrator(this, config);
 
-        if (djChannel != null) msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
+        if (djChannel != null)
+            msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
         register(commandManager = new CommandManager());
         register(suggestionManager = new SongSuggestionManager());
@@ -118,21 +118,23 @@ public class Radio implements EventListener {
         register(karaokeManager = new KaraokeManager());
         register(dj = new SongDJ(orchestrator, djChannel));
         register(new RadioMessageListener(radioChannel));
-        register(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes)));
+        if (false) register(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes)));
 
         if (RadioConfig.config.useCoinGain) register(coinCreditorManager = new CoinCreditorManager(jda));
         if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));
         if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));
 
-        if (djChannel != null) msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();
+        if (djChannel != null)
+            msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
         AudioManager mgr = radioVoiceChannel.getGuild().getAudioManager();
 
         mgr.setSendingHandler(orchestrator.getAudioSendHandler());
         mgr.openAudioConnection(radioVoiceChannel);
 
-        if (djChannel != null) msg.editMessage(loading.appendDescription("\n`Load complete!`").setTimestamp(OffsetDateTime.now()).build()).queue();
+        if (djChannel != null)
+            msg.editMessage(loading.appendDescription("\n`Load complete!`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
         if (djChannel != null) msg.delete().queueAfter(8, TimeUnit.SECONDS);
 
@@ -140,7 +142,8 @@ public class Radio implements EventListener {
     }
 
     private void register(Object listener) {
-        if (listener instanceof SongEventListener) orchestrator.registerSongEventListener(((SongEventListener) listener));
+        if (listener instanceof SongEventListener)
+            orchestrator.registerSongEventListener(((SongEventListener) listener));
         if (listener instanceof EventListener) jda.addEventListener(listener);
     }
 

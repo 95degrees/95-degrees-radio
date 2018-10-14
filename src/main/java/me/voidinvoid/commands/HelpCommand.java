@@ -16,6 +16,6 @@ public class HelpCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        data.getTextChannel().sendMessage("```[Radio commands]\n\n" + commands.stream().filter(c -> !c.equals(this)).map(c -> Command.COMMAND_PREFIX + c.getName() + (c.getUsageMessage() == null ? "" : " " + c.getUsageMessage()) + " - " + c.getDescription()).collect(Collectors.joining("\n")).replaceAll("`", "") + "```").queue();
+        data.code("[Radio commands]\n\n" + commands.stream().filter(c -> !c.equals(this)).map(c -> (data.isConsole() ? "" : Command.COMMAND_PREFIX) + c.getName() + (c.getUsageMessage() == null ? "" : " " + c.getUsageMessage()) + " - " + c.getDescription()).collect(Collectors.joining("\n")).replaceAll("`", ""));
     }
 }
