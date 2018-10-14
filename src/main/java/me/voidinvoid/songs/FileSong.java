@@ -26,7 +26,7 @@ public class FileSong extends Song {
     private File file;
     private File albumArtFile;
 
-    FileSong(SongType type, File file) {
+    public FileSong(SongType type, File file) { //todo use path api
         super(type);
 
         this.file = file;

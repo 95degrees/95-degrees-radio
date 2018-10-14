@@ -10,6 +10,7 @@ import me.voidinvoid.events.RadioMessageListener;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.events.TotoAfricaSongListener;
 import me.voidinvoid.karaoke.KaraokeManager;
+import me.voidinvoid.quiz.QuizManager;
 import me.voidinvoid.server.SocketServer;
 import me.voidinvoid.status.StatusManager;
 import me.voidinvoid.suggestions.SongSuggestionManager;
@@ -31,6 +32,7 @@ import net.dv8tion.jda.core.requests.RequestFuture;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
+import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
@@ -67,6 +69,7 @@ public class Radio implements EventListener {
     private SongSuggestionManager suggestionManager;
     private AdvertisementManager advertisementManager;
     private SocketServer socketServer;
+    private QuizManager quizManager;
 
     private boolean loaded;
 
@@ -115,6 +118,7 @@ public class Radio implements EventListener {
         register(karaokeManager = new KaraokeManager());
         register(dj = new SongDJ(orchestrator, djChannel));
         register(new RadioMessageListener(radioChannel));
+        register(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes)));
 
         if (RadioConfig.config.useCoinGain) register(coinCreditorManager = new CoinCreditorManager(jda));
         if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));

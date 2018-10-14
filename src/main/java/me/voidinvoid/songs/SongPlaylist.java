@@ -9,6 +9,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class SongPlaylist extends Playlist {
 
+    private SongQueue songs;
+    private SongQueue jingles;
     private boolean shuffleSongs;
     private boolean jinglesEnabled;
     private boolean testingMode;
@@ -45,6 +47,14 @@ public class SongPlaylist extends Playlist {
 
         songsFuture = songs.loadSongsAsync();
         jinglesFuture = jingles.loadSongsAsync();
+    }
+
+    public SongQueue getSongs() {
+        return songs;
+    }
+
+    public SongQueue getJingles() {
+        return jingles;
     }
 
     public boolean isJinglesEnabled() {

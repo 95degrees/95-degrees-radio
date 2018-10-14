@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
@@ -15,8 +16,14 @@ public class PlaySongCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
+        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+
+        if (!(active instanceof SongPlaylist)) {
+            data.error("This command can only be used when a song playlist is active");
+            return;
+        }
+
         String[] args = data.getArgs();
-        SongPlaylist active = Radio.instance.getOrchestrator().getActivePlaylist();
 
         if (args.length < 1) {
             data.error("Song number required. Use `!songs` to list songs");
@@ -32,7 +39,7 @@ public class PlaySongCommand extends Command {
         }
 
         song--;
-        List<Song> map = active.getSongs().getSongMap();
+        List<Song> map = ((SongPlaylist) active).getSongs().getSongMap();
 
         if (song < 0 || song >= map.size()) {
             data.error("Invalid song number. Use !songs to list songs");

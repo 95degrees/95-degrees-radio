@@ -42,6 +42,15 @@ public class StatusManager implements SongEventListener {
         }
     }
 
+    @Override
+    public void onTrackStopped() {
+        if (Radio.instance.getOrchestrator().getActivePlaylist().getStatusOverrideMessage() == null) { //normally for scheduled playlists
+            jda.getPresence().setGame(null);
+
+        }
+
+    }
+
     public void addSongOverride(Song song, String message) {
         songStatusOverrides.put(song, message);
     }

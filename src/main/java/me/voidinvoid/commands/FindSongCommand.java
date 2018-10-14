@@ -3,6 +3,7 @@ package me.voidinvoid.commands;
 import me.voidinvoid.Radio;
 import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
+import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
 
 import java.util.List;
@@ -19,14 +20,16 @@ public class FindSongCommand extends Command {
         String[] args = data.getArgs();
         Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
 
+        if (!(active instanceof SongPlaylist)) return;
+
         if (args.length < 1) {
             data.error("Song search required");
             return;
         }
 
         String search = data.getArgsString().toLowerCase();
-        List<Song> map = active.getSongs().getSongMap();
-        List<Song> queue = active.getSongs().getQueue();
+        List<Song> map = ((SongPlaylist) active).getSongs().getSongMap();
+        List<Song> queue = ((SongPlaylist) active).getSongs().getQueue();
         List<Song> matches = map.stream().filter(s -> s.getLocation().toLowerCase().contains(search)).collect(Collectors.toList());
 
         if (matches.size() == 0) {

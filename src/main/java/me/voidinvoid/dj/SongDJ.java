@@ -58,6 +58,7 @@ public class SongDJ implements SongEventListener, EventListener {
         actions.add(new SkipSongAction());
         actions.add(new PauseSongAction());
         actions.add(new RestartSongAction());
+        actions.add(new PauseAtEndAction());
         actions.add(new PlayJingleAction());
         actions.add(new ToggleSuggestionsAction());
         actions.add(new PlayAdvertAction());

@@ -2,7 +2,9 @@ package me.voidinvoid.tasks.types;
 
 import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
+import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.songs.SongQueue;
 import me.voidinvoid.suggestions.SuggestionQueueMode;
 import me.voidinvoid.tasks.ParameterList;
@@ -24,6 +26,9 @@ public class PlaySongTask extends RadioTaskExecutor {
         String song = params.get("song_name", String.class);
         boolean force = params.get("play_instantly", Boolean.class);
 
+        Playlist playlist = orch.getActivePlaylist();
+        if (!(playlist instanceof SongPlaylist)) return;
+
         if (!jingle && params.get("remote", Boolean.class)) {
             Radio.instance.getSuggestionManager().addSuggestion(song, null, null, null, false, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
             return;
@@ -41,7 +46,7 @@ public class PlaySongTask extends RadioTaskExecutor {
             return;
         }
 
-        SongQueue queue = jingle ? orch.getActivePlaylist().getJingles() : orch.getActivePlaylist().getSongs();
+        SongQueue queue = jingle ? ((SongPlaylist) playlist).getJingles() : ((SongPlaylist) playlist).getSongs();
 
         List<Song> foundSongs = queue.getQueue().stream().filter(s -> s.getLocation().equalsIgnoreCase(song)).collect(Collectors.toList());
 

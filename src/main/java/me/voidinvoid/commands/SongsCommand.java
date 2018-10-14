@@ -1,6 +1,8 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.Playlist;
+import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ChannelScope;
 
 public class SongsCommand extends Command {
@@ -11,6 +13,13 @@ public class SongsCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
+        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+
+        if (!(active instanceof SongPlaylist)) {
+            data.error("This command can only be used when a song playlist is active");
+            return;
+        }
+
         String[] args = data.getArgs();
 
         int page = 1;
@@ -25,7 +34,7 @@ public class SongsCommand extends Command {
             }
         }
 
-        String map = Radio.instance.getOrchestrator().getActivePlaylist().getSongs().getFormattedMap(page);
+        String map = ((SongPlaylist) active).getSongs().getFormattedMap(page);
         if (map == null) {
             data.error("Invalid page number");
             return;

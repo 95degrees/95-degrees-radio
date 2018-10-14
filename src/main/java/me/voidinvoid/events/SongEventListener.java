@@ -24,20 +24,20 @@ public interface SongEventListener {
     }
 
     default void onSongSeek(AudioTrack track, long seekTime, AudioPlayer player) {
-
     }
 
     default void onNetworkSongQueueError(NetworkSong song, AudioTrack track, Member member, NetworkSongError error) {
     }
 
     default void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
-
     }
 
     default void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
     }
 
     default void onSuggestionsToggle(boolean enabled, User source) {
+    }
 
+    default void onTrackStopped() {
     }
 }

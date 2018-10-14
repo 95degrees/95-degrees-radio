@@ -50,6 +50,8 @@ public class SongOrchestrator extends AudioEventAdapter {
     private AudioPlayer player;
     private AudioPlayerSendHandler audioSendHandler;
 
+    private boolean pausePending;
+
     private JDA jda;
     private Path playlistsRoot;
     private boolean suggestionsEnabled = true;
@@ -122,9 +124,13 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void setActivePlaylist(Playlist activePlaylist) {
-        if (this.activePlaylist != null) {
-            List<NetworkSong> networkSongs = this.activePlaylist.getSongs().clearNetworkSongs();
-            activePlaylist.getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
+        if (this.activePlaylist instanceof SongPlaylist) {
+            SongPlaylist sp = (SongPlaylist) this.activePlaylist;
+            List<NetworkSong> networkSongs = sp.getSongs().clearNetworkSongs();
+
+            if (activePlaylist instanceof SongPlaylist) {
+                ((SongPlaylist) activePlaylist).getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
+            }
         }
 
         songEventListeners.forEach(l -> {
@@ -158,7 +164,7 @@ public class SongOrchestrator extends AudioEventAdapter {
 
         Playlist prevActive = activePlaylist;
 
-        try (Stream<Path> playlistFolder = Files.walk(playlistsRoot)) {
+        try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
             playlists = playlistFolder
                     .filter(Files::isDirectory)
                     .map(SongPlaylist::new)
@@ -199,20 +205,36 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void playNextSong(boolean skipJingle, boolean decrementJingleCounter) {
-        if (decrementJingleCounter) timeUntilJingle--;
-        boolean play = !skipJingle && timeUntilJingle < 0;
+        if (pausePending) {
+            pausePending = false;
 
-        if (play) {
-            timeUntilJingle = JINGLE_FREQUENCY;
-            activePlaylist.provideNextSong(true);
+            player.stopTrack();
+            songEventListeners.forEach(l -> {
+                try {
+                    l.onTrackStopped();
+                } catch (Exception ex) {
+                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    ex.printStackTrace();
+                }
+            });
+            return;
         }
+
+        if (decrementJingleCounter) timeUntilJingle--;
+        boolean jingle = !skipJingle && timeUntilJingle < 0;
 
         if (awaitingSpecialSongs.size() > 0) {
             playSong(awaitingSpecialSongs.remove(0));
             return;
         }
 
-        activePlaylist.provideNextSong(false);
+        if (jingle) {
+            timeUntilJingle = JINGLE_FREQUENCY;
+            playSong(activePlaylist.provideNextSong(true));
+            return;
+        }
+
+        playSong(activePlaylist.provideNextSong(false));
     }
 
     public void playSong(final Song song) {
@@ -269,6 +291,8 @@ public class SongOrchestrator extends AudioEventAdapter {
 
     public void seekTrack(long seekTime) {
         AudioTrack track = player.getPlayingTrack();
+
+        if (track == null) return;
 
         final long pos = Math.max(0, Math.min(seekTime, track.getDuration())); //normalise
 
@@ -339,6 +363,10 @@ public class SongOrchestrator extends AudioEventAdapter {
             return false;
         }
 
+        if (!(activePlaylist instanceof SongPlaylist)) return false;
+
+        SongPlaylist sp = (SongPlaylist) activePlaylist;
+
         NetworkSong song = new NetworkSong(SongType.SONG, track, user);
 
         if (!bypassErrors) {
@@ -346,7 +374,7 @@ public class SongOrchestrator extends AudioEventAdapter {
 
             if (!suggestionsEnabled) {
                 error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
-            } else if (activePlaylist.getSongs().suggestionsBy(user).size() >= USER_QUEUE_LIMIT) {
+            } else if (sp.getSongs().suggestionsBy(user).size() >= USER_QUEUE_LIMIT) {
                 error = NetworkSongError.QUEUE_LIMIT_REACHED;
             } else if (track.getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
@@ -376,7 +404,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         if (pushToStart || playInstantly) {
             index = 0;
         } else {
-            index = activePlaylist.getSongs().addNetworkSong(song);
+            index = sp.getSongs().addNetworkSong(song);
         }
 
         songEventListeners.forEach(l -> {
@@ -389,7 +417,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         });
 
         if (pushToStart || playInstantly) {
-            activePlaylist.getSongs().getQueue().add(0, song);
+            sp.getSongs().getQueue().add(0, song);
 
             if (playInstantly) {
                 player.setPaused(false);
@@ -429,5 +457,13 @@ public class SongOrchestrator extends AudioEventAdapter {
 
     public List<Song> getAwaitingSpecialSongs() {
         return awaitingSpecialSongs;
+    }
+
+    public boolean isPausePending() {
+        return pausePending;
+    }
+
+    public void setPausePending(boolean pausePending) {
+        this.pausePending = pausePending;
     }
 }

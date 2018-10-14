@@ -38,7 +38,7 @@ public class QueueSongCommand extends Command {
         }
 
         songId--;
-        List<Song> map = active.getSongs().getSongMap();
+        List<Song> map = ((SongPlaylist) active).getSongs().getSongMap();
 
         if (songId < 0 || songId >= map.size()) {
             data.error("Invalid song number. Use !songs to list songs");
@@ -47,7 +47,7 @@ public class QueueSongCommand extends Command {
 
         Song song = map.get(songId);
 
-        Radio.instance.getOrchestrator().getActivePlaylist().getSongs().moveSongToFront(song);
+        ((SongPlaylist) active).getSongs().moveSongToFront(song);
         data.success("Queued `" + song.getLocation().replace("`", "") + "`");
     }
 }

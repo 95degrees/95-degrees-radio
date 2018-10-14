@@ -10,6 +10,7 @@ public class QuizPlaylist extends Playlist {
 
     private final Quiz quiz;
     private int currentQuestion = 0;
+    private int currentQuestionProgress = 0;
 
     public QuizPlaylist(Quiz quiz) {
         super(quiz.getInternal());
@@ -24,6 +25,7 @@ public class QuizPlaylist extends Playlist {
     @Override
     public void onActivate() {
         currentQuestion = 0;
+        currentQuestionProgress = 0;
     }
 
     @Override

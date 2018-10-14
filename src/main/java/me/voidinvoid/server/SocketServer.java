@@ -60,6 +60,10 @@ public class SocketServer implements SongEventListener, EventListener {
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
+    public SocketIOServer getServer() {
+        return server;
+    }
+
     @Override
     public void onSongSeek(AudioTrack track, long seekTime, AudioPlayer player) {
         server.getAllClients().forEach(c -> c.sendEvent("song_seek", seekTime));

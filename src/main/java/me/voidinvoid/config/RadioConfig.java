@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class RadioConfig {
 
@@ -29,7 +30,7 @@ public class RadioConfig {
     }
 
     public class Locations {
-        public String coinUpdates, playlists, specialPlaylist, advertPlaylist, tasks, adverts, recordings;
+        public String coinUpdates, playlists, specialPlaylist, advertPlaylist, quizzes, tasks, adverts, recordings;
     }
 
     public class Images {

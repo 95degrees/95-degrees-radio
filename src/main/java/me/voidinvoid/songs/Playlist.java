@@ -1,8 +1,6 @@
 package me.voidinvoid.songs;
 
 public abstract class Playlist {
-    protected SongQueue songs;
-    protected SongQueue jingles;
     protected String name;
     protected String internal;
     protected boolean isDefault;
@@ -11,14 +9,6 @@ public abstract class Playlist {
 
     public Playlist(String internal) {
         this.internal = internal;
-    }
-
-    public SongQueue getSongs() {
-        return songs;
-    }
-
-    public SongQueue getJingles() {
-        return jingles;
     }
 
     public String getName() {

@@ -22,6 +22,11 @@ public class SeekCommand extends Command {
             return;
         }
 
+        if (track == null) {
+            data.error("No track is currently playing");
+            return;
+        }
+
         if (!track.isSeekable()) {
             data.error("This track isn't seekable");
             return;
