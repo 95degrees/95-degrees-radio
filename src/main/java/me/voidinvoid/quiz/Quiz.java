@@ -1,6 +1,9 @@
 package me.voidinvoid.quiz;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -27,5 +30,16 @@ public class Quiz {
 
     public QuizType getType() {
         return type;
+    }
+
+    public static Quiz __DEBUG_QUIZ;
+
+    static {
+        __DEBUG_QUIZ = new Quiz();
+
+        __DEBUG_QUIZ.internal = "DEBUG";
+        __DEBUG_QUIZ.title = "Debug quiz";
+        __DEBUG_QUIZ.type = QuizType.BATTLE_ROYALE;
+        __DEBUG_QUIZ.questions = IntStream.range(0, 10).mapToObj(i -> new QuizQuestion("Question " + i, "corr", "ansA", "ansB")).collect(Collectors.toList());
     }
 }

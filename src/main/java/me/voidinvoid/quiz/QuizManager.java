@@ -20,10 +20,7 @@ import me.voidinvoid.songs.SongType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -33,7 +30,7 @@ public class QuizManager implements SongEventListener {
 
     private static Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
-    private List<Quiz> quizzes;
+    private Map<Quiz, QuizPlaylist> quizzes;
     private Path quizRoot;
 
     private SocketIOServer server;
@@ -45,8 +42,9 @@ public class QuizManager implements SongEventListener {
     private Song answerSong;
     private Song answerCorrectSong;
     private Song answerIncorrectSong;
+    private Song waitingSong;
 
-    private Quiz activeQuiz;
+    private QuizPlaylist activeQuiz;
 
     public QuizManager(Path quizRoot) {
 
@@ -82,13 +80,35 @@ public class QuizManager implements SongEventListener {
             c.sendEvent("quizzes", quizzes);
         });
 
+        server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
+            if (!authenticatedClients.contains(c)) return;
+
+            startQuiz(o);
+        });
+
+        server.addEventListener("make_quiz_progress", Object.class, (c, o, ack) -> {
+            if (!authenticatedClients.contains(c)) return;
+
+            if (activeQuiz != null) {
+                if (activeQuiz.progress()) {
+                    Radio.instance.getOrchestrator().playNextSong();
+                }
+            }
+        });
+
         server.startAsync();
 
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
     public void reload() {
-        quizzes = new ArrayList<>();
+        quizzes = new HashMap<>();
+
+        //todo DEBUG
+        QuizPlaylist DEBUG_playlist = new QuizPlaylist(Quiz.__DEBUG_QUIZ, this);
+        quizzes.put(Quiz.__DEBUG_QUIZ, DEBUG_playlist);
+        Radio.instance.getOrchestrator().getPlaylists().add(DEBUG_playlist);
+        ////////////
 
         try {
             Path soundsRoot = quizRoot.resolve("Sounds");
@@ -96,10 +116,14 @@ public class QuizManager implements SongEventListener {
             answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3").toFile());
             answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3").toFile());
             answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3").toFile());
+            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3").toFile());
 
             Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
                 try {
-                    quizzes.add(GSON.fromJson(new String(Files.readAllBytes(q)), Quiz.class));
+                    Quiz quiz = GSON.fromJson(new String(Files.readAllBytes(q)), Quiz.class);
+                    QuizPlaylist playlist = new QuizPlaylist(quiz, this);
+                    quizzes.put(quiz, playlist);
+                    Radio.instance.getOrchestrator().getPlaylists().add(playlist);
                 } catch (IOException e) {
                     System.out.println("Error loading quiz file " + q);
                     e.printStackTrace();
@@ -109,11 +133,11 @@ public class QuizManager implements SongEventListener {
             e.printStackTrace();
         }
 
-        Radio.instance.getOrchestrator().getPlaylists().addAll(quizzes.stream().map(QuizPlaylist::new).collect(Collectors.toList()));
+        //Radio.instance.getOrchestrator().getPlaylists().addAll(quizzes.stream().map(q -> new QuizPlaylist(q, this)).collect(Collectors.toList()));
     }
 
     public boolean startQuiz(String internal) {
-        Quiz quiz = quizzes.stream().filter(q -> q.getInternal().equalsIgnoreCase(internal)).findAny().orElse(null);
+        QuizPlaylist quiz = quizzes.entrySet().stream().filter(kv -> kv.getKey().getInternal().equalsIgnoreCase(internal)).map(Map.Entry::getValue).findAny().orElse(null);
 
         if (quiz == null) return false;
 
@@ -122,6 +146,8 @@ public class QuizManager implements SongEventListener {
         if (server != null) {
             authenticatedClients.forEach(c -> c.sendEvent("active_quiz", activeQuiz));
         }
+
+        Radio.instance.getOrchestrator().setActivePlaylist(quiz);
 
         return true;
     }
@@ -155,5 +181,9 @@ public class QuizManager implements SongEventListener {
 
     public String getServerCode() {
         return serverCode;
+    }
+
+    public Song getWaitingSong() {
+        return waitingSong;
     }
 }
