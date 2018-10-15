@@ -120,7 +120,7 @@ public class Radio implements EventListener {
         register(new RadioMessageListener(radioChannel));
         if (false) register(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes)));
 
-        if (RadioConfig.config.useCoinGain) register(coinCreditorManager = new CoinCreditorManager(jda));
+        if (RadioConfig.config.useCoinGain) register(coinCreditorManager = new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
         if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));
         if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));

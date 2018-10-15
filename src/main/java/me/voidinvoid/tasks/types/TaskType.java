@@ -8,16 +8,16 @@ import static me.voidinvoid.tasks.Parameter.*;
 @SuppressWarnings("unused")
 public enum TaskType {
 
-    PLAY_SONG(new PlaySongTask(false), string("song_name"), bool("remote", false), bool("play_instantly", false)),
+    PLAY_SONG(new PlaySongTask(false), of("song_name"), of("remote", false), of("play_instantly", false)),
     PAUSE_SONG(new PauseSongTask(true)),
     RESUME_SONG(new PauseSongTask(false)),
     ENABLE_SUGGESTIONS(new ToggleSuggestionsTask(true)),
     DISABLE_SUGGESTIONS(new ToggleSuggestionsTask(false)),
     SKIP_SONG(new SkipSongTask()),
-    SWITCH_PLAYLIST(new SwitchPlaylistTask(), string("playlist_name"), bool("switch_instantly", false)),
-    PLAY_JINGLE(new PlaySongTask(true), string("song_name", null), bool("play_instantly", true)),
-    PLAY_SPECIAL(new PlaySpecialTask(), string("song_name"), bool("play_instantly", false), string("listening_to", null)), //play a song from /Special folder
-    ANNOUNCE(new AnnounceTask(), string("message"), integer("delete_after", 0), string("announce_to_channel", null), bool("announce_to_dj_channel", true), bool("announce_to_text_channel", true), integer("colour", -1)), //white
+    SWITCH_PLAYLIST(new SwitchPlaylistTask(), of("playlist_name"), of("switch_instantly", false)),
+    PLAY_JINGLE(new PlaySongTask(true), of("song_name", null), of("play_instantly", true)),
+    PLAY_SPECIAL(new PlaySpecialTask(), of("song_name"), of("play_instantly", false), of("listening_to", null)), //play a song from /Special folder
+    ANNOUNCE(new AnnounceTask(), of("title", "Announcement"), of("message"), of("image_url", null), of("delete_after", 0), of("announce_to_channel", null), of("announce_to_dj_channel", true), of("announce_to_text_channel", true), of("colour", -1)), //white
     CLEAR_QUEUE(new ClearQueueTask()),
     START_KARAOKE(new KaraokeTask(true)),
     STOP_KARAOKE(new KaraokeTask(false)),

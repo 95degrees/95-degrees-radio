@@ -19,11 +19,13 @@ public class AnnounceTask extends RadioTaskExecutor {
         String message = params.get("message", String.class);
         boolean announceToDj = params.get("announce_to_dj_channel", Boolean.class);
         boolean announceToText = params.get("announce_to_text_channel", Boolean.class);
+        String title = params.get("title", String.class);
         String additionalChannel = params.get("announce_to_channel", String.class);
         int colour = params.get("colour", Integer.class);
         long deleteAfter = params.get("delete_after", Long.class);
+        String image = params.get("image_url", String.class);
 
-        MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(message).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
+        MessageEmbed embed = new EmbedBuilder().setTitle(title).setDescription(message).setImage(image).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
         if (announceToDj)
             Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();

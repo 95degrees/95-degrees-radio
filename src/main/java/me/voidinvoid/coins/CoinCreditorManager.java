@@ -4,7 +4,6 @@ import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.Playlist;
-import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.utils.ConsoleColor;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -36,7 +35,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
 
     private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
 
-    public CoinCreditorManager(JDA jda) {
+    public CoinCreditorManager(JDA jda, Playlist playlist) {
 
         voiceChannel = jda.getVoiceChannelById(RadioConfig.config.channels.voice);
         textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat);
@@ -44,13 +43,16 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
         for (Member m : voiceChannel.getMembers()) {
             User u = m.getUser();
             if (u.isBot()) continue;
-            coinGains.put(u.getIdLong(), new UserCoinTracker(u, m.getVoiceState().isDeafened()));
+            coinGains.put(u.getIdLong(), new UserCoinTracker(u, m.getVoiceState().isDeafened(), playlist.getCoinMultiplier()));
         }
     }
 
     @Override
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
+        if (oldPlaylist.getCoinMultiplier() != newPlaylist.getCoinMultiplier()) {
 
+            coinGains.forEach((user, coins) -> coins.setMultiplier(newPlaylist.getCoinMultiplier()));
+        }
     }
 
     @Override
@@ -61,7 +63,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
             if (e.getMember().getUser().isBot()) return;
             if (!voiceChannel.equals(e.getChannelJoined())) return;
 
-            coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened()));
+            coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened(), Radio.instance.getOrchestrator().getActivePlaylist().getCoinMultiplier()));
 
         } else if (ev instanceof GuildVoiceDeafenEvent) { //user deafened
             GuildVoiceDeafenEvent e = (GuildVoiceDeafenEvent) ev;
@@ -73,7 +75,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
 
             UserCoinTracker coins = coinGains.get(user.getIdLong());
             if (coins == null) {
-                coinGains.put(user.getIdLong(), new UserCoinTracker(user, false));
+                coinGains.put(user.getIdLong(), new UserCoinTracker(user, false, Radio.instance.getOrchestrator().getActivePlaylist().getCoinMultiplier()));
             } else {
                 coins.setFrozen(e.isDeafened()); //stop tracking coins if they're deafened, resume if undeafened
             }
@@ -90,16 +92,16 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
             if (e.getMember().getUser().isBot()) return;
 
             if (voiceChannel.equals(e.getChannelJoined())) {
-                coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened()));
+                coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened(), Radio.instance.getOrchestrator().getActivePlaylist().getCoinMultiplier()));
             } else if (voiceChannel.equals(e.getChannelLeft())) {
                 giveCoins(e.getMember(), false);
             }
         } else if (ev instanceof ShutdownEvent) {
-            shutdown();
+            giveAllCoins();
         }
     }
 
-    private void shutdown() {
+    private void giveAllCoins() {
         for (Member m : voiceChannel.getMembers()) {
             UserCoinTracker coins = coinGains.remove(m.getUser().getIdLong());
             if (coins == null) continue; //shouldn't happen

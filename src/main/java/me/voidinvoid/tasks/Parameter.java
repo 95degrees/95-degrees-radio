@@ -18,27 +18,11 @@ public class Parameter {
         this.optional = true;
     }
 
-    public static Parameter string(String name) {
+    public static Parameter of(String name) {
         return new Parameter(name);
     }
 
-    public static Parameter string(String name, String defaultValue) {
-        return new Parameter(name, defaultValue);
-    }
-
-    public static Parameter integer(String name) {
-        return new Parameter(name);
-    }
-
-    public static Parameter integer(String name, Integer defaultValue) {
-        return new Parameter(name, defaultValue);
-    }
-
-    public static Parameter bool(String name) {
-        return new Parameter(name);
-    }
-
-    public static Parameter bool(String name, boolean defaultValue) {
+    public static Parameter of(String name, Object defaultValue) {
         return new Parameter(name, defaultValue);
     }
 

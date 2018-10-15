@@ -1,5 +1,7 @@
 package me.voidinvoid.coins;
 
+import me.voidinvoid.Radio;
+import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.utils.ConsoleColor;
 import net.dv8tion.jda.core.entities.User;
 
@@ -13,12 +15,16 @@ public class UserCoinTracker {
     private long resumedTime;
     private int earnedCoins;
     private long totalTime;
+    private long creditedTime;
     private boolean frozen;
+    private double multiplier;
 
-    public UserCoinTracker(User user, boolean frozen) {
+    public UserCoinTracker(User user, boolean frozen, double multiplier) {
 
         this.user = user;
         this.frozen = frozen;
+        this.multiplier = multiplier;
+
         startTime = resumedTime = System.currentTimeMillis();
 
         System.out.println(ConsoleColor.YELLOW_BACKGROUND_BRIGHT + " COINS " + ConsoleColor.RESET_SPACE + "Started tracking coin gain for " + user);
@@ -36,22 +42,33 @@ public class UserCoinTracker {
         return earnedCoins;
     }
 
-    public void credit() {
+    public void credit(double multiplier) {
         if (!frozen) {
             long time = System.currentTimeMillis();
             totalTime += time - resumedTime;
         }
 
-        int coinGain = (int) Math.floor(totalTime / 1000 / 60); //convert total from ms to minutes
+        resumedTime = System.currentTimeMillis();
+
+        int coinGain = (int) Math.floor((totalTime - creditedTime) / 1000F / 60F); //convert total from ms to minutes
         coinGain *= COINS_PER_MINUTE;
+        coinGain *= multiplier;
 
         earnedCoins += coinGain;
+
+        creditedTime = totalTime;
 
         System.out.println(ConsoleColor.YELLOW_BACKGROUND_BRIGHT + " COINS " + ConsoleColor.RESET_SPACE + "Credited " + user + ", " + earnedCoins);
     }
 
+    public void setMultiplier(double multiplier) {
+        credit(this.multiplier);
+
+        this.multiplier = multiplier;
+    }
+
     public int getTotal() {
-        credit();
+        credit(multiplier);
 
         return Math.min(MAX_COINS, earnedCoins);
     }

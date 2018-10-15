@@ -82,7 +82,7 @@ class CommandData {
             return;
         }
 
-        textChannel.sendMessage("```" + message.substring(Math.min(1994, message.length())).replaceAll("`", "") + "```").queue();
+        textChannel.sendMessage("```" + message.substring(0, Math.min(1994, message.length())).replaceAll("`", "") + "```").queue();
     }
 
     public void success(String message) {
