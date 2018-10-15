@@ -15,7 +15,7 @@ public class QueueCommand extends Command {
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
 
-        if (args.length > 0 && ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
+        if (args.length > 0 && (data.getTextChannel() == null || ChannelScope.DJ_CHAT.check(data.getTextChannel()))) {
             if (args[0].equalsIgnoreCase("on")) {
                 Radio.instance.getOrchestrator().setQueueCommandEnabled(true);
                 data.success("The queue command has been enabled");
@@ -35,7 +35,7 @@ public class QueueCommand extends Command {
             return;
         }
 
-        if (!Radio.instance.getOrchestrator().isQueueCommandEnabled() && !ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
+        if (data.getTextChannel() != null && !Radio.instance.getOrchestrator().isQueueCommandEnabled() && !ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
             data.error("The queue command is currently disabled");
             return;
         }

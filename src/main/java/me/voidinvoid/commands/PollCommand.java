@@ -31,12 +31,16 @@ public class PollCommand extends Command {
             return;
         }
 
-        String question = args.split("")[0];
-        String[] answers = args.substring(question.length()).split("\\|");
+        String question = args.split(",")[0];
+        String[] answers = args.substring(question.length() + 1).split("\\|");
 
-        MessageEmbed embed = new EmbedBuilder().setTitle("Poll").setDescription("**" + question + "**\n\n" + IntStream.range(0, answers.length).mapToObj(i -> NUMBER_EMOJIS.get(i) + " " + answers[i]).collect(Collectors.joining("\n"))).setTimestamp(OffsetDateTime.now()).setColor(Colors.ACCENT_POLL).build();
+        MessageEmbed embed = new EmbedBuilder().setTitle("Poll").setDescription("**" + question.trim() + "**\nReact with the corresponding number to cast your vote!\n\n" + IntStream.range(0, answers.length).mapToObj(i -> NUMBER_EMOJIS.get(i) + " " + answers[i].trim()).collect(Collectors.joining("\n"))).setTimestamp(OffsetDateTime.now()).setColor(Colors.ACCENT_POLL).build();
 
-        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
+        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue(m -> {
+            for (int i = 0; i < answers.length; i++) {
+                m.addReaction(NUMBER_EMOJIS.get(i)).queue();
+            }
+        });
 
         data.success("Created a poll");
     }
