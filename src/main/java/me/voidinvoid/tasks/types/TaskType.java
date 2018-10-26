@@ -17,7 +17,7 @@ public enum TaskType {
     SWITCH_PLAYLIST(new SwitchPlaylistTask(), of("playlist_name"), of("switch_instantly", false)),
     PLAY_JINGLE(new PlaySongTask(true), of("song_name", null), of("play_instantly", true)),
     PLAY_SPECIAL(new PlaySpecialTask(), of("song_name"), of("play_instantly", false), of("listening_to", null)), //play a song from /Special folder
-    ANNOUNCE(new AnnounceTask(), of("title", "Announcement"), of("message"), of("image_url", null), of("delete_after", 0), of("announce_to_channel", null), of("announce_to_dj_channel", true), of("announce_to_text_channel", true), of("colour", -1)), //white
+    ANNOUNCE(new AnnounceTask(), of("title", "Announcement"), of("message"), of("image_url", null), of("delete_after", 0L), of("announce_to_channel", null), of("announce_to_dj_channel", true), of("announce_to_text_channel", true), of("colour", -1)), //white
     CLEAR_QUEUE(new ClearQueueTask()),
     START_KARAOKE(new KaraokeTask(true)),
     STOP_KARAOKE(new KaraokeTask(false)),
