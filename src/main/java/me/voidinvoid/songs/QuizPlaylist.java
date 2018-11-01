@@ -4,6 +4,16 @@ import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.quiz.Quiz;
 import me.voidinvoid.quiz.QuizManager;
+import me.voidinvoid.quiz.QuizQuestion;
+import me.voidinvoid.utils.Colors;
+import me.voidinvoid.utils.FormattingUtils;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.TextChannel;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -11,15 +21,22 @@ import me.voidinvoid.quiz.QuizManager;
  */
 public class QuizPlaylist extends Playlist {
 
+    private static final String CORRECT_EMOTE = "✅", INCORRECT_EMOTE = "❌";
+
     private final Quiz quiz;
     private QuizManager manager;
-    private int currentQuestion = 0;
+    private int currentQuestion = -1;
     private QuizProgress quizProgress;
     private QuizQuestionProgress currentQuestionProgress;
     private boolean progressMade;
 
+    private int correctAnswerIndex;
+
+    private Message lastQuizMessage;
+
     public QuizPlaylist(Quiz quiz, QuizManager manager) {
         super(quiz.getInternal());
+        this.name = quiz.getTitle();
         this.quiz = quiz;
         this.manager = manager;
     }
@@ -38,16 +55,17 @@ public class QuizPlaylist extends Playlist {
 
     @Override
     public Song provideNextSong(boolean playJingle) {
+        this.progress(); //todo temp
         if (!progressMade) return null; //so we're not repeating stuff over and over again
         progressMade = false;
 
         if (quizProgress == QuizProgress.ENDED) {
-            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage("Debug: round end").queue(); //todo DEBUG
+            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage("Debug: quiz end").queue(); //todo DEBUG
             return null;
             //todo something
         }
 
-        if (quizProgress == QuizProgress.NOT_STARTED) {
+        if (quizProgress == QuizProgress.WAITING) {
             Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage("Debug: waiting").queue(); //todo DEBUG
             return manager.getWaitingSong();
         }
@@ -58,7 +76,7 @@ public class QuizPlaylist extends Playlist {
         }
 
         if (currentQuestionProgress == QuizQuestionProgress.ENDED) {
-            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage("Debug: quiz end").queue(); //todo DEBUG
+            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage("Debug: round end").queue(); //todo DEBUG
             return null;
         }
 
@@ -74,29 +92,51 @@ public class QuizPlaylist extends Playlist {
         boolean requiresManualPlay = !progressMade;
         progressMade = true;
 
-        if (currentQuestion == -1) { //-> play the waiting music
-            currentQuestion++;
-            quizProgress = QuizProgress.NOT_STARTED;
+        if (quizProgress == QuizProgress.NOT_STARTED) { //-> play the waiting music
+            quizProgress = QuizProgress.WAITING;
+
+            manager.getTextChannel().sendMessage("**temp** waiting").queue();
 
         } else if (currentQuestion > quiz.getQuestions().size()) { //-> quiz has ended
             quizProgress = QuizProgress.ENDED;
 
-        } else if (currentQuestionProgress == null) { //-> right after the waiting music
+            manager.getTextChannel().sendMessage("**temp** ended").queue();
+
+        } else if (currentQuestionProgress == null || currentQuestionProgress == QuizQuestionProgress.DISPLAYING_ANSWERS) { //-> right after the waiting music, start question 1, or continue to next questions
+            currentQuestion++;
             currentQuestionProgress = QuizQuestionProgress.IN_PROGRESS;
             quizProgress = QuizProgress.IN_PROGRESS;
+
+            QuizQuestion qc = quiz.getQuestions().get(currentQuestion);
+
+            manager.getTextChannel().sendMessage(new EmbedBuilder()
+                    .setAuthor("95 Degrees Trivia - Q" + (currentQuestion + 1))
+                    .setTitle(qc.getQuestion())
+                    .setColor(Colors.ACCENT_QUIZ)
+                    .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + qc.getAnswers()[i].getAnswer()).collect(Collectors.joining("\n")))
+                    .build()).queue();
 
         } else if (currentQuestionProgress == QuizQuestionProgress.IN_PROGRESS) { //-> right after the quiz countdown
             currentQuestionProgress = QuizQuestionProgress.ENDED;
             quizProgress = QuizProgress.IN_PROGRESS;
 
+            manager.getTextChannel().sendMessage(new EmbedBuilder()
+                    .setAuthor("95 Degrees Trivia - Q" + (currentQuestion + 1))
+                    .setTitle("The results are in!")
+                    .setColor(Colors.ACCENT_QUIZ)
+                    .build()).queue();
+
         } else if (currentQuestionProgress == QuizQuestionProgress.ENDED) { //-> right after the pause after the question ends
             currentQuestionProgress = QuizQuestionProgress.DISPLAYING_ANSWERS;
             quizProgress = QuizProgress.IN_PROGRESS;
 
-        } else if (currentQuestionProgress == QuizQuestionProgress.DISPLAYING_ANSWERS) { //-> after we've shown the answers, go to the next question
-            currentQuestion++;
-            currentQuestionProgress = QuizQuestionProgress.IN_PROGRESS;
-            quizProgress = QuizProgress.IN_PROGRESS;
+            QuizQuestion qc = quiz.getQuestions().get(currentQuestion);
+
+            manager.getTextChannel().sendMessage(new EmbedBuilder()
+                    .setAuthor("95 Degrees Trivia - Q" + (currentQuestion + 1))
+                    .setColor(Colors.ACCENT_QUIZ)
+                    .setDescription(Arrays.stream(qc.getAnswers()).map(a -> (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - TODO").collect(Collectors.joining("\n")))
+                    .build()).queue();
         }
 
         return requiresManualPlay;
@@ -104,6 +144,18 @@ public class QuizPlaylist extends Playlist {
 
     public Quiz getQuiz() {
         return quiz;
+    }
+
+    public int getCurrentQuestion() {
+        return currentQuestion;
+    }
+
+    public QuizProgress getQuizProgress() {
+        return quizProgress;
+    }
+
+    public QuizQuestionProgress getCurrentQuestionProgress() {
+        return currentQuestionProgress;
     }
 
     public enum QuizQuestionProgress {
@@ -114,6 +166,7 @@ public class QuizPlaylist extends Playlist {
 
     public enum QuizProgress {
         NOT_STARTED,
+        WAITING,
         IN_PROGRESS,
         ENDED
     }

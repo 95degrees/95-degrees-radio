@@ -6,6 +6,7 @@ import me.voidinvoid.Radio;
 import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.utils.Colors;
+import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -23,7 +24,6 @@ public class SongSearchResult {
 
     private static final int MAX_SEARCH_RESULTS = 5;
 
-    private static final List<String> NUMBER_EMOJIS = Arrays.asList(new String(new char[]{49, 8419}), new String(new char[]{50, 8419}), new String(new char[]{51, 8419}), new String(new char[]{52, 8419}), new String(new char[]{53, 8419}), new String(new char[]{54, 8419}), new String(new char[]{55, 8419}), new String(new char[]{56, 8419}), new String(new char[]{57, 8419}), "🔟");
     private static final String CANCEL_EMOJI = "❌";
 
     private List<AudioTrack> playlist;
@@ -63,7 +63,7 @@ public class SongSearchResult {
 
         int i = 0;
         for (AudioTrack t : playlist) {
-            emojiBuilder.append(NUMBER_EMOJIS.get(i)).append(" ").append(t.getInfo().title).append(" (").append(t.getInfo().author).append(")\n");
+            emojiBuilder.append(FormattingUtils.NUMBER_EMOTES.get(i)).append(" ").append(t.getInfo().title).append(" (").append(t.getInfo().author).append(")\n");
             i++;
         }
 
@@ -73,7 +73,7 @@ public class SongSearchResult {
 
         future.whenComplete((m, e) -> {
             for (int ix = 0; ix < amount; ix++) {
-                m.addReaction(NUMBER_EMOJIS.get(ix)).queue();
+                m.addReaction(FormattingUtils.NUMBER_EMOTES.get(ix)).queue();
             }
 
             m.addReaction(CANCEL_EMOJI).queue();
@@ -85,8 +85,8 @@ public class SongSearchResult {
     public boolean handleReaction(GuildMessageReactionAddEvent e) {
         if (e.getUser().getIdLong() == user.getIdLong()) {
             String reaction = e.getReaction().getReactionEmote().getName();
-            if (NUMBER_EMOJIS.contains(reaction)) {
-                int index = NUMBER_EMOJIS.indexOf(reaction);
+            if (FormattingUtils.NUMBER_EMOTES.contains(reaction)) {
+                int index = FormattingUtils.NUMBER_EMOTES.indexOf(reaction);
 
                 try {
                     AudioTrack track = playlist.get(index);

@@ -357,7 +357,7 @@ public class SongOrchestrator extends AudioEventAdapter {
     public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
         System.out.println("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
 
-        User user = suggestedBy.getUser();
+        User user = suggestedBy == null ? null : suggestedBy.getUser();
 
         if (!bypassErrors && track instanceof LocalAudioTrack) {
             System.out.println(suggestedBy + " tried to play a local track - disallowed");
@@ -381,7 +381,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                 error = NetworkSongError.IS_STREAM;
             } else if (track.getDuration() > MAX_SONG_LENGTH) {
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
-            } else if (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel())) {
+            } else if (suggestedBy != null && (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel()))) {
                 error = NetworkSongError.NOT_IN_VOICE_CHANNEL;
             } else {
                 error = null;

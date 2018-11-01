@@ -40,6 +40,6 @@ public class Quiz {
         __DEBUG_QUIZ.internal = "DEBUG";
         __DEBUG_QUIZ.title = "Debug quiz";
         __DEBUG_QUIZ.type = QuizType.BATTLE_ROYALE;
-        __DEBUG_QUIZ.questions = IntStream.range(0, 10).mapToObj(i -> new QuizQuestion("Question " + i, "corr", "ansA", "ansB")).collect(Collectors.toList());
+        __DEBUG_QUIZ.questions = IntStream.range(0, 10).mapToObj(i -> new QuizQuestion("Question " + i, new QuizAnswer("CORRECT", true), new QuizAnswer("INCORRECT-1", false), new QuizAnswer("INCORRECT-2", false))).collect(Collectors.toList());
     }
 }

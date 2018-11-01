@@ -16,6 +16,7 @@ import me.voidinvoid.songs.FileSong;
 import me.voidinvoid.songs.QuizPlaylist;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongType;
+import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +34,8 @@ public class QuizManager implements SongEventListener {
     private Map<Quiz, QuizPlaylist> quizzes;
     private Path quizRoot;
 
+    private TextChannel textChannel;
+
     private SocketIOServer server;
     private List<SocketIOClient> authenticatedClients = new ArrayList<>();
 
@@ -46,9 +49,10 @@ public class QuizManager implements SongEventListener {
 
     private QuizPlaylist activeQuiz;
 
-    public QuizManager(Path quizRoot) {
+    public QuizManager(Path quizRoot, TextChannel textChannel) {
 
         this.quizRoot = quizRoot;
+        this.textChannel = textChannel;
 
         reload();
     }
@@ -108,6 +112,7 @@ public class QuizManager implements SongEventListener {
         QuizPlaylist DEBUG_playlist = new QuizPlaylist(Quiz.__DEBUG_QUIZ, this);
         quizzes.put(Quiz.__DEBUG_QUIZ, DEBUG_playlist);
         Radio.instance.getOrchestrator().getPlaylists().add(DEBUG_playlist);
+        Radio.instance.getOrchestrator().setActivePlaylist(DEBUG_playlist);
         ////////////
 
         try {
@@ -185,5 +190,9 @@ public class QuizManager implements SongEventListener {
 
     public Song getWaitingSong() {
         return waitingSong;
+    }
+
+    public TextChannel getTextChannel() {
+        return textChannel;
     }
 }

@@ -4,7 +4,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongType;
 
+import java.util.Arrays;
+import java.util.List;
+
 public final class FormattingUtils {
+
+    public static final List<String> NUMBER_EMOTES = Arrays.asList(new String(new char[]{49, 8419}), new String(new char[]{50, 8419}), new String(new char[]{51, 8419}), new String(new char[]{52, 8419}), new String(new char[]{53, 8419}), new String(new char[]{54, 8419}), new String(new char[]{55, 8419}), new String(new char[]{56, 8419}), new String(new char[]{57, 8419}), "🔟");
 
     public static String getFormattedMsTime(long time) {
         long second = (time / 1000) % 60;
