@@ -84,6 +84,37 @@ public class QuizManager implements SongEventListener {
             c.sendEvent("quizzes", quizzes);
         });
 
+        //NEW
+        //start_quiz (quiz internal id param)
+        server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
+            if (!authenticatedClients.contains(c)) return;
+
+            startQuiz(o);
+        });
+
+        //next_question (no param)
+        server.addEventListener("next_question", Object.class, (c, o, ack) -> {
+            if (!authenticatedClients.contains(c)) return;
+
+            if (activeQuiz != null) {
+                activeQuiz.progress();
+            }
+        });
+
+        //next_question (no param)
+        //same as previous on java end, but if there are any updates
+        //in the future on java end, vue shouldn't need to change
+        server.addEventListener("next_question", Object.class, (c, o, ack) -> {
+            if (!authenticatedClients.contains(c)) return;
+
+            if (activeQuiz != null) {
+                activeQuiz.progress();
+            }
+        });
+
+
+
+        //OLD
         server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
             if (!authenticatedClients.contains(c)) return;
 
@@ -149,12 +180,16 @@ public class QuizManager implements SongEventListener {
         activeQuiz = quiz;
 
         if (server != null) {
-            authenticatedClients.forEach(c -> c.sendEvent("active_quiz", activeQuiz));
+            emitToAuthenticated("quiz_activated", activeQuiz.getInternal());
         }
 
         Radio.instance.getOrchestrator().setActivePlaylist(quiz);
 
         return true;
+    }
+
+    public void emitToAuthenticated(String key, Object value) {
+        authenticatedClients.forEach(c -> c.sendEvent(key, value));
     }
 
     @Override

@@ -137,6 +137,12 @@ public class QuizPlaylist extends Playlist {
                     .setColor(Colors.ACCENT_QUIZ)
                     .setDescription(Arrays.stream(qc.getAnswers()).map(a -> (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - TODO").collect(Collectors.joining("\n")))
                     .build()).queue();
+        } else if (currentQuestionProgress == QuizQuestionProgress.DISPLAYING_ANSWERS) { //-> after we've shown the answers, go to the next question
+            currentQuestion++;
+            currentQuestionProgress = QuizQuestionProgress.IN_PROGRESS;
+            quizProgress = QuizProgress.IN_PROGRESS;
+
+            manager.emitToAuthenticated("question_change", currentQuestion, System.currentTimeMillis(), System.currentTimeMillis() + 10000, remainingParticipants  ); //todo
         }
 
         return requiresManualPlay;
