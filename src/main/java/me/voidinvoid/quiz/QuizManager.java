@@ -85,7 +85,7 @@ public class QuizManager implements SongEventListener {
         });
 
         //NEW
-        //start_quiz (quiz internal id param)
+        //activate_quiz (quiz internal id param)
         server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
             if (!authenticatedClients.contains(c)) return;
 
@@ -188,7 +188,7 @@ public class QuizManager implements SongEventListener {
         return true;
     }
 
-    public void emitToAuthenticated(String key, Object value) {
+    public void emitToAuthenticated(String key, Object... value) {
         authenticatedClients.forEach(c -> c.sendEvent(key, value));
     }
 

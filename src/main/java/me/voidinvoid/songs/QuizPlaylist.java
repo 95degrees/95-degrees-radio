@@ -4,14 +4,16 @@ import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.quiz.Quiz;
 import me.voidinvoid.quiz.QuizManager;
+import me.voidinvoid.quiz.QuizParticipant;
 import me.voidinvoid.quiz.QuizQuestion;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,6 +36,8 @@ public class QuizPlaylist extends Playlist {
 
     private Message lastQuizMessage;
 
+    private List<QuizParticipant> remainingParticipants;
+
     public QuizPlaylist(Quiz quiz, QuizManager manager) {
         super(quiz.getInternal());
         this.name = quiz.getTitle();
@@ -51,6 +55,8 @@ public class QuizPlaylist extends Playlist {
         currentQuestion = 0;
         quizProgress = QuizProgress.NOT_STARTED;
         currentQuestionProgress = null;
+
+        remainingParticipants = new ArrayList<>();
     }
 
     @Override
@@ -116,6 +122,8 @@ public class QuizPlaylist extends Playlist {
                     .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + qc.getAnswers()[i].getAnswer()).collect(Collectors.joining("\n")))
                     .build()).queue();
 
+            manager.emitToAuthenticated("set_question", remainingParticipants); //todo
+
         } else if (currentQuestionProgress == QuizQuestionProgress.IN_PROGRESS) { //-> right after the quiz countdown
             currentQuestionProgress = QuizQuestionProgress.ENDED;
             quizProgress = QuizProgress.IN_PROGRESS;
@@ -137,12 +145,6 @@ public class QuizPlaylist extends Playlist {
                     .setColor(Colors.ACCENT_QUIZ)
                     .setDescription(Arrays.stream(qc.getAnswers()).map(a -> (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - TODO").collect(Collectors.joining("\n")))
                     .build()).queue();
-        } else if (currentQuestionProgress == QuizQuestionProgress.DISPLAYING_ANSWERS) { //-> after we've shown the answers, go to the next question
-            currentQuestion++;
-            currentQuestionProgress = QuizQuestionProgress.IN_PROGRESS;
-            quizProgress = QuizProgress.IN_PROGRESS;
-
-            manager.emitToAuthenticated("question_change", currentQuestion, System.currentTimeMillis(), System.currentTimeMillis() + 10000, remainingParticipants  ); //todo
         }
 
         return requiresManualPlay;

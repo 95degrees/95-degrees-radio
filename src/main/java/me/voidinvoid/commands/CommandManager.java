@@ -37,6 +37,7 @@ public class CommandManager implements EventListener {
         register(new ReloadCommand());
         register(new RestartRadioCommand());
         register(new StopRadioCommand());
+        register(new DebugCommand());
         register(new HelpCommand(commands));
 
         Executors.newSingleThreadExecutor().submit(() -> {
