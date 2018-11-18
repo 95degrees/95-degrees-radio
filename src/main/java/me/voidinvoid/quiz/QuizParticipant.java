@@ -13,4 +13,16 @@ public class QuizParticipant {
         avatarUrl = user.getAvatarUrl();
         name = user.getName();
     }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

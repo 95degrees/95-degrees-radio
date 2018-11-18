@@ -158,7 +158,7 @@ public class SongDJ implements SongEventListener, EventListener {
         activeTrack = null;
         activeMessageId = null;
 
-        taskTimer.cancel(false);
+        if (taskTimer != null) taskTimer.cancel(false);
     }
 
     public MessageAction createMessage(Song song, AudioTrack track, List<DJAction> actions, AudioPlayer player, int timeUntilJingle) {

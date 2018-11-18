@@ -16,18 +16,24 @@ import me.voidinvoid.songs.FileSong;
 import me.voidinvoid.songs.QuizPlaylist;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongType;
+import me.voidinvoid.utils.FormattingUtils;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.core.hooks.EventListener;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.IntStream;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
  * 2018
  */
-public class QuizManager implements SongEventListener {
+public class QuizManager implements SongEventListener, EventListener {
 
     private static Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
@@ -113,7 +119,6 @@ public class QuizManager implements SongEventListener {
         });
 
 
-
         //OLD
         server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
             if (!authenticatedClients.contains(c)) return;
@@ -144,6 +149,7 @@ public class QuizManager implements SongEventListener {
         quizzes.put(Quiz.__DEBUG_QUIZ, DEBUG_playlist);
         Radio.instance.getOrchestrator().getPlaylists().add(DEBUG_playlist);
         Radio.instance.getOrchestrator().setActivePlaylist(DEBUG_playlist);
+        activeQuiz = DEBUG_playlist;
         ////////////
 
         try {
@@ -229,5 +235,35 @@ public class QuizManager implements SongEventListener {
 
     public TextChannel getTextChannel() {
         return textChannel;
+    }
+
+    public QuizPlaylist getActiveQuiz() {
+        return activeQuiz;
+    }
+
+    @Override
+    public void onEvent(Event ev) {
+        if (ev instanceof GuildMessageReactionAddEvent) {
+            GuildMessageReactionAddEvent e = ((GuildMessageReactionAddEvent) ev);
+            if (e.getUser().isBot()) return;
+
+            if (activeQuiz == null) return;
+
+            Message msg = activeQuiz.getActiveQuestionMessage();
+            if (msg == null) return;
+
+            if (msg.getId().equals(e.getMessageId())) {
+                String emote = e.getReaction().getReactionEmote().getName();
+
+                int ix = 0;
+                for (String em : FormattingUtils.NUMBER_EMOTES) {
+                    if (em.equals(emote)) {
+                        activeQuiz.addParticipantAnswer(e.getUser(), ix);
+                        return;
+                    }
+                    ix++;
+                }
+            }
+        }
     }
 }

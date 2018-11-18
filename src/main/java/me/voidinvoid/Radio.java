@@ -118,9 +118,10 @@ public class Radio implements EventListener {
         register(karaokeManager = new KaraokeManager());
         register(dj = new SongDJ(orchestrator, djChannel));
         register(new RadioMessageListener(radioChannel));
-        register(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel));
+        register(quizManager = new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel));
 
-        if (RadioConfig.config.useCoinGain) register(coinCreditorManager = new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
+        if (RadioConfig.config.useCoinGain)
+            register(coinCreditorManager = new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
         if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));
         if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));
@@ -193,5 +194,9 @@ public class Radio implements EventListener {
 
     public AdvertisementManager getAdvertisementManager() {
         return advertisementManager;
+    }
+
+    public QuizManager getQuizManager() {
+        return quizManager;
     }
 }

@@ -14,7 +14,7 @@ public class Quiz {
     private String internal;
     private String title;
     private List<QuizQuestion> questions;
-    private QuizType type;
+    private QuizType type; //todo
 
     public String getInternal() {
         return internal;
