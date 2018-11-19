@@ -8,10 +8,8 @@ import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.actions.*;
 import me.voidinvoid.events.SongEventListener;
-import me.voidinvoid.songs.FileSong;
-import me.voidinvoid.songs.NetworkSong;
-import me.voidinvoid.songs.Playlist;
-import me.voidinvoid.songs.Song;
+import me.voidinvoid.quiz.Quiz;
+import me.voidinvoid.songs.*;
 import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
@@ -118,7 +116,7 @@ public class SongDJ implements SongEventListener, EventListener {
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         activeTrack = track;
 
-        if (!(song instanceof FileSong) && !(song instanceof NetworkSong)) return; //no quiz stuff here
+        if (Radio.instance.getOrchestrator().getActivePlaylist() instanceof QuizPlaylist) return; //no quiz stuff here
 
         if (song instanceof NetworkSong) {
             for (String id : queueDeletionMessages.keySet()) {

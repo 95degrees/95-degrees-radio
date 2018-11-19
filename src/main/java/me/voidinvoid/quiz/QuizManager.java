@@ -40,7 +40,7 @@ public class QuizManager implements SongEventListener, EventListener {
     private Map<Quiz, QuizPlaylist> quizzes;
     private Path quizRoot;
 
-    private TextChannel textChannel;
+    private TextChannel textChannel, quizManagerChannel;
 
     private SocketIOServer server;
     private List<SocketIOClient> authenticatedClients = new ArrayList<>();
@@ -55,10 +55,11 @@ public class QuizManager implements SongEventListener, EventListener {
 
     private QuizPlaylist activeQuiz;
 
-    public QuizManager(Path quizRoot, TextChannel textChannel) {
+    public QuizManager(Path quizRoot, TextChannel textChannel, TextChannel quizManagerChannel) {
 
         this.quizRoot = quizRoot;
         this.textChannel = textChannel;
+        this.quizManagerChannel = quizManagerChannel;
 
         reload();
     }
@@ -265,5 +266,9 @@ public class QuizManager implements SongEventListener, EventListener {
                 }
             }
         }
+    }
+
+    public TextChannel getQuizManagerChannel() {
+        return quizManagerChannel;
     }
 }

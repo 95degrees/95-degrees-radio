@@ -23,11 +23,13 @@ public class QuizQuestion {
         return answers;
     }
 
-    public QuizAnswer getCorrectAnswer() {
+    public int getCorrectAnswerIndex() {
+        int i = 0;
         for (QuizAnswer a : answers) {
-            if (a.isCorrect()) return a;
+            if (a.isCorrect()) return i;
+            i++;
         }
 
-        return null;
+        return -1;
     }
 }

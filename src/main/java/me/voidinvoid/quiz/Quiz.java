@@ -40,6 +40,9 @@ public class Quiz {
         __DEBUG_QUIZ.internal = "DEBUG";
         __DEBUG_QUIZ.title = "Debug quiz";
         __DEBUG_QUIZ.type = QuizType.BATTLE_ROYALE;
-        __DEBUG_QUIZ.questions = IntStream.range(0, 10).mapToObj(i -> new QuizQuestion("Question " + i, new QuizAnswer("CORRECT", true), new QuizAnswer("INCORRECT-1", false), new QuizAnswer("INCORRECT-2", false))).collect(Collectors.toList());
+        __DEBUG_QUIZ.questions = Arrays.asList(
+                new QuizQuestion("What is the capital city of France?", new QuizAnswer("Paris", true), new QuizAnswer("London", false), new QuizAnswer("Madrid", false)),
+                new QuizQuestion("meaningful question 2", new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false))
+                ); //IntStream.range(0, 10).mapToObj(i -> new QuizQuestion("Question " + i, new QuizAnswer("CORRECT", true), new QuizAnswer("INCORRECT-1", false), new QuizAnswer("INCORRECT-2", false))).collect(Collectors.toList());
     }
 }
