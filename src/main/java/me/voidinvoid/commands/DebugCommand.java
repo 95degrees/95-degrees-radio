@@ -41,7 +41,7 @@ public class DebugCommand extends Command {
 
         }),
         QUIZ_PROGRESS(d -> {
-            if (Radio.instance.getQuizManager().getActiveQuiz().progress()) {
+            if (Radio.instance.getQuizManager().getActiveQuiz().progress(false)) {
                 Radio.instance.getOrchestrator().playNextSong();
             }
         });

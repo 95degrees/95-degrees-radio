@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -52,6 +51,8 @@ public class QuizManager implements SongEventListener, EventListener {
     private Song answerCorrectSong;
     private Song answerIncorrectSong;
     private Song waitingSong;
+    private Song winnerSuspenseSong;
+    private Song winnerSong;
 
     private QuizPlaylist activeQuiz;
 
@@ -104,7 +105,7 @@ public class QuizManager implements SongEventListener, EventListener {
             if (!authenticatedClients.contains(c)) return;
 
             if (activeQuiz != null) {
-                activeQuiz.progress();
+                activeQuiz.progress(false);
             }
         });
 
@@ -115,7 +116,7 @@ public class QuizManager implements SongEventListener, EventListener {
             if (!authenticatedClients.contains(c)) return;
 
             if (activeQuiz != null) {
-                activeQuiz.progress();
+                activeQuiz.progress(false);
             }
         });
 
@@ -131,7 +132,7 @@ public class QuizManager implements SongEventListener, EventListener {
             if (!authenticatedClients.contains(c)) return;
 
             if (activeQuiz != null) {
-                if (activeQuiz.progress()) {
+                if (activeQuiz.progress(false)) {
                     Radio.instance.getOrchestrator().playNextSong();
                 }
             }
@@ -160,6 +161,8 @@ public class QuizManager implements SongEventListener, EventListener {
             answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3").toFile());
             answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3").toFile());
             waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3").toFile());
+            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3").toFile());
+            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3").toFile());
 
             Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
                 try {
@@ -234,6 +237,14 @@ public class QuizManager implements SongEventListener, EventListener {
         return waitingSong;
     }
 
+    public Song getWinnerSuspenseSong() {
+        return winnerSuspenseSong;
+    }
+
+    public Song getWinnerSong() {
+        return winnerSong;
+    }
+
     public TextChannel getTextChannel() {
         return textChannel;
     }
@@ -250,16 +261,28 @@ public class QuizManager implements SongEventListener, EventListener {
 
             if (activeQuiz == null) return;
 
-            Message msg = activeQuiz.getActiveQuestionMessage();
-            if (msg == null) return;
+            Message controlMsg = activeQuiz.getQuizManagerMessage();
+            if (controlMsg != null && controlMsg.getId().equals(e.getMessageId())) {
+                String emote = e.getReaction().getReactionEmote().getName();
 
-            if (msg.getId().equals(e.getMessageId())) {
+                if (emote.equals(QuizPlaylist.ADVANCE_QUIZ_EMOTE)) {
+                    if (activeQuiz.progress(true)) Radio.instance.getOrchestrator().playNextSong();
+                    e.getReaction().removeReaction(e.getUser()).queue();
+                }
+                return;
+            }
+
+            Message questionMsg = activeQuiz.getActiveQuestionMessage();
+            if (questionMsg == null) return;
+
+            if (questionMsg.getId().equals(e.getMessageId())) {
                 String emote = e.getReaction().getReactionEmote().getName();
 
                 int ix = 0;
                 for (String em : FormattingUtils.NUMBER_EMOTES) {
                     if (em.equals(emote)) {
                         activeQuiz.addParticipantAnswer(e.getUser(), ix);
+                        e.getReaction().removeReaction(e.getUser()).queue();
                         return;
                     }
                     ix++;
