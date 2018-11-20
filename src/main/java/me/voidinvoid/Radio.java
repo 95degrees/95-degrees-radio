@@ -113,7 +113,7 @@ public class Radio implements EventListener {
         register(commandManager = new CommandManager());
         register(suggestionManager = new SongSuggestionManager());
         register(new PlaylistTesterListener(radioChannel));
-        register(socketServer = new SocketServer(radioVoiceChannel));
+        if (RadioConfig.config.useSocketServer) register(socketServer = new SocketServer(radioVoiceChannel));
 
         register(karaokeManager = new KaraokeManager());
         register(dj = new SongDJ(orchestrator, djChannel));

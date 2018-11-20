@@ -8,7 +8,7 @@ import me.voidinvoid.SongOrchestrator;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.dj.actions.*;
 import me.voidinvoid.events.SongEventListener;
-import me.voidinvoid.quiz.Quiz;
+import me.voidinvoid.quiz.QuizPlaylist;
 import me.voidinvoid.songs.*;
 import me.voidinvoid.utils.AlbumArtUtils;
 import me.voidinvoid.utils.Colors;

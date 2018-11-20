@@ -13,19 +13,22 @@ import me.voidinvoid.Radio;
 import me.voidinvoid.config.RadioConfig;
 import me.voidinvoid.events.SongEventListener;
 import me.voidinvoid.songs.FileSong;
-import me.voidinvoid.songs.QuizPlaylist;
+import me.voidinvoid.songs.Playlist;
 import me.voidinvoid.songs.Song;
 import me.voidinvoid.songs.SongType;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
+import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
 import java.util.*;
 
 /**
@@ -143,15 +146,41 @@ public class QuizManager implements SongEventListener, EventListener {
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
+    public void loadDynamicQuiz(Path file) {
+        QuizPlaylist quiz = loadQuiz(file);
+
+        quizManagerChannel.sendMessage("Loaded quiz!").queue();
+
+        startQuiz(quiz);
+
+        try {
+            Files.delete(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public QuizPlaylist loadQuiz(Path q) {
+        try {
+            Quiz quiz = GSON.fromJson(new String(Files.readAllBytes(q)), Quiz.class);
+
+            return new QuizPlaylist(quiz, this);
+        } catch (IOException e) {
+            System.out.println("Error loading quiz file " + q);
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void reload() {
         quizzes = new HashMap<>();
 
         //todo DEBUG
-        QuizPlaylist DEBUG_playlist = new QuizPlaylist(Quiz.__DEBUG_QUIZ, this);
+        /*QuizPlaylist DEBUG_playlist = new QuizPlaylist(Quiz.__DEBUG_QUIZ, this);
         quizzes.put(Quiz.__DEBUG_QUIZ, DEBUG_playlist);
         Radio.instance.getOrchestrator().getPlaylists().add(DEBUG_playlist);
         Radio.instance.getOrchestrator().setActivePlaylist(DEBUG_playlist);
-        activeQuiz = DEBUG_playlist;
+        activeQuiz = DEBUG_playlist;*/
         ////////////
 
         try {
@@ -165,14 +194,10 @@ public class QuizManager implements SongEventListener, EventListener {
             winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3").toFile());
 
             Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
-                try {
-                    Quiz quiz = GSON.fromJson(new String(Files.readAllBytes(q)), Quiz.class);
-                    QuizPlaylist playlist = new QuizPlaylist(quiz, this);
-                    quizzes.put(quiz, playlist);
+                QuizPlaylist playlist = loadQuiz(q);
+                if (playlist != null) {
+                    quizzes.put(playlist.getQuiz(), playlist);
                     Radio.instance.getOrchestrator().getPlaylists().add(playlist);
-                } catch (IOException e) {
-                    System.out.println("Error loading quiz file " + q);
-                    e.printStackTrace();
                 }
             });
         } catch (IOException e) {
@@ -182,9 +207,7 @@ public class QuizManager implements SongEventListener, EventListener {
         //Radio.instance.getOrchestrator().getPlaylists().addAll(quizzes.stream().map(q -> new QuizPlaylist(q, this)).collect(Collectors.toList()));
     }
 
-    public boolean startQuiz(String internal) {
-        QuizPlaylist quiz = quizzes.entrySet().stream().filter(kv -> kv.getKey().getInternal().equalsIgnoreCase(internal)).map(Map.Entry::getValue).findAny().orElse(null);
-
+    public boolean startQuiz(QuizPlaylist quiz) {
         if (quiz == null) return false;
 
         activeQuiz = quiz;
@@ -194,19 +217,24 @@ public class QuizManager implements SongEventListener, EventListener {
         }
 
         Radio.instance.getOrchestrator().setActivePlaylist(quiz);
+        Radio.instance.getOrchestrator().playNextSong();
 
         return true;
     }
 
-    public void emitToAuthenticated(String key, Object... value) {
-        authenticatedClients.forEach(c -> c.sendEvent(key, value));
+    public boolean startQuiz(String internal) {
+        return startQuiz(quizzes.entrySet().stream().filter(kv -> kv.getKey().getInternal().equalsIgnoreCase(internal)).map(Map.Entry::getValue).findAny().orElse(null));
     }
 
     @Override
-    public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        if (song.equals(questionCountdownSong)) {
-
+    public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
+        if (activeQuiz != null) {
+            activeQuiz.getQuizManagerMessage().delete().reason("End of quiz").queue();
         }
+    }
+
+    public void emitToAuthenticated(String key, Object... value) {
+        authenticatedClients.forEach(c -> c.sendEvent(key, value));
     }
 
     public boolean isQuizActive() {
@@ -286,6 +314,25 @@ public class QuizManager implements SongEventListener, EventListener {
                         return;
                     }
                     ix++;
+                }
+            }
+        } else if (ev instanceof GuildMessageReceivedEvent) {
+            GuildMessageReceivedEvent e = (GuildMessageReceivedEvent) ev;
+
+            if (e.getAuthor().isBot() || !e.getChannel().getId().equals(quizManagerChannel.getId())) return;
+
+            if (e.getMessage().getAttachments().isEmpty()) return;
+
+            Message.Attachment att = e.getMessage().getAttachments().get(0);
+
+            if (!att.isImage() && att.getFileName().endsWith(".quiz")) {
+                try {
+                    Path file = Files.createTempDirectory("quiz-attachment-").resolve("quiz");
+                    att.download(file.toFile());
+
+                    loadDynamicQuiz(file);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
             }
         }

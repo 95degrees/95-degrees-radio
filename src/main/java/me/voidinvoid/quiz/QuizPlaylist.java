@@ -1,6 +1,7 @@
-package me.voidinvoid.songs;
+package me.voidinvoid.quiz;
 
-import me.voidinvoid.quiz.*;
+import me.voidinvoid.songs.Playlist;
+import me.voidinvoid.songs.Song;
 import me.voidinvoid.utils.Colors;
 import me.voidinvoid.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -11,6 +12,7 @@ import net.dv8tion.jda.core.entities.User;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -22,23 +24,23 @@ public class QuizPlaylist extends Playlist {
 
     private final Quiz quiz;
     private QuizManager manager;
-    private int currentQuestion = -1;
+    private int currentQuestion;
     private QuizProgress quizProgress;
     private QuizQuestionProgress currentQuestionProgress;
     private boolean progressMade;
     private boolean automaticProgression;
 
-    private boolean allowRepeat = true;
+    private boolean allowRepeat;
 
     private int correctAnswerIndex;
 
     private Message activeQuestionMessage, quizManagerMessage;
 
-    private Map<QuizParticipant, Integer> currentAnswers = new HashMap<>();
+    private Map<QuizParticipant, Integer> currentAnswers;
 
     private List<QuizParticipant> remainingParticipants;
 
-    private String nextProgressionAction = "start question 1";
+    private String nextProgressionAction;
 
     public Message getQuizManagerMessage() {
         return quizManagerMessage;
@@ -57,15 +59,30 @@ public class QuizPlaylist extends Playlist {
     }
 
     @Override
+    public String getStatusOverrideMessage() {
+        return quiz.getTitle();
+    }
+
+    @Override
     public void onActivate() {
         currentQuestion = -1;
         quizProgress = QuizProgress.WAITING;
         currentQuestionProgress = null;
+        activeQuestionMessage = null;
+
+        allowRepeat = true;
+        progressMade = false;
+        automaticProgression = false;
 
         remainingParticipants = new ArrayList<>();
+        currentAnswers = new HashMap<>();
+
+        nextProgressionAction = "start question 1";
 
         quizManagerMessage = manager.getQuizManagerChannel().sendMessage(generateStatusMessage()).complete();
         quizManagerMessage.addReaction(ADVANCE_QUIZ_EMOTE).complete();
+
+        manager.getTextChannel().sendMessage(getBaseEmbed(false).setTitle("The quiz is starting soon! 🎲").build()).queue();
     }
 
     public MessageEmbed generateStatusMessage() {
@@ -75,13 +92,22 @@ public class QuizPlaylist extends Playlist {
                 .addField("Loaded quiz", quiz.getTitle(), true)
                 .addField("Current state", "Quiz: " + quizProgress + (currentQuestionProgress == null ? "" : "\nQuestion: " + currentQuestionProgress), true)
                 .addField("", "\u200b", false)
-                .setFooter("Press " + ADVANCE_QUIZ_EMOTE + " to " + nextProgressionAction, null);
+                .setFooter(nextProgressionAction == null ? "🚫 Quiz cannot be advanced yet" : "Press " + ADVANCE_QUIZ_EMOTE + " to " + nextProgressionAction, null);
 
         boolean nobodyCorrect = remainingParticipants.stream().noneMatch(p -> currentAnswers.containsKey(p) && currentAnswers.get(p) == correctAnswerIndex);
 
         if (quizProgress == QuizProgress.IN_PROGRESS) {
             QuizQuestion cq = quiz.getQuestions().get(currentQuestion);
-            eb.addField("Current question (" + (currentQuestion + 1) + "/" + (quiz.getQuestions().size()) + ")", "Eligible contestants: " + (currentQuestion == 0 ? "<everyone>" : remainingParticipants.stream().map(QuizParticipant::getName).collect(Collectors.joining(", "))) + "\n\n" + cq.getQuestion() + "\n\n" + Arrays.stream(cq.getAnswers()).map(a -> a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()).collect(Collectors.joining("\n")), false);
+            eb.addField("Current question (" + (currentQuestion + 1) + "/" + (quiz.getQuestions().size()) + ")", "Eligible contestants: " + (currentQuestion == 0 ? "<everyone>" : currentQuestionProgress == QuizQuestionProgress.DISPLAYING_ANSWERS ? "-" : remainingParticipants.stream().map(QuizParticipant::getName).collect(Collectors.joining(", "))) + "\n\n" + cq.getQuestion() + "\n\n" +
+                    IntStream.range(0, cq.getAnswers().length)
+                            .mapToObj(i -> {
+                                QuizAnswer a = cq.getAnswers()[i];
+                                return (a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()) + " (" + currentAnswers.values().stream().filter(v -> v == i).count() + ")";
+                            }).collect(Collectors.joining("\n")), false);
+
+            if (cq.getImageUrl() != null) {
+                eb.setThumbnail(cq.getImageUrl());
+            }
 
             if (remainingParticipants.size() == 0 || nobodyCorrect) {
                 eb.addField("", "⚠ No participants have answered correctly" + (currentQuestionProgress == QuizQuestionProgress.IN_PROGRESS ? " so far" : ""), false);
@@ -89,6 +115,8 @@ public class QuizPlaylist extends Playlist {
                 eb.addField("", "✅ " + remainingParticipants.stream().filter(p -> currentAnswers.getOrDefault(p, -1) == correctAnswerIndex).map(QuizParticipant::getName).collect(Collectors.joining(", ")) + " will make it to the next round", false);
             }
         }
+
+        if (quizProgress == QuizProgress.ENDED) return eb.build();
 
         eb.addField("", "\u200b", false);
 
@@ -141,8 +169,8 @@ public class QuizPlaylist extends Playlist {
         progressMade = false;
 
         if (quizProgress == QuizProgress.ENDED) {
-            return manager.getAnswerSong();
-            //todo something
+            return manager.getWaitingSong();
+            //todo something else maybe
         }
 
         if (quizProgress == QuizProgress.WAITING) {
@@ -233,6 +261,7 @@ public class QuizPlaylist extends Playlist {
                 activeQuestionMessage = manager.getTextChannel().sendMessage(getBaseEmbed(true)
                         .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + qc.getAnswers()[i].getAnswer()).collect(Collectors.joining("\n")))
                         .setFooter("React with the corresponding number to select your answer", null)
+                        .setImage(qc.getImageUrl())
                         .build())
                         .complete();
 
@@ -273,18 +302,25 @@ public class QuizPlaylist extends Playlist {
                     .setDescription(currentAnswers.entrySet().stream().map(e -> e.getKey().getName() + " - ans " + e.getValue()).collect(Collectors.joining(", ")))
                     .build()).queue();*/
 
-            nextProgressionAction = currentQuestion + 2 >= quiz.getQuestions().size() || remainingParticipants.size() == 0 ? "play winner suspense music" : "start question " + (currentQuestion + 2);
-
             remainingParticipants = currentAnswers.entrySet().stream().filter(e -> e.getValue() == correctAnswerIndex).map(Map.Entry::getKey).collect(Collectors.toList());
+
+            nextProgressionAction = currentQuestion + 1 >= quiz.getQuestions().size() || remainingParticipants.size() == 0 ? "play winner suspense music" : "start question " + (currentQuestion + 2);
+
         } else if (quizProgress == QuizProgress.WINNER_SUSPENSE) {
             quizProgress = QuizProgress.WINNER_ANNOUNCEMENT;
 
-            String winners = remainingParticipants.stream().map(p -> "<@" + p.getId() + ">").collect(Collectors.joining(", "));
+            List<String> res = remainingParticipants.stream().map(p -> "<@" + p.getId() + ">").collect(Collectors.toList());
+            long numberOfWinners = res.size();
+            String winners = String.join(",\n", res);
+
+            //winners. winners.lastIndexOf("\n")
 
             manager.getTextChannel().sendMessage(getBaseEmbed(false)
                     .setTitle("Winners")
-                    .setDescription(winners.isEmpty() ? "no-one lol" : winners)
+                    .setDescription(winners.isEmpty() ? "Nobody has won! 🥀🥀" : winners + (numberOfWinners == 1 ? " has" : " have") + " won! Congratulations! 🎉🎉")
                     .build()).queue();
+
+            nextProgressionAction = "end the quiz (will play waiting music again)";
 
         } else if (quizProgress == QuizProgress.WINNER_ANNOUNCEMENT) {
             quizProgress = QuizProgress.ENDED;
@@ -292,6 +328,8 @@ public class QuizPlaylist extends Playlist {
             manager.getTextChannel().sendMessage(getBaseEmbed(false)
                     .setTitle("The quiz has ended")
                     .build()).queue();
+
+            nextProgressionAction = null;
         }
 
         quizManagerMessage = quizManagerMessage.editMessage(generateStatusMessage()).complete();

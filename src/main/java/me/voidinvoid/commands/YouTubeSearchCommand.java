@@ -1,6 +1,7 @@
 package me.voidinvoid.commands;
 
 import me.voidinvoid.Radio;
+import me.voidinvoid.songs.SongPlaylist;
 import me.voidinvoid.suggestions.SuggestionQueueMode;
 import me.voidinvoid.utils.ChannelScope;
 
@@ -14,6 +15,11 @@ public class YouTubeSearchCommand extends Command {
     public void invoke(CommandData data) {
         if (data.isConsole()) {
             data.error("This command can't be ran by console"); //todo move into command parameter?
+            return;
+        }
+
+        if (!(Radio.instance.getOrchestrator().getActivePlaylist() instanceof SongPlaylist)) {
+            data.error("This command can only be used when a song playlist is active");
             return;
         }
 

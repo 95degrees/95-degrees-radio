@@ -7,16 +7,22 @@ package me.voidinvoid.quiz;
 public class QuizQuestion {
 
     private final String question;
+    private final String imageUrl;
     private final QuizAnswer[] answers;
 
-    public QuizQuestion(String question, QuizAnswer... answers) {
+    public QuizQuestion(String question, String imageUrl, QuizAnswer... answers) {
 
         this.question = question;
+        this.imageUrl = imageUrl;
         this.answers = answers;
     }
 
     public String getQuestion() {
         return question;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public QuizAnswer[] getAnswers() {

@@ -16,6 +16,7 @@ public class RadioConfig {
     public boolean debug;
     public boolean useStatus;
     public boolean useAdverts;
+    public boolean useSocketServer;
     @Deprecated
     public boolean liveFileUpdates;
 
