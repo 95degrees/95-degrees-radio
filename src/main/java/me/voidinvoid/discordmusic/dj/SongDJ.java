@@ -15,8 +15,6 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
-import me.voidinvoid.dj.actions.*;
-import me.voidinvoid.songs.*;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
