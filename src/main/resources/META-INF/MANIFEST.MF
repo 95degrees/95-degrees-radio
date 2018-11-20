@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
 Class-Path: libs.jar
-Main-Class: me.voidinvoid.Radio
+Main-Class: me.voidinvoid.discordmusic.Radio
 
