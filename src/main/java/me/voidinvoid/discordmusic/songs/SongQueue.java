@@ -21,15 +21,15 @@ public class SongQueue extends AudioEventAdapter {
     private List<Song> queue;
     private List<Song> songMap;
     private Playlist playlist;
-    private File directory;
+    private Path directory;
     private SongType queueType;
     private boolean shuffleSongs;
 
     private String queueCache;
 
-    public SongQueue(Playlist playlist, Path directoryLocation, SongType queueType, boolean shuffleSongs) {
-        directory = directoryLocation.toFile();
+    public SongQueue(Playlist playlist, Path directory, SongType queueType, boolean shuffleSongs) {
         this.playlist = playlist;
+        this.directory = directory;
         this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
     }
@@ -37,9 +37,12 @@ public class SongQueue extends AudioEventAdapter {
     public CompletableFuture<List<Song>> loadSongsAsync() {
         CompletableFuture<List<Song>> files = CompletableFuture.supplyAsync(this::initSongs); //find all files async
         files.whenComplete((l, e) -> {
+            if (l == null) return;
+
+            System.out.println(ConsoleColor.BLUE_BACKGROUND + " SONG " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist");
 
             List<Song> songMap = new ArrayList<>(l); //a clone
-            songMap.sort(Comparator.comparing(Song::getIdentifier)); //probably not needed but just in-case
+            songMap.sort(Comparator.comparing(Song::getFullLocation)); //probably not needed but just in-case
 
             if (shuffleSongs) Collections.shuffle(l);
 
@@ -61,20 +64,16 @@ public class SongQueue extends AudioEventAdapter {
     }
 
     private List<Song> initSongs() {
-        List<Song> songs = new ArrayList<>();
+        try {
+            return Files.walk(directory, 1)
+                    .filter(f -> !Files.isDirectory(f))
+            .map(f -> new FileSong(queueType, f, this)).collect(Collectors.toList());
 
-        File[] files = directory.listFiles();
-        if (files == null) return songs;
+        } catch (Exception ex) {
+            System.err.println("Error fetching songs for playlist");
 
-        for (File f : files) { //todo convert to fully new path api
-            if (Files.isDirectory(f.toPath())) continue;
-            Song s = new FileSong(queueType, f);
-            s.setQueue(this);
-            songs.add(s);
-            System.out.println(ConsoleColor.BLUE_BACKGROUND + " SONG " + ConsoleColor.RESET_SPACE + f.getName());
+            return null;
         }
-
-        return songs;
     }
 
     public Song getNextAndRemove() {
@@ -137,7 +136,7 @@ public class SongQueue extends AudioEventAdapter {
         return queue.stream().filter(s -> s instanceof NetworkSong && ((NetworkSong) s).getSuggestedBy().equals(user)).collect(Collectors.toList());
     }
 
-    public File getDirectory() {
+    public Path getDirectory() {
         return directory;
     }
 
@@ -157,7 +156,7 @@ public class SongQueue extends AudioEventAdapter {
         for (Song s : songMap) {
             i++;
             if (i - 1 < min || i - 1 >= max) continue;
-            String loc = s.getLocation();
+            String loc = s.getFileName();
             output.append(i).append(i < 10 ? "  " : i < 100 ? " " : "").append(": ").append(loc, 0, Math.min(loc.length(), 150)).append("\n");
         }
 
@@ -179,7 +178,7 @@ public class SongQueue extends AudioEventAdapter {
             } else {
                 boolean addedDesc = false;
                 try {
-                    Mp3File m = new Mp3File(s.getIdentifier());
+                    Mp3File m = new Mp3File(s.getFullLocation());
                     if (m.hasId3v2Tag()) {
                         ID3v2 tag = m.getId3v2Tag();
                         output.append(tag.getArtist()).append(" - ").append(tag.getTitle());
@@ -188,7 +187,7 @@ public class SongQueue extends AudioEventAdapter {
                 } catch (Exception ignored) {
                 }
 
-                if (!addedDesc) output.append(s.getLocation());
+                if (!addedDesc) output.append(s.getFileName());
             }
 
             output.append("\n");

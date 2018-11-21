@@ -253,7 +253,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             return;
         }
 
-        System.out.println(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getLocation() + ConsoleColor.RESET);
+        System.out.println(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFileName() + ConsoleColor.RESET);
         System.out.println("              Jingle after " + timeUntilJingle + " more songs");
 
         if (song.getTrack() != null) {
@@ -261,7 +261,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             return;
         }
 
-        manager.loadItem(song.getIdentifier(), new AudioLoadResultHandler() {
+        manager.loadItem(song.getFullLocation(), new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
                 track.setUserData(song);
                 player.playTrack(track);
@@ -276,7 +276,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             }
 
             public void loadFailed(FriendlyException e) {
-                System.out.println("Load failed for file: (ID) " + song.getIdentifier());
+                System.out.println("Load failed for file: (ID) " + song.getFullLocation());
                 e.printStackTrace();
                 playNextSong(false, false);
 

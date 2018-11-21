@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.songs;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public abstract class Song {
 
@@ -18,13 +19,13 @@ public abstract class Song {
         return null;
     }
 
-    public abstract String getLocation();
+    public abstract String getFileName();
 
-    public abstract String getIdentifier();
+    public abstract String getFullLocation();
 
     public abstract AlbumArtType getAlbumArtType();
 
-    public abstract File getAlbumArtFile();
+    public abstract Path getAlbumArtFile();
 
     public String getAlbumArtURL() {
         return null;

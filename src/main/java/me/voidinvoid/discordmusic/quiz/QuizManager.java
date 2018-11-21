@@ -199,23 +199,15 @@ public class QuizManager implements SongEventListener, EventListener {
     public void reload() {
         quizzes = new HashMap<>();
 
-        //DEBUG
-        /*QuizPlaylist DEBUG_playlist = new QuizPlaylist(Quiz.__DEBUG_QUIZ, this);
-        quizzes.put(Quiz.__DEBUG_QUIZ, DEBUG_playlist);
-        Radio.instance.getOrchestrator().getPlaylists().add(DEBUG_playlist);
-        Radio.instance.getOrchestrator().setActivePlaylist(DEBUG_playlist);
-        activeQuiz = DEBUG_playlist;*/
-        ////////////
-
         try {
             Path soundsRoot = quizRoot.resolve("Sounds");
-            questionCountdownSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("countdown.mp3").toFile());
-            answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3").toFile());
-            answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3").toFile());
-            answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3").toFile());
-            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3").toFile());
-            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3").toFile());
-            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3").toFile());
+            questionCountdownSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("countdown.mp3"));
+            answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3"));
+            answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3"));
+            answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3"));
+            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3"));
+            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3"));
+            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3"));
 
             Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
                 QuizPlaylist playlist = loadQuiz(q);

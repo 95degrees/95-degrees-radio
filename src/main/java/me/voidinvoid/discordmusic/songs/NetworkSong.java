@@ -6,14 +6,15 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import net.dv8tion.jda.core.entities.User;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class NetworkSong extends Song {
-    public static final File NETWORK_ALBUM;
 
-    //public static final Pattern YOUTUBE_MATCHER = Pattern.compile("(youtu\\.be/|youtube\\.com/(watch\\?(.*&)?v=|(embed|v)/))([^?&\"'>]+)");
+    public static final Path NETWORK_ALBUM_ART;
 
     static {
-        NETWORK_ALBUM = new File(RadioConfig.config.images.networkAlbumArt);
+        NETWORK_ALBUM_ART = Paths.get(RadioConfig.config.images.networkAlbumArt);
     }
 
     private String url;
@@ -30,13 +31,13 @@ public class NetworkSong extends Song {
         this.track = track;
         track.setUserData(this);
 
-        if (track instanceof YoutubeAudioTrack) {
+        if (track instanceof YoutubeAudioTrack) { //fetch youtube album art
             albumArtUrl = "https://img.youtube.com/vi/" + track.getIdentifier().split("\\?v=")[0] + "/mqdefault.jpg";
         }
     }
 
     @Override
-    public String getLocation() {
+    public String getFileName() {
         return track.getInfo().uri;
     }
 
@@ -46,7 +47,7 @@ public class NetworkSong extends Song {
     }
 
     @Override
-    public String getIdentifier() {
+    public String getFullLocation() {
         return url;
     }
 
@@ -56,8 +57,8 @@ public class NetworkSong extends Song {
     }
 
     @Override
-    public File getAlbumArtFile() {
-        return NETWORK_ALBUM;
+    public Path getAlbumArtFile() {
+        return NETWORK_ALBUM_ART;
     }
 
     @Override

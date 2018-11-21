@@ -11,6 +11,7 @@ import javax.annotation.CheckReturnValue;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Path;
 
 public final class AlbumArtUtils {
 
@@ -19,9 +20,9 @@ public final class AlbumArtUtils {
     @CheckReturnValue
     public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel, boolean forceLocal) {
         if (forceLocal || song.getAlbumArtType() == AlbumArtType.FILE) {
-            File albumArt = song.getAlbumArtFile();
-            embed.setThumbnail("attachment://" + albumArt.getName());
-            return channel.sendFile(albumArt).embed(embed.build());
+            Path albumArt = song.getAlbumArtFile();
+            embed.setThumbnail("attachment://" + albumArt.getFileName().toString());
+            return channel.sendFile(albumArt.toFile()).embed(embed.build());
 
         } else { //network album
             embed.setThumbnail(song.getAlbumArtURL());
@@ -37,8 +38,8 @@ public final class AlbumArtUtils {
     @CheckReturnValue
     public static MessageAction attachAlbumArtToEdit(EmbedBuilder embed, Song song, Message existingMessage, boolean forceLocal) {
         if (forceLocal || song.getAlbumArtType() == AlbumArtType.FILE) {
-            File albumArt = song.getAlbumArtFile();
-            embed.setThumbnail("attachment://" + albumArt.getName());
+            Path albumArt = song.getAlbumArtFile();
+            embed.setThumbnail("attachment://" + albumArt.getFileName().toString());
             return existingMessage.editMessage(embed.build());
 
         } else { //network album

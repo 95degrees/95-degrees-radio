@@ -77,10 +77,10 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
 
             if (reaction.equals(VALID_REACTION)) {
                 result = true;
-                textChannel.sendMessage("✅ Marked `" + song.getLocation() + "` as valid").queue();
+                textChannel.sendMessage("✅ Marked `" + song.getFileName() + "` as valid").queue();
             } else if (reaction.equals(INVALID_REACTION)) {
                 result = false;
-                textChannel.sendMessage("❌ Marked `" + song.getLocation() + "` as invalid").queue();
+                textChannel.sendMessage("❌ Marked `" + song.getFileName() + "` as invalid").queue();
             } else {
                 return;
             }
@@ -92,7 +92,7 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
                 Radio.instance.getOrchestrator().playNextSong();
             }
 
-            Path parent = song.getQueue().getDirectory().toPath(); // /Songs directory
+            Path parent = song.getQueue().getDirectory(); // /Songs directory
 
             Path validSongs = parent.resolve("valid");
             Path invalidSongs = parent.resolve("invalid");
@@ -116,7 +116,7 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
             Path target = result ? validSongs : invalidSongs;
 
             try {
-                Files.move(Paths.get(song.getIdentifier()), target.resolve(song.getLocation()));
+                Files.move(Paths.get(song.getFullLocation()), target.resolve(song.getFileName()));
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

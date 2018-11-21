@@ -30,14 +30,14 @@ public class FindSongCommand extends Command {
         String search = data.getArgsString().toLowerCase();
         List<Song> map = ((SongPlaylist) active).getSongs().getSongMap();
         List<Song> queue = ((SongPlaylist) active).getSongs().getQueue();
-        List<Song> matches = map.stream().filter(s -> s.getLocation().toLowerCase().contains(search)).collect(Collectors.toList());
+        List<Song> matches = map.stream().filter(s -> s.getFileName().toLowerCase().contains(search)).collect(Collectors.toList());
 
         if (matches.size() == 0) {
             data.error("No matches found from result");
             return;
         }
 
-        String result = "[Song search]\n" + matches.size() + " match" + (matches.size() == 1 ? "" : "es") + "\n\n" + matches.stream().map(s -> "#" + (map.indexOf(s) + 1) + " [Queue " + (queue.indexOf(s) + 1) + "/" + queue.size() + "] " + " - " + s.getLocation()).collect(Collectors.joining("\n"));
+        String result = "[Song search]\n" + matches.size() + " match" + (matches.size() == 1 ? "" : "es") + "\n\n" + matches.stream().map(s -> "#" + (map.indexOf(s) + 1) + " [Queue " + (queue.indexOf(s) + 1) + "/" + queue.size() + "] " + " - " + s.getFileName()).collect(Collectors.joining("\n"));
 
         data.code(result);
     }

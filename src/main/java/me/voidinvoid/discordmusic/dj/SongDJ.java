@@ -166,7 +166,7 @@ public class SongDJ implements SongEventListener, EventListener {
                 .setColor(player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN)
                 .addField("Title", track.getInfo().title, true)
                 .addField(song instanceof NetworkSong ? "Uploader" : "Artist", FormattingUtils.escapeMarkup(track.getInfo().author), true)
-                .addField(song instanceof NetworkSong ? "URL" : "File (#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ")", FormattingUtils.escapeMarkup(song.getLocation()), false)
+                .addField(song instanceof NetworkSong ? "URL" : "File (#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ")", FormattingUtils.escapeMarkup(song.getFileName()), false)
                 .addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) + (track.getInfo().isStream ? "" : " (in " + FormattingUtils.getFormattedMsTimeLabelled(track.getDuration() - track.getPosition()) + ")") : "After " + (timeUntilJingle + 1) + " more songs", false)
                 .addField("Elapsed", track.getInfo().isStream ? "-" : FormattingUtils.getFormattedMsTime(track.getPosition()) + " / " + FormattingUtils.getFormattedMsTime(track.getDuration()), false)
                 .addField("", actions.stream().map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false)
@@ -201,7 +201,7 @@ public class SongDJ implements SongEventListener, EventListener {
         textChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Failed to Load Track")
                 .setColor(Colors.ACCENT_ERROR)
-                .setDescription("Failed to load " + song.getLocation() + ".\nCheck the console for stack trace")
+                .setDescription("Failed to load " + song.getFileName() + ".\nCheck the console for stack trace")
                 .addField("Error Message", error.getMessage(), false)
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
     }

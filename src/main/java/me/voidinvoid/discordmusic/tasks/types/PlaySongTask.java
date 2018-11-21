@@ -48,7 +48,7 @@ public class PlaySongTask extends RadioTaskExecutor {
 
         SongQueue queue = jingle ? ((SongPlaylist) playlist).getJingles() : ((SongPlaylist) playlist).getSongs();
 
-        List<Song> foundSongs = queue.getQueue().stream().filter(s -> s.getLocation().equalsIgnoreCase(song)).collect(Collectors.toList());
+        List<Song> foundSongs = queue.getQueue().stream().filter(s -> s.getFileName().equalsIgnoreCase(song)).collect(Collectors.toList());
 
         if (foundSongs.size() == 0) {
             System.out.println("TASK: couldn't find song_name: " + song);

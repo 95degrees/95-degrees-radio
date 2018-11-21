@@ -11,25 +11,32 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class FileSong extends Song {
-    static final File FALLBACK_FILE;
-    static final File JINGLE_FILE;
-    static final File ADVERT_FILE;
+
+    static final Path FALLBACK_ALBUM_ART;
+    static final Path JINGLE_ALBUM_ART;
+    static final Path ADVERT_ALBUM_ART;
 
     static {
-        FALLBACK_FILE = new File(RadioConfig.config.images.fallbackAlbumArt);
-        JINGLE_FILE = RadioConfig.config.images.jingleAlbumArt == null ? FALLBACK_FILE : new File(RadioConfig.config.images.jingleAlbumArt);
-        ADVERT_FILE = RadioConfig.config.images.advertAlbumArt == null ? FALLBACK_FILE : new File(RadioConfig.config.images.advertAlbumArt);
+        FALLBACK_ALBUM_ART = Paths.get(RadioConfig.config.images.fallbackAlbumArt);
+        JINGLE_ALBUM_ART = RadioConfig.config.images.jingleAlbumArt == null ? FALLBACK_ALBUM_ART : Paths.get(RadioConfig.config.images.jingleAlbumArt);
+        ADVERT_ALBUM_ART = RadioConfig.config.images.advertAlbumArt == null ? FALLBACK_ALBUM_ART : Paths.get(RadioConfig.config.images.advertAlbumArt);
     }
 
-    private File file;
-    private File albumArtFile;
+    private Path file;
+    private Path albumArtFile;
 
-    public FileSong(SongType type, File file) { //todo use path api
+    public FileSong(SongType type, Path file) {
+        this(type, file, null);
+    }
+
+    public FileSong(SongType type, Path file, SongQueue songQueue) {
         super(type);
 
         this.file = file;
+        this.setQueue(songQueue);
 
         try {
             Mp3File song = new Mp3File(file);
@@ -42,23 +49,24 @@ public class FileSong extends Song {
                 String mime = tag.getAlbumImageMimeType().replace("image/", "");
                 BufferedImage artImg = AlbumArtUtils.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
 
-                Path album = Files.createTempFile("albumart-", "." + mime);
-                albumArtFile = album.toFile();
-                albumArtFile.deleteOnExit();
+                albumArtFile = Files.createTempFile("albumart-", "." + mime);
 
-                ImageIO.write(artImg, mime, albumArtFile);
+                File af = albumArtFile.toFile();
+                af.deleteOnExit();
+
+                ImageIO.write(artImg, mime, af);
             }
         } catch (Exception ignored) {
         }
     }
 
     @Override
-    public String getLocation() {
-        return file.getName();
+    public String getFileName() {
+        return file.getFileName().toString();
     }
 
     @Override
-    public String getIdentifier() {
+    public String getFullLocation() {
         return file.toString();
     }
 
@@ -68,13 +76,13 @@ public class FileSong extends Song {
     }
 
     @Override
-    public File getAlbumArtFile() {
-        File f = getType().getAlbumArt(this);
-        if (f == null) {
-            f = albumArtFile == null ? FALLBACK_FILE : albumArtFile;
-        }
+    public Path getAlbumArtFile() {
+        Path p = getType().getAlbumArt(this);
 
-        return f;
+        //does the song type have a specific album art? if so return that
+        //otherwise does it have its own album art? if so return that
+        //otherwise return the 'not found' fallback album art
+        return p == null ? albumArtFile == null ? FALLBACK_ALBUM_ART : albumArtFile : p;
     }
 
     @Override

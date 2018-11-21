@@ -17,7 +17,7 @@ public class PlaySpecialTask extends RadioTaskExecutor {
         boolean force = params.get("play_instantly", Boolean.class);
         String listeningTo = params.get("listening_to", String.class);
 
-        List<Song> foundSongs = orch.getSpecialQueue().getQueue().stream().filter(s -> s.getLocation().equalsIgnoreCase(song)).collect(Collectors.toList());
+        List<Song> foundSongs = orch.getSpecialQueue().getQueue().stream().filter(s -> s.getFileName().equalsIgnoreCase(song)).collect(Collectors.toList());
 
         if (foundSongs.size() == 0) {
             System.out.println("TASK: couldn't find song_name: " + song);
