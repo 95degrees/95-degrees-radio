@@ -6,9 +6,9 @@ package me.voidinvoid.discordmusic.quiz;
  */
 public class QuizQuestion {
 
-    private final String question;
-    private final String imageUrl;
-    private final QuizAnswer[] answers;
+    private String question;
+    private String imageUrl;
+    private QuizAnswer[] answers;
 
     public QuizQuestion(String question, String imageUrl, QuizAnswer... answers) {
 
@@ -16,6 +16,8 @@ public class QuizQuestion {
         this.imageUrl = imageUrl;
         this.answers = answers;
     }
+
+    public QuizQuestion() {}
 
     public String getQuestion() {
         return question;
@@ -31,6 +33,7 @@ public class QuizQuestion {
 
     public int getCorrectAnswerIndex() {
         int i = 0;
+        if (answers == null) return -1;
         for (QuizAnswer a : answers) {
             if (a.isCorrect()) return i;
             i++;

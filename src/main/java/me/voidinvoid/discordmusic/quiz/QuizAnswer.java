@@ -6,14 +6,16 @@ package me.voidinvoid.discordmusic.quiz;
  */
 public class QuizAnswer {
 
-    private final String answer;
-    private final boolean correct;
+    private String answer;
+    private boolean correct;
 
     public QuizAnswer(String answer, boolean correct) {
 
         this.answer = answer;
         this.correct = correct;
     }
+
+    public QuizAnswer() {}
 
     public String getAnswer() {
         return answer;

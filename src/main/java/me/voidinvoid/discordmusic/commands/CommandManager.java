@@ -38,6 +38,7 @@ public class CommandManager implements EventListener {
         register(new RestartRadioCommand());
         register(new StopRadioCommand());
         register(new DebugCommand());
+        if (RadioConfig.config.useQuizSocketServer) register(new QuizSocketServerKeyCommand());
         register(new HelpCommand(commands));
 
         Executors.newSingleThreadExecutor().submit(() -> {

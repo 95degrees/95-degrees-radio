@@ -118,7 +118,7 @@ public class Radio implements EventListener {
         register(karaokeManager = new KaraokeManager());
         register(dj = new SongDJ(orchestrator, djChannel));
         register(new RadioMessageListener(radioChannel));
-        register(quizManager = new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel));
+        register(quizManager = new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
 
         if (RadioConfig.config.useCoinGain)
             register(coinCreditorManager = new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));

@@ -10,17 +10,19 @@ import com.google.gson.GsonBuilder;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
-import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import me.voidinvoid.discordmusic.songs.FileSong;
 import me.voidinvoid.discordmusic.songs.Playlist;
+import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.core.managers.GuildController;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,21 +55,30 @@ public class QuizManager implements SongEventListener, EventListener {
     private Song winnerSuspenseSong;
     private Song winnerSong;
 
+    private Role quizInGameRole, quizEliminatedRole;
+
     private QuizPlaylist activeQuiz;
 
-    public QuizManager(Path quizRoot, TextChannel textChannel, TextChannel quizManagerChannel) {
+    public QuizManager(Path quizRoot, TextChannel textChannel, TextChannel quizManagerChannel, Role quizInGameRole, Role quizEliminatedRole) {
 
         this.quizRoot = quizRoot;
         this.textChannel = textChannel;
         this.quizManagerChannel = quizManagerChannel;
 
+        this.quizInGameRole = quizInGameRole;
+        this.quizEliminatedRole = quizEliminatedRole;
+
         reload();
+
+        if (RadioConfig.config.useQuizSocketServer) runServer();
     }
 
     public void runServer() {
         Configuration config = new Configuration();
         config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9301 : 9501);
+
+        System.out.println("Started quiz server on " + config.getPort());
 
         SocketConfig sockets = new SocketConfig();
         sockets.setReuseAddress(true);
@@ -81,6 +92,7 @@ public class QuizManager implements SongEventListener, EventListener {
 
             if (!authenticatedClients.contains(c)) authenticatedClients.add(c);
 
+            c.sendEvent("authenticated");
             c.sendEvent("quizzes", quizzes);
             if (activeQuiz != null) c.sendEvent("active_quiz", activeQuiz);
         });
@@ -89,6 +101,12 @@ public class QuizManager implements SongEventListener, EventListener {
             if (!authenticatedClients.contains(c)) return;
 
             c.sendEvent("quizzes", quizzes);
+        });
+
+        server.addEventListener("start_dynamic_quiz", Quiz.class, (c, o, ack) -> {
+            if (!authenticatedClients.contains(c)) return;
+
+            startQuiz(new QuizPlaylist(o, this));
         });
 
         //NEW
@@ -142,6 +160,18 @@ public class QuizManager implements SongEventListener, EventListener {
         Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
+    private QuizPlaylist loadQuizFromString(String data) {
+        try {
+            Quiz quiz = GSON.fromJson(data, Quiz.class);
+
+            return new QuizPlaylist(quiz, this);
+        } catch (Exception e) {
+            System.out.println("Error loading quiz data");
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public void loadDynamicQuiz(Path file) {
         QuizPlaylist quiz = loadQuiz(file);
 
@@ -158,9 +188,7 @@ public class QuizManager implements SongEventListener, EventListener {
 
     public QuizPlaylist loadQuiz(Path q) {
         try {
-            Quiz quiz = GSON.fromJson(new String(Files.readAllBytes(q)), Quiz.class);
-
-            return new QuizPlaylist(quiz, this);
+            return loadQuizFromString(new String(Files.readAllBytes(q)));
         } catch (IOException e) {
             System.out.println("Error loading quiz file " + q);
             e.printStackTrace();
@@ -171,7 +199,7 @@ public class QuizManager implements SongEventListener, EventListener {
     public void reload() {
         quizzes = new HashMap<>();
 
-        //todo DEBUG
+        //DEBUG
         /*QuizPlaylist DEBUG_playlist = new QuizPlaylist(Quiz.__DEBUG_QUIZ, this);
         quizzes.put(Quiz.__DEBUG_QUIZ, DEBUG_playlist);
         Radio.instance.getOrchestrator().getPlaylists().add(DEBUG_playlist);
@@ -224,8 +252,13 @@ public class QuizManager implements SongEventListener, EventListener {
 
     @Override
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
-        if (activeQuiz != null) {
+        if (activeQuiz != null && activeQuiz.getQuizManagerMessage() != null) {
             activeQuiz.getQuizManagerMessage().delete().reason("End of quiz").queue();
+
+            GuildController controller = getController();
+            controller.getGuild().getMembersWithRoles(quizInGameRole).forEach(m -> {
+                controller.removeRolesFromMember(m, quizInGameRole, quizEliminatedRole).reason("Quiz has ended - removing roles").queue();
+            });
         }
     }
 
@@ -305,7 +338,7 @@ public class QuizManager implements SongEventListener, EventListener {
                 int ix = 0;
                 for (String em : FormattingUtils.NUMBER_EMOTES) {
                     if (em.equals(emote)) {
-                        activeQuiz.addParticipantAnswer(e.getUser(), ix);
+                        activeQuiz.addParticipantAnswer(e.getMember(), ix);
                         e.getReaction().removeReaction(e.getUser()).queue();
                         return;
                     }
@@ -332,6 +365,18 @@ public class QuizManager implements SongEventListener, EventListener {
                 }
             }
         }
+    }
+
+    public Role getQuizInGameRole() {
+        return quizInGameRole;
+    }
+
+    public Role getQuizEliminatedRole() {
+        return quizEliminatedRole;
+    }
+
+    public GuildController getController() {
+        return textChannel.getGuild().getController();
     }
 
     public TextChannel getQuizManagerChannel() {

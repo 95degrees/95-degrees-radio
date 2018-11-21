@@ -143,7 +143,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
             pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);
         }
 
-        if (RadioConfig.config.notificationsOptOutRole == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(RadioConfig.config.notificationsOptOutRole))) {
+        if (RadioConfig.config.roles.notificationsOptOutRole == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(RadioConfig.config.roles.notificationsOptOutRole))) {
             user.openPrivateChannel().queue(c -> c.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Coins")
                     .setColor(new Color(110, 230, 140))
