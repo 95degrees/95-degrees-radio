@@ -35,7 +35,7 @@ import java.util.*;
  */
 public class QuizManager implements SongEventListener, EventListener {
 
-    private static Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+    private static Gson GSON = new GsonBuilder().create();
 
     private Map<Quiz, QuizPlaylist> quizzes;
     private Path quizRoot;

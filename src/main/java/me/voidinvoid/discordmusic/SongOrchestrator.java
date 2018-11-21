@@ -206,6 +206,8 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void playNextSong(boolean skipJingle, boolean decrementJingleCounter) {
+        if (activePlaylist == null) return;
+
         if (pausePending) {
             pausePending = false;
 
