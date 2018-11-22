@@ -72,6 +72,15 @@ public class QuizManager implements SongEventListener, EventListener {
         if (RadioConfig.config.useQuizSocketServer) runServer();
     }
 
+    public boolean checkAuth(SocketIOClient c) {
+        if (!authenticatedClients.contains(c)) {
+            c.sendEvent("not_authenticated");
+            return false;
+        }
+
+        return true;
+    }
+
     public void runServer() {
         Configuration config = new Configuration();
         config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
@@ -97,13 +106,13 @@ public class QuizManager implements SongEventListener, EventListener {
         });
 
         server.addEventListener("list_quizzes", Object.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             c.sendEvent("quizzes", quizzes);
         });
 
         server.addEventListener("start_dynamic_quiz", Quiz.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             startQuiz(new QuizPlaylist(o, this));
         });
@@ -111,14 +120,14 @@ public class QuizManager implements SongEventListener, EventListener {
         //NEW
         //activate_quiz (quiz internal id param)
         server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             startQuiz(o);
         });
 
         //next_question (no param)
         server.addEventListener("next_question", Object.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             if (activeQuiz != null) {
                 activeQuiz.progress(false);
@@ -129,7 +138,7 @@ public class QuizManager implements SongEventListener, EventListener {
         //same as previous on java end, but if there are any updates
         //in the future on java end, vue shouldn't need to change
         server.addEventListener("next_question", Object.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             if (activeQuiz != null) {
                 activeQuiz.progress(false);
@@ -139,13 +148,13 @@ public class QuizManager implements SongEventListener, EventListener {
 
         //OLD
         server.addEventListener("start_quiz", String.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             startQuiz(o);
         });
 
         server.addEventListener("make_quiz_progress", Object.class, (c, o, ack) -> {
-            if (!authenticatedClients.contains(c)) return;
+            if (!checkAuth(c)) return;
 
             if (activeQuiz != null) {
                 if (activeQuiz.progress(false)) {
