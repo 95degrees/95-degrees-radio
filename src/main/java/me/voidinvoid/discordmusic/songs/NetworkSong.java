@@ -5,7 +5,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import net.dv8tion.jda.core.entities.User;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 

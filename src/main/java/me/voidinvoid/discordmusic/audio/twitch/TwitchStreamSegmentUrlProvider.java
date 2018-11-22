@@ -17,8 +17,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
-import static me.voidinvoid.discordmusic.audio.twitch.TwitchKrakenStreamAudioSourceManager.createGetRequest;
-
 /**
  * Provider for Twitch segment URLs from a channel.
  */

@@ -1,5 +1,9 @@
 package me.voidinvoid.discordmusic.quiz;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * This code was developed by VoidInVoid / Exfusion
  * 2018
@@ -29,16 +33,5 @@ public class QuizQuestion {
 
     public QuizAnswer[] getAnswers() {
         return answers;
-    }
-
-    public int getCorrectAnswerIndex() {
-        int i = 0;
-        if (answers == null) return -1;
-        for (QuizAnswer a : answers) {
-            if (a.isCorrect()) return i;
-            i++;
-        }
-
-        return -1;
     }
 }

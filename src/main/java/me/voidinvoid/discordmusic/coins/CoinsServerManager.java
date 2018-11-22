@@ -8,6 +8,7 @@ import net.dv8tion.jda.core.entities.User;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public class CoinsServerManager {
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
             conn.addRequestProperty("Content-Type", "application/json");
-            conn.getOutputStream().write(root.toString().getBytes("UTF8"));
+            conn.getOutputStream().write(root.toString().getBytes(StandardCharsets.UTF_8));
 
             int status = conn.getResponseCode();
             if (status != 200) {

@@ -2,7 +2,6 @@ package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 
-import java.io.File;
 import java.nio.file.Path;
 
 public abstract class Song {

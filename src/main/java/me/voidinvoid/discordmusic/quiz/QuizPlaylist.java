@@ -33,11 +33,9 @@ public class QuizPlaylist extends Playlist {
 
     private boolean allowRepeat;
 
-    private int correctAnswerIndex;
-
     private Message activeQuestionMessage, quizManagerMessage;
 
-    private Map<QuizParticipant, Integer> currentAnswers;
+    private Map<QuizParticipant, QuizAnswer> currentAnswers;
 
     private List<QuizParticipant> remainingParticipants;
 
@@ -93,9 +91,9 @@ public class QuizPlaylist extends Playlist {
                 .addField("Loaded quiz", quiz.getTitle(), true)
                 .addField("Current state", "Quiz: " + quizProgress + (currentQuestionProgress == null ? "" : "\nQuestion: " + currentQuestionProgress), true)
                 .addField("", "\u200b", false)
-                .setFooter(nextProgressionAction == null ? "🚫 Quiz cannot be advanced yet" : "Press " + ADVANCE_QUIZ_EMOTE + " to " + nextProgressionAction, null);
+                .setFooter(quizProgress == QuizProgress.ENDED ? "🚫 Quiz has ended" : nextProgressionAction == null ? "🚫 Quiz cannot be advanced yet" : "Press " + ADVANCE_QUIZ_EMOTE + " to " + nextProgressionAction, null);
 
-        boolean nobodyCorrect = remainingParticipants.stream().noneMatch(p -> currentAnswers.containsKey(p) && currentAnswers.get(p) == correctAnswerIndex);
+        boolean nobodyCorrect = remainingParticipants.stream().noneMatch(p -> currentAnswers.containsKey(p) && currentAnswers.get(p).isCorrect());
 
         if (quizProgress == QuizProgress.IN_PROGRESS) {
             QuizQuestion cq = quiz.getQuestions().get(currentQuestion);
@@ -103,7 +101,7 @@ public class QuizPlaylist extends Playlist {
                     IntStream.range(0, cq.getAnswers().length)
                             .mapToObj(i -> {
                                 QuizAnswer a = cq.getAnswers()[i];
-                                return (a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()) + " (" + currentAnswers.values().stream().filter(v -> v == i).count() + ")";
+                                return (a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()) + " (" + currentAnswers.values().stream().filter(v -> v.equals(a)).count() + ")";
                             }).collect(Collectors.joining("\n")), false);
 
             if (cq.getImageUrl() != null) {
@@ -113,7 +111,7 @@ public class QuizPlaylist extends Playlist {
             if (remainingParticipants.size() == 0 || nobodyCorrect) {
                 eb.addField("", "⚠ No participants have answered correctly" + (currentQuestionProgress == QuizQuestionProgress.IN_PROGRESS ? " so far" : ""), false);
             } else {
-                eb.addField("", "✅ " + remainingParticipants.stream().filter(p -> currentAnswers.getOrDefault(p, -1) == correctAnswerIndex).map(QuizParticipant::getName).collect(Collectors.joining(", ")) + " will make it to the next round", false);
+                eb.addField("", "✅ " + remainingParticipants.stream().filter(p -> currentAnswers.containsKey(p) && currentAnswers.get(p).isCorrect()).map(QuizParticipant::getName).collect(Collectors.joining(", ")) + " will make it to the next round", false);
             }
         }
 
@@ -142,25 +140,27 @@ public class QuizPlaylist extends Playlist {
         if (currentQuestion == 0) {
             if (currentAnswers.keySet().stream().anyMatch(p -> p.getId().equals(user.getId())))
                 return; //already answered
+
             QuizParticipant part = new QuizParticipant(user);
-            addAnswer(part, answerIndex);
+
+            addAnswer(part, quiz.getQuestions().get(currentQuestion).getAnswers()[answerIndex]);
 
             manager.getTextChannel().getGuild().getController().addSingleRoleToMember(member, manager.getQuizInGameRole()).queue();
+
         } else {
+            //only accept their answer if they're a remaining participant
             remainingParticipants.stream().filter(p -> p.getId().equals(user.getId())).findAny()
-                    .ifPresent(p -> {
-                        addAnswer(p, answerIndex);
-                    });
+                    .ifPresent(p -> addAnswer(p, quiz.getQuestions().get(currentQuestion).getAnswers()[answerIndex]));
         }
         //TODO HISTORY
     }
 
-    private void addAnswer(QuizParticipant p, int answerIndex) {
+    private void addAnswer(QuizParticipant p, QuizAnswer answer) {
         if (currentAnswers.containsKey(p)) return;
 
-        if (!remainingParticipants.contains(p) && answerIndex == correctAnswerIndex) remainingParticipants.add(p);
+        if (!remainingParticipants.contains(p) && answer.isCorrect()) remainingParticipants.add(p);
 
-        currentAnswers.put(p, answerIndex);
+        currentAnswers.put(p, answer);
 
         quizManagerMessage.editMessage(generateStatusMessage()).queue(m -> quizManagerMessage = m);
     }
@@ -215,7 +215,7 @@ public class QuizPlaylist extends Playlist {
     private EmbedBuilder getBaseEmbed(boolean question) {
         return new EmbedBuilder()
                 //.setAuthor("95 Degrees Trivia", "http://95degrees.cf", "https://cdn.discordapp.com/avatars/121387133821911040/86baaf30c545a20cf27b68b01dead28e.png")
-                .setAuthor("95 Degrees Trivia" + (question ? (" - Q" + (currentQuestion + 1)) : ""))
+                .setAuthor("95 Degrees Trivia" + (question ? (" - Q" + (currentQuestion + 1)) : ""), null, manager.getTextChannel().getJDA().getSelfUser().getAvatarUrl())
                 .setTitle(question ? quiz.getQuestions().get(currentQuestion).getQuestion() : null)
                 .setColor(Colors.ACCENT_QUIZ);
     }
@@ -258,8 +258,6 @@ public class QuizPlaylist extends Playlist {
 
                 QuizQuestion qc = quiz.getQuestions().get(currentQuestion);
 
-                correctAnswerIndex = qc.getCorrectAnswerIndex();
-
                 activeQuestionMessage = manager.getTextChannel().sendMessage(getBaseEmbed(true)
                         .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + qc.getAnswers()[i].getAnswer()).collect(Collectors.joining("\n")))
                         .setFooter("React with the corresponding number to select your answer", null)
@@ -280,6 +278,10 @@ public class QuizPlaylist extends Playlist {
             currentQuestionProgress = QuizQuestionProgress.ENDED;
             quizProgress = QuizProgress.IN_PROGRESS;
 
+            if (activeQuestionMessage != null) { //shouldn't be null
+                activeQuestionMessage.clearReactions().queue();
+            }
+
             manager.getTextChannel().sendMessage(getBaseEmbed(true)
                     .setTitle("The results are in!")
                     .build()).queue();
@@ -296,7 +298,7 @@ public class QuizPlaylist extends Playlist {
                     .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> {
                         QuizAnswer a = qc.getAnswers()[i];
 
-                        return (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - " + currentAnswers.entrySet().stream().filter(e -> e.getValue() == i).count();
+                        return (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - " + currentAnswers.entrySet().stream().filter(e -> e.getValue().isCorrect()).count();
                     }).collect(Collectors.joining("\n")))
                     .build()).queue();
 
@@ -306,7 +308,7 @@ public class QuizPlaylist extends Playlist {
 
             requiresManualPlay = true;
 
-            List<QuizParticipant> correctParticipants = currentAnswers.entrySet().stream().filter(e -> e.getValue() == correctAnswerIndex).map(Map.Entry::getKey).collect(Collectors.toList());
+            List<QuizParticipant> correctParticipants = currentAnswers.entrySet().stream().filter(e -> e.getValue().isCorrect()).map(Map.Entry::getKey).collect(Collectors.toList());
 
             GuildController controller = manager.getController();
             remainingParticipants.stream().filter(p -> !correctParticipants.contains(p)).forEach(p -> {

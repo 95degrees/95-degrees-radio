@@ -67,7 +67,6 @@ public class TaskManager implements Job {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return;
         }
     }
 
