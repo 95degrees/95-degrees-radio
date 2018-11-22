@@ -39,14 +39,14 @@ public class Quiz {
         __DEBUG_QUIZ.title = "Debug quiz";
         __DEBUG_QUIZ.type = QuizType.BATTLE_ROYALE;
         __DEBUG_QUIZ.questions = Arrays.asList(
-                new QuizQuestion("What is the capital city of France?", null, new QuizAnswer("Paris", true), new QuizAnswer("London", false), new QuizAnswer("Madrid", false)),
-                new QuizQuestion("whats this flag lol", "c", new QuizAnswer("England", false), new QuizAnswer("Scotland", true), new QuizAnswer("Australia", false)),
-                new QuizQuestion("meaningful question 3", null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
-                new QuizQuestion("meaningful question 4", null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
-                new QuizQuestion("meaningful question 5", null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
-                new QuizQuestion("meaningful question 6", null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
-                new QuizQuestion("meaningful question 7", null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
-                new QuizQuestion("meaningful question 8", null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false))
+                new QuizQuestion("What is the capital city of France?", null, null, new QuizAnswer("Paris", true), new QuizAnswer("London", false), new QuizAnswer("Madrid", false)),
+                new QuizQuestion("whats this flag lol", "c", null, new QuizAnswer("England", false), new QuizAnswer("Scotland", true), new QuizAnswer("Australia", false)),
+                new QuizQuestion("meaningful question 3", null, null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
+                new QuizQuestion("meaningful question 4", null, null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
+                new QuizQuestion("meaningful question 5", null, null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
+                new QuizQuestion("meaningful question 6", null, null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
+                new QuizQuestion("meaningful question 7", null, null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false)),
+                new QuizQuestion("meaningful question 8", null, null, new QuizAnswer("wrong", false), new QuizAnswer("right", true), new QuizAnswer("wrong again", false))
         ); //IntStream.range(0, 10).mapToObj(i -> new QuizQuestion("Question " + i, new QuizAnswer("CORRECT", true), new QuizAnswer("INCORRECT-1", false), new QuizAnswer("INCORRECT-2", false))).collect(Collectors.toList());
     }
 }

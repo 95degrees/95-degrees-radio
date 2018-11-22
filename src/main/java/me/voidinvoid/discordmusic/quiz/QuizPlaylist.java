@@ -1,7 +1,9 @@
 package me.voidinvoid.discordmusic.quiz;
 
+import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -39,6 +41,8 @@ public class QuizPlaylist extends Playlist {
 
     private List<QuizParticipant> remainingParticipants;
 
+    private Map<QuizQuestion, Song> songTracks = new HashMap<>();
+
     private String nextProgressionAction;
 
     public Message getQuizManagerMessage() {
@@ -50,6 +54,12 @@ public class QuizPlaylist extends Playlist {
         this.name = quiz.getTitle();
         this.quiz = quiz;
         this.manager = manager;
+
+        for (QuizQuestion c : quiz.getQuestions()) {
+            if (c.getAudioUrl() != null) {
+                Radio.instance.getOrchestrator().createNetworkTrack(SongType.QUIZ, c.getAudioUrl(), s -> songTracks.put(c, s));
+            }
+        }
     }
 
     @Override
@@ -98,11 +108,7 @@ public class QuizPlaylist extends Playlist {
         if (quizProgress == QuizProgress.IN_PROGRESS) {
             QuizQuestion cq = quiz.getQuestions().get(currentQuestion);
             eb.addField("Current question (" + (currentQuestion + 1) + "/" + (quiz.getQuestions().size()) + ")", "Eligible contestants: " + (currentQuestion == 0 ? "<everyone>" : currentQuestionProgress == QuizQuestionProgress.DISPLAYING_ANSWERS ? "-" : remainingParticipants.stream().map(QuizParticipant::getName).collect(Collectors.joining(", "))) + "\n\n" + cq.getQuestion() + "\n\n" +
-                    IntStream.range(0, cq.getAnswers().length)
-                            .mapToObj(i -> {
-                                QuizAnswer a = cq.getAnswers()[i];
-                                return (a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()) + " (" + currentAnswers.values().stream().filter(v -> v.equals(a)).count() + ")";
-                            }).collect(Collectors.joining("\n")), false);
+                    Arrays.stream(cq.getAnswers()).map(a -> (a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()) + " (" + currentAnswers.values().stream().filter(v -> v.equals(a)).count() + ")").collect(Collectors.joining("\n")), false);
 
             if (cq.getImageUrl() != null) {
                 eb.setThumbnail(cq.getImageUrl());
@@ -190,15 +196,17 @@ public class QuizPlaylist extends Playlist {
         }
 
         if (currentQuestionProgress == QuizQuestionProgress.IN_PROGRESS) {
+            Song customAudio = songTracks.get(quiz.getQuestions().get(currentQuestion));
+
             new Thread(() -> {
                 try {
-                    Thread.sleep(10500);
+                    Thread.sleep(customAudio == null ? 10500 : customAudio.getTrack().getDuration() - 100);
                     progress(false);
                 } catch (Exception ignored) {
                 }
-            }).start();
+            }).start(); //TODO
 
-            return manager.getQuestionCountdownSong();
+            return customAudio == null ? manager.getQuestionCountdownSong() : customAudio;
         }
 
         if (currentQuestionProgress == QuizQuestionProgress.ENDED) {
@@ -295,11 +303,7 @@ public class QuizPlaylist extends Playlist {
             QuizQuestion qc = quiz.getQuestions().get(currentQuestion);
 
             manager.getTextChannel().sendMessage(getBaseEmbed(true)
-                    .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> {
-                        QuizAnswer a = qc.getAnswers()[i];
-
-                        return (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - " + currentAnswers.entrySet().stream().filter(e -> e.getValue().isCorrect()).count();
-                    }).collect(Collectors.joining("\n")))
+                    .setDescription(Arrays.stream(qc.getAnswers()).map(a -> (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - " + currentAnswers.entrySet().stream().filter(e -> e.getValue().isCorrect()).count()).collect(Collectors.joining("\n")))
                     .build()).queue();
 
             /*manager.getTextChannel().sendMessage(getBaseEmbed()
@@ -348,13 +352,17 @@ public class QuizPlaylist extends Playlist {
 
             nextProgressionAction = null;
 
+            if (quizManagerMessage != null) {
+                quizManagerMessage.clearReactions().queue();
+            }
+
             GuildController controller = manager.getController();
             controller.getGuild().getMembersWithRoles(manager.getQuizInGameRole()).forEach(m -> {
                 controller.removeRolesFromMember(m, manager.getQuizInGameRole(), manager.getQuizEliminatedRole()).reason("Quiz has ended - removing roles").queue();
             });
         }
 
-        quizManagerMessage = quizManagerMessage.editMessage(generateStatusMessage()).complete();
+        quizManagerMessage = quizManagerMessage == null ? null : quizManagerMessage.editMessage(generateStatusMessage()).complete();
 
         return requiresManualPlay;
     }

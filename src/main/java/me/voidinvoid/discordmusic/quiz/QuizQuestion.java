@@ -12,12 +12,14 @@ public class QuizQuestion {
 
     private String question;
     private String imageUrl;
+    private String audioUrl;
     private QuizAnswer[] answers;
 
-    public QuizQuestion(String question, String imageUrl, QuizAnswer... answers) {
+    public QuizQuestion(String question, String imageUrl, String audioUrl, QuizAnswer... answers) {
 
         this.question = question;
         this.imageUrl = imageUrl;
+        this.audioUrl = audioUrl;
         this.answers = answers;
     }
 
@@ -29,6 +31,10 @@ public class QuizQuestion {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public String getAudioUrl() {
+        return audioUrl;
     }
 
     public QuizAnswer[] getAnswers() {

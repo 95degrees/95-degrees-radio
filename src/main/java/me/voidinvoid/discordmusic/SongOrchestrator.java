@@ -34,6 +34,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -354,6 +357,30 @@ public class SongOrchestrator extends AudioEventAdapter {
     public void onTrackStuck(AudioPlayer player, AudioTrack track, long thresholdMs) {
         setTimeUntilJingle(-1);
         playNextSong();
+    }
+
+    public void createNetworkTrack(SongType type, String url, Consumer<NetworkSong> callback) {
+        manager.loadItem(url, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack audioTrack) {
+                callback.accept(new NetworkSong(type, audioTrack, null));
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist audioPlaylist) {
+
+            }
+
+            @Override
+            public void noMatches() {
+
+            }
+
+            @Override
+            public void loadFailed(FriendlyException e) {
+
+            }
+        });
     }
 
     public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
