@@ -58,6 +58,10 @@ public class AdvertisementManager implements SongEventListener {
         }
     }
 
+    public SongQueue getAdvertQueue() {
+        return advertQueue;
+    }
+
     public List<Advertisement> getAdverts() {
         return adverts;
     }
