@@ -58,6 +58,10 @@ public class AdvertisementManager implements SongEventListener {
         }
     }
 
+    public List<Advertisement> getAdverts() {
+        return adverts;
+    }
+
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (song.getType() == SongType.ADVERTISEMENT) {

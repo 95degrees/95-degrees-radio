@@ -252,14 +252,8 @@ public class QuizManager implements SongEventListener, EventListener {
 
     @Override
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
-        if (activeQuiz != null && activeQuiz.getQuizManagerMessage() != null) {
-            activeQuiz.getQuizManagerMessage().delete().reason("End of quiz").queue();
+        if (!(newPlaylist instanceof QuizPlaylist)) activeQuiz = null;
 
-            GuildController controller = getController();
-            controller.getGuild().getMembersWithRoles(quizInGameRole).forEach(m -> {
-                controller.removeRolesFromMember(m, quizInGameRole, quizEliminatedRole).reason("Quiz has ended - removing roles").queue();
-            });
-        }
     }
 
     public void emitToAuthenticated(String key, Object... value) {

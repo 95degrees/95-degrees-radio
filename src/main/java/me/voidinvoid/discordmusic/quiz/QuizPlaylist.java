@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.quiz;
 
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -40,6 +41,9 @@ public class QuizPlaylist extends Playlist {
     private Map<QuizParticipant, QuizAnswer> currentAnswers;
 
     private List<QuizParticipant> remainingParticipants;
+    private List<Member> allMembers;
+
+    private List<QuizParticipant> winners;
 
     private Map<QuizQuestion, Song> songTracks = new HashMap<>();
 
@@ -69,7 +73,7 @@ public class QuizPlaylist extends Playlist {
 
     @Override
     public String getStatusOverrideMessage() {
-        return quiz.getTitle();
+        return quizProgress == QuizProgress.ENDED ? null : quiz.getTitle();
     }
 
     @Override
@@ -84,7 +88,10 @@ public class QuizPlaylist extends Playlist {
         automaticProgression = false;
 
         remainingParticipants = new ArrayList<>();
+        allMembers = new ArrayList<>();
         currentAnswers = new HashMap<>();
+
+        winners = new ArrayList<>();
 
         nextProgressionAction = "start question 1";
 
@@ -92,6 +99,16 @@ public class QuizPlaylist extends Playlist {
         quizManagerMessage.addReaction(ADVANCE_QUIZ_EMOTE).complete();
 
         manager.getTextChannel().sendMessage(getBaseEmbed(false).setTitle("The quiz is starting soon! 🎲").build()).queue();
+    }
+
+    @Override
+    public void onDeactivate() {
+        if (quizManagerMessage != null) quizManagerMessage.delete().reason("End of quiz").queue();
+
+        GuildController controller = manager.getController();
+        allMembers.forEach(m -> controller.removeRolesFromMember(m, manager.getQuizInGameRole(), manager.getQuizEliminatedRole()).reason("Quiz has ended - removing roles").queue());
+
+        if (RadioConfig.config.useStatus) controller.getJDA().getPresence().setGame(null);
     }
 
     public MessageEmbed generateStatusMessage() {
@@ -119,18 +136,18 @@ public class QuizPlaylist extends Playlist {
             } else {
                 eb.addField("", "✅ " + remainingParticipants.stream().filter(p -> currentAnswers.containsKey(p) && currentAnswers.get(p).isCorrect()).map(QuizParticipant::getName).collect(Collectors.joining(", ")) + " will make it to the next round", false);
             }
+
+            eb.addField("", "\u200b", false);
         }
 
         if (quizProgress == QuizProgress.ENDED) return eb.build();
 
-        eb.addField("", "\u200b", false);
-
         if (quizProgress == QuizProgress.IN_PROGRESS && currentQuestionProgress != QuizQuestionProgress.IN_PROGRESS && nobodyCorrect) {
             eb.addField("The quiz will end after this round", "Nobody answered the previous question correctly", false);
         } else if (quizProgress == QuizProgress.WINNER_SUSPENSE || quizProgress == QuizProgress.WINNER_ANNOUNCEMENT) {
-            String winners = remainingParticipants.stream().map(QuizParticipant::getName).collect(Collectors.joining(", "));
+            String won = winners.stream().map(QuizParticipant::getName).collect(Collectors.joining(", "));
 
-            eb.addField("Game winners (" + remainingParticipants.size() + ")", winners.isEmpty() ? "<nobody>" : winners, false);
+            eb.addField("Game winners (" + winners.size() + ")", won.isEmpty() ? "<nobody>" : won, false);
         } else if (currentQuestion <= quiz.getQuestions().size() - 2) {
             QuizQuestion nq = quiz.getQuestions().get(currentQuestion + 1);
             eb.addField("Preview of next question (" + (currentQuestion + 2) + "/" + (quiz.getQuestions().size()) + ")", nq.getQuestion() + "\n\n" + Arrays.stream(nq.getAnswers()).map(a -> a.isCorrect() ? "**" + a.getAnswer() + "**" : a.getAnswer()).collect(Collectors.joining("\n")), false);
@@ -149,6 +166,7 @@ public class QuizPlaylist extends Playlist {
 
             QuizParticipant part = new QuizParticipant(user);
 
+            allMembers.add(member);
             addAnswer(part, quiz.getQuestions().get(currentQuestion).getAnswers()[answerIndex]);
 
             manager.getTextChannel().getGuild().getController().addSingleRoleToMember(member, manager.getQuizInGameRole()).queue();
@@ -303,7 +321,7 @@ public class QuizPlaylist extends Playlist {
             QuizQuestion qc = quiz.getQuestions().get(currentQuestion);
 
             manager.getTextChannel().sendMessage(getBaseEmbed(true)
-                    .setDescription(Arrays.stream(qc.getAnswers()).map(a -> (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - " + currentAnswers.entrySet().stream().filter(e -> e.getValue().isCorrect()).count()).collect(Collectors.joining("\n")))
+                    .setDescription(Arrays.stream(qc.getAnswers()).map(a -> (a.isCorrect() ? CORRECT_EMOTE : INCORRECT_EMOTE) + " " + a.getAnswer() + " - " + currentAnswers.entrySet().stream().filter(e -> e.getValue().equals(a)).count()).collect(Collectors.joining("\n")))
                     .build()).queue();
 
             /*manager.getTextChannel().sendMessage(getBaseEmbed()
@@ -325,12 +343,16 @@ public class QuizPlaylist extends Playlist {
 
             remainingParticipants = correctParticipants;
 
+            if (!remainingParticipants.isEmpty()) {
+                winners = new ArrayList<>(correctParticipants);
+            }
+
             nextProgressionAction = currentQuestion + 1 >= quiz.getQuestions().size() || remainingParticipants.size() == 0 ? "play winner suspense music" : "start question " + (currentQuestion + 2);
 
         } else if (quizProgress == QuizProgress.WINNER_SUSPENSE) {
             quizProgress = QuizProgress.WINNER_ANNOUNCEMENT;
 
-            List<String> res = remainingParticipants.stream().map(p -> "<@" + p.getId() + ">").collect(Collectors.toList());
+            List<String> res = winners.stream().map(p -> "<@" + p.getId() + ">").collect(Collectors.toList());
             long numberOfWinners = res.size();
             String winners = String.join(",\n", res);
 
@@ -352,14 +374,9 @@ public class QuizPlaylist extends Playlist {
 
             nextProgressionAction = null;
 
-            if (quizManagerMessage != null) {
-                quizManagerMessage.clearReactions().queue();
-            }
+            onDeactivate();
 
-            GuildController controller = manager.getController();
-            controller.getGuild().getMembersWithRoles(manager.getQuizInGameRole()).forEach(m -> {
-                controller.removeRolesFromMember(m, manager.getQuizInGameRole(), manager.getQuizEliminatedRole()).reason("Quiz has ended - removing roles").queue();
-            });
+            return requiresManualPlay;
         }
 
         quizManagerMessage = quizManagerMessage == null ? null : quizManagerMessage.editMessage(generateStatusMessage()).complete();

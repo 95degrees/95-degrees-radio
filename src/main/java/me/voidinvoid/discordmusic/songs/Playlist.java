@@ -33,6 +33,8 @@ public abstract class Playlist {
 
     public void onActivate() {}
 
+    public void onDeactivate() {}
+
     public abstract void awaitLoad();
 
     public abstract Song provideNextSong(boolean playJingle);

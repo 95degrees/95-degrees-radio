@@ -135,6 +135,8 @@ public class SongOrchestrator extends AudioEventAdapter {
             if (activePlaylist instanceof SongPlaylist) {
                 ((SongPlaylist) activePlaylist).getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
             }
+
+            sp.onDeactivate();
         }
 
         songEventListeners.forEach(l -> {
