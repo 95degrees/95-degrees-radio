@@ -51,7 +51,7 @@ public class SongSearchResult {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Song Search")
-                .setColor(Colors.ACCENT_SEARCH)
+                .setColor(Colors.ACCENT_SEARCH) //todo masked links for all matches so theyre clickable [display text](url)
                 .setDescription((amount == 1 ? "Here is the top match" : "Here are the top " + amount + " matches") + " from your search\n" + "React with the corresponding number to add to the queue\n\n" + (songsOverLengthLimit ? "⚠ Some results were omitted for being over the length limit\n\n" : ""))
                 .setTimestamp(OffsetDateTime.now());
 

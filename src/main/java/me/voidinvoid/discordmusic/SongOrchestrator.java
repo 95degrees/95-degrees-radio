@@ -34,9 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -135,9 +133,9 @@ public class SongOrchestrator extends AudioEventAdapter {
             if (activePlaylist instanceof SongPlaylist) {
                 ((SongPlaylist) activePlaylist).getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
             }
-
-            sp.onDeactivate();
         }
+
+        activePlaylist.onDeactivate();
 
         songEventListeners.forEach(l -> {
             try {

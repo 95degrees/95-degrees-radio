@@ -36,9 +36,13 @@ public class SongQueue extends AudioEventAdapter {
     public CompletableFuture<List<Song>> loadSongsAsync() {
         CompletableFuture<List<Song>> files = CompletableFuture.supplyAsync(this::initSongs); //find all files async
         files.whenComplete((l, e) -> {
-            if (l == null) return;
+            if (e != null) {
+                System.err.println("Error loading songs (async callback) for playlist: " + e.getMessage());
+                e.printStackTrace();
+                return;
+            }
 
-            System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + playlist.getName());
+            System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + (playlist == null ? "<null>" : playlist.getName()));
 
             List<Song> songMap = new ArrayList<>(l); //a clone
             songMap.sort(Comparator.comparing(Song::getFullLocation)); //probably not needed but just in-case
@@ -66,7 +70,7 @@ public class SongQueue extends AudioEventAdapter {
         try {
             return Files.walk(directory, 1)
                     .filter(f -> !Files.isDirectory(f))
-            .map(f -> new FileSong(queueType, f, this)).collect(Collectors.toList());
+                    .map(f -> new FileSong(queueType, f, this)).collect(Collectors.toList());
 
         } catch (Exception ex) {
             System.err.println("Error fetching songs for playlist");

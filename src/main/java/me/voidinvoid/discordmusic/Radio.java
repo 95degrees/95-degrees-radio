@@ -185,6 +185,7 @@ public class Radio implements EventListener {
     }
 
     public static void shutdown(boolean restart) {
+        System.out.println(ConsoleColor.BLUE_BACKGROUND + ConsoleColor.BLACK_BOLD + (restart ? " Restarting... " : " Shutting down ") + ConsoleColor.RESET);
         System.exit(restart ? 1 : 0);
     }
 
