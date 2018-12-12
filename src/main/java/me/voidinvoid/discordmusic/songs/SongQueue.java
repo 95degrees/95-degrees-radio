@@ -70,6 +70,7 @@ public class SongQueue extends AudioEventAdapter {
 
         } catch (Exception ex) {
             System.err.println("Error fetching songs for playlist");
+            ex.printStackTrace();
 
             return null;
         }

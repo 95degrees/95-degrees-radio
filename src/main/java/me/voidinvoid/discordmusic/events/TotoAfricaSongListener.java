@@ -6,7 +6,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongPlaylist;
+import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import net.dv8tion.jda.core.entities.*;
 
 public class TotoAfricaSongListener implements SongEventListener {
@@ -22,9 +22,9 @@ public class TotoAfricaSongListener implements SongEventListener {
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         Playlist playlist = Radio.instance.getOrchestrator().getActivePlaylist();
-        if (!(playlist instanceof SongPlaylist)) return;
+        if (!(playlist instanceof RadioPlaylist)) return;
         
-        if (((SongPlaylist) playlist).isDirectMessageNotifications() && track instanceof LocalAudioTrack && track.getInfo().title.equals("Africa") && track.getInfo().author.equals("Toto")) {
+        if (((RadioPlaylist) playlist).isDirectMessageNotifications() && track instanceof LocalAudioTrack && track.getInfo().title.equals("Africa") && track.getInfo().author.equals("Toto")) {
             int i = 0;
             for (Member m : textChannel.getGuild().getMembersWithRoles(mentionRole)) {
                 if (++i >= 75) {

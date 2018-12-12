@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 
-public class SongPlaylist extends Playlist {
+public class RadioPlaylist extends Playlist {
 
     private SongQueue songs;
     private SongQueue jingles;
@@ -18,7 +18,7 @@ public class SongPlaylist extends Playlist {
 
     private CompletableFuture<List<Song>> songsFuture, jinglesFuture;
 
-    public SongPlaylist(Path path) {
+    public RadioPlaylist(Path path) {
         super(path.getFileName().toString()); //playlist dir name
 
         Properties prop = new Properties();
