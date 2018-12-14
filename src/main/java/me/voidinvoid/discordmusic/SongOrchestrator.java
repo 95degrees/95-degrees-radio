@@ -126,12 +126,12 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void setActivePlaylist(Playlist activePlaylist) {
-        if (this.activePlaylist instanceof SongPlaylist) {
-            SongPlaylist sp = (SongPlaylist) this.activePlaylist;
+        if (this.activePlaylist instanceof RadioPlaylist) {
+            RadioPlaylist sp = (RadioPlaylist) this.activePlaylist;
             List<NetworkSong> networkSongs = sp.getSongs().clearNetworkSongs();
 
-            if (activePlaylist instanceof SongPlaylist) {
-                ((SongPlaylist) activePlaylist).getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
+            if (activePlaylist instanceof RadioPlaylist) {
+                ((RadioPlaylist) activePlaylist).getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
             }
         }
 
@@ -171,7 +171,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
             playlists = playlistFolder
                     .filter(Files::isDirectory)
-                    .map(SongPlaylist::new)
+                    .map(RadioPlaylist::new)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             System.out.println(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
@@ -393,9 +393,9 @@ public class SongOrchestrator extends AudioEventAdapter {
             return false;
         }
 
-        if (!(activePlaylist instanceof SongPlaylist)) return false;
+        if (!(activePlaylist instanceof RadioPlaylist)) return false;
 
-        SongPlaylist sp = (SongPlaylist) activePlaylist;
+        RadioPlaylist sp = (RadioPlaylist) activePlaylist;
 
         NetworkSong song = new NetworkSong(SongType.SONG, track, user);
 

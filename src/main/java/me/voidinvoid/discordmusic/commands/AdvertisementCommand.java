@@ -17,19 +17,19 @@ public class AdvertisementCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        if (Radio.instance.getAdvertisementManager() == null) {
+        AdvertisementManager adman = Radio.instance.getAdvertisementManager();
+
+        if (adman == null) {
             data.error("Adverts are not currently enabled");
             return;
         }
-
-        AdvertisementManager adman = Radio.instance.getAdvertisementManager();
 
         if (data.getArgs().length > 0) {
             List<Song> ads = adman.getAdvertQueue().getQueue();
 
             String title = data.getArgsString();
 
-            Song ad = ads.stream().filter(a -> title.equals(a.getFileName())).findFirst().orElse(null);
+            Song ad = ads.stream().filter(a -> title.equals(a.getFileName())).findAny().orElse(null);
 
             if (ad == null) {
                 data.error("Invalid ad file name. Valid file names:\n" + ads.stream().map(Song::getFileName).collect(Collectors.joining("\n", "`", "`")));
@@ -41,7 +41,7 @@ public class AdvertisementCommand extends Command {
             return;
         }
 
-        Radio.instance.getAdvertisementManager().pushAdvertisement();
+        adman.pushAdvertisement();
         data.success("Queued an advert");
     }
 }

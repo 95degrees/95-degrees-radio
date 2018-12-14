@@ -27,7 +27,7 @@ public class StatusManager implements SongEventListener {
         String statusOverride = songStatusOverrides.remove(song);
 
         if (statusOverride != null) { //normally for special task songs
-            jda.getPresence().setGame(Game.listening(statusOverride));
+            jda.getPresence().setGame(Game.playing(statusOverride));
 
         } else if ((statusOverride = Radio.instance.getOrchestrator().getActivePlaylist().getStatusOverrideMessage()) != null) { //normally for scheduled playlists
             jda.getPresence().setGame(Game.playing(statusOverride));
@@ -36,7 +36,7 @@ public class StatusManager implements SongEventListener {
             if (track.getInfo().isStream) {
                 jda.getPresence().setGame(Game.streaming(track.getInfo().title, track.getInfo().uri));
             } else {
-                jda.getPresence().setGame(Game.listening(song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
+                jda.getPresence().setGame(Game.playing(song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
             }
         }
     }

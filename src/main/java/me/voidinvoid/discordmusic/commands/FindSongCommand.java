@@ -3,7 +3,7 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongPlaylist;
+import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 
 import java.util.List;
@@ -20,7 +20,7 @@ public class FindSongCommand extends Command {
         String[] args = data.getArgs();
         Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
 
-        if (!(active instanceof SongPlaylist)) return;
+        if (!(active instanceof RadioPlaylist)) return;
 
         if (args.length < 1) {
             data.error("Song search required");
@@ -28,8 +28,8 @@ public class FindSongCommand extends Command {
         }
 
         String search = data.getArgsString().toLowerCase();
-        List<Song> map = ((SongPlaylist) active).getSongs().getSongMap();
-        List<Song> queue = ((SongPlaylist) active).getSongs().getQueue();
+        List<Song> map = ((RadioPlaylist) active).getSongs().getSongMap();
+        List<Song> queue = ((RadioPlaylist) active).getSongs().getQueue();
         List<Song> matches = map.stream().filter(s -> s.getFileName().toLowerCase().contains(search)).collect(Collectors.toList());
 
         if (matches.size() == 0) {

@@ -252,7 +252,9 @@ public class QuizManager implements SongEventListener, EventListener {
 
     @Override
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
-        if (!(newPlaylist instanceof QuizPlaylist)) activeQuiz = null;
+        if (!(newPlaylist instanceof QuizPlaylist) && activeQuiz != null) {
+            activeQuiz = null;
+        }
 
     }
 

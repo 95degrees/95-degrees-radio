@@ -4,7 +4,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongPlaylist;
+import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.songs.SongQueue;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
@@ -27,7 +27,7 @@ public class PlaySongTask extends RadioTaskExecutor {
         boolean force = params.get("play_instantly", Boolean.class);
 
         Playlist playlist = orch.getActivePlaylist();
-        if (!(playlist instanceof SongPlaylist)) return;
+        if (!(playlist instanceof RadioPlaylist)) return;
 
         if (!jingle && params.get("remote", Boolean.class)) {
             Radio.instance.getSuggestionManager().addSuggestion(song, null, null, null, false, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
@@ -46,7 +46,7 @@ public class PlaySongTask extends RadioTaskExecutor {
             return;
         }
 
-        SongQueue queue = jingle ? ((SongPlaylist) playlist).getJingles() : ((SongPlaylist) playlist).getSongs();
+        SongQueue queue = jingle ? ((RadioPlaylist) playlist).getJingles() : ((RadioPlaylist) playlist).getSongs();
 
         List<Song> foundSongs = queue.getQueue().stream().filter(s -> s.getFileName().equalsIgnoreCase(song)).collect(Collectors.toList());
 

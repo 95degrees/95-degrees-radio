@@ -3,7 +3,7 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongPlaylist;
+import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class PlaySongCommand extends Command {
     public void invoke(CommandData data) {
         Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
 
-        if (!(active instanceof SongPlaylist)) {
+        if (!(active instanceof RadioPlaylist)) {
             data.error("This command can only be used when a song playlist is active");
             return;
         }
@@ -39,7 +39,7 @@ public class PlaySongCommand extends Command {
         }
 
         song--;
-        List<Song> map = ((SongPlaylist) active).getSongs().getSongMap();
+        List<Song> map = ((RadioPlaylist) active).getSongs().getSongMap();
 
         if (song < 0 || song >= map.size()) {
             data.error("Invalid song number. Use !songs to list songs");

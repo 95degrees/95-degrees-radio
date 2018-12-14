@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.FileSong;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongPlaylist;
+import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -40,7 +40,7 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!(song instanceof FileSong)) return;
         if (song.getType() != SongType.SONG) return;
-        if (!(song.getQueue().getPlaylist() instanceof SongPlaylist) || !((SongPlaylist) song.getQueue().getPlaylist()).isTestingMode()) return;
+        if (!(song.getQueue().getPlaylist() instanceof RadioPlaylist) || !((RadioPlaylist) song.getQueue().getPlaylist()).isTestingMode()) return;
 
         currentSong = song;
 
