@@ -38,7 +38,7 @@ public class SongQueue extends AudioEventAdapter {
         files.whenComplete((l, e) -> {
             if (l == null) return;
 
-            System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + playlist.getName());
+            System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + (playlist == null ? "<null>" : playlist.getName()));
 
             List<Song> songMap = new ArrayList<>(l); //a clone
             songMap.sort(Comparator.comparing(Song::getFullLocation)); //probably not needed but just in-case

@@ -4,9 +4,7 @@ import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
-import me.voidinvoid.discordmusic.events.RadioMessageListener;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.*;
 import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
@@ -14,7 +12,6 @@ import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.dj.SongDJ;
-import me.voidinvoid.discordmusic.events.TotoAfricaSongListener;
 import me.voidinvoid.discordmusic.server.SocketServer;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import net.dv8tion.jda.core.AccountType;
@@ -125,6 +122,7 @@ public class Radio implements EventListener {
         if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));
         if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
         if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));
+        if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug) register(new LaMetricMemberStatsHook()); //todo?
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

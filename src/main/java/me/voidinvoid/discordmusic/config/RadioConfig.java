@@ -16,6 +16,7 @@ public class RadioConfig {
     public boolean useStatus;
     public boolean useAdverts;
     public boolean useSocketServer;
+    public boolean useQuizSocketServer;
     @Deprecated
     public boolean liveFileUpdates;
 
@@ -23,7 +24,7 @@ public class RadioConfig {
     public Locations locations;
     public Images images;
     public Roles roles;
-    public boolean useQuizSocketServer;
+    public Orchestration orchestration;
 
     public class Roles {
         public String notificationsOptOutRole;
@@ -40,6 +41,12 @@ public class RadioConfig {
 
     public class Images {
         public String fallbackAlbumArt, jingleAlbumArt, advertAlbumArt, networkAlbumArt;
+    }
+
+    public class Orchestration {
+        public int jingleFrequency;
+        public long maxSongLength;
+        public int userQueueLimit;
     }
 
     public static boolean loadFromFile(File file) {
