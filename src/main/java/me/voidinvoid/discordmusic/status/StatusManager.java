@@ -29,7 +29,7 @@ public class StatusManager implements SongEventListener {
         if (statusOverride != null) { //normally for special task songs
             jda.getPresence().setGame(Game.playing(statusOverride));
 
-        } else if ((statusOverride = Radio.instance.getOrchestrator().getActivePlaylist().getStatusOverrideMessage()) != null) { //normally for scheduled playlists
+        } else if ((statusOverride = Radio.getInstance().getOrchestrator().getActivePlaylist().getStatusOverrideMessage()) != null) { //normally for scheduled playlists
             jda.getPresence().setGame(Game.playing(statusOverride));
 
         } else if (song.getType().usesStatus()) {
@@ -43,7 +43,7 @@ public class StatusManager implements SongEventListener {
 
     @Override
     public void onTrackStopped() {
-        if (Radio.instance.getOrchestrator().getActivePlaylist().getStatusOverrideMessage() == null) { //normally for scheduled playlists
+        if (Radio.getInstance().getOrchestrator().getActivePlaylist().getStatusOverrideMessage() == null) { //normally for scheduled playlists
             jda.getPresence().setGame(null);
 
         }

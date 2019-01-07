@@ -1,9 +1,12 @@
-package me.voidinvoid.discordmusic.songs;
+package me.voidinvoid.discordmusic.songs.local;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
-import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
+import me.voidinvoid.discordmusic.songs.AlbumArtType;
+import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SongQueue;
+import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.utils.AlbumArt;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -11,19 +14,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class FileSong extends Song {
-
-    static final Path FALLBACK_ALBUM_ART;
-    static final Path JINGLE_ALBUM_ART;
-    static final Path ADVERT_ALBUM_ART;
-
-    static {
-        FALLBACK_ALBUM_ART = Paths.get(RadioConfig.config.images.fallbackAlbumArt);
-        JINGLE_ALBUM_ART = RadioConfig.config.images.jingleAlbumArt == null ? FALLBACK_ALBUM_ART : Paths.get(RadioConfig.config.images.jingleAlbumArt);
-        ADVERT_ALBUM_ART = RadioConfig.config.images.advertAlbumArt == null ? FALLBACK_ALBUM_ART : Paths.get(RadioConfig.config.images.advertAlbumArt);
-    }
 
     private Path file;
     private Path albumArtFile;
@@ -47,7 +39,7 @@ public class FileSong extends Song {
                 if (art == null) return;
 
                 String mime = tag.getAlbumImageMimeType().replace("image/", "");
-                BufferedImage artImg = AlbumArtUtils.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
+                BufferedImage artImg = AlbumArt.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
 
                 albumArtFile = Files.createTempFile("albumart-", "." + mime);
 
@@ -82,7 +74,7 @@ public class FileSong extends Song {
         //does the song type have a specific album art? if so return that
         //otherwise does it have its own album art? if so return that
         //otherwise return the 'not found' fallback album art
-        return p == null ? albumArtFile == null ? FALLBACK_ALBUM_ART : albumArtFile : p;
+        return p == null ? albumArtFile == null ? AlbumArt.FALLBACK_ALBUM_ART : albumArtFile : p;
     }
 
     @Override

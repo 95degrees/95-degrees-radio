@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.tasks.types;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.status.StatusManager;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
 import me.voidinvoid.discordmusic.tasks.RadioTaskExecutor;
 
@@ -25,7 +26,7 @@ public class PlaySpecialTask extends RadioTaskExecutor {
         }
 
         if (listeningTo != null) {
-            Radio.instance.getStatusManager().addSongOverride(foundSongs.get(0), listeningTo);
+            Radio.getInstance().getService(StatusManager.class).addSongOverride(foundSongs.get(0), listeningTo);
         }
 
         if (force) {

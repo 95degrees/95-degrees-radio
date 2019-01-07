@@ -11,6 +11,6 @@ public class RestartRadioCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        Radio.shutdown(true);
+        Radio.getInstance().shutdown(true);
     }
 }

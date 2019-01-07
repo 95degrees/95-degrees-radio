@@ -35,7 +35,7 @@ public class SongSearchResult {
 
         if (!bypassLengthLimit) {
             int prev = playlist.size();
-            playlist = playlist.stream().filter(t -> t.getDuration() <= SongOrchestrator.MAX_SONG_LENGTH).collect(Collectors.toList());
+            playlist = playlist.stream().filter(t -> t.getDuration() <= RadioConfig.config.orchestration.maxSongLength).collect(Collectors.toList());
             if (playlist.size() < prev) songsOverLengthLimit = true;
         }
 
@@ -90,7 +90,7 @@ public class SongSearchResult {
                     AudioTrack track = playlist.get(index);
                     e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
 
-                    Radio.instance.getOrchestrator().addNetworkTrack(e.getMember(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
+                    Radio.getInstance().getOrchestrator().addNetworkTrack(e.getMember(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
                     return true;
                 } catch (Exception ex) {
                     System.out.println("Error handling search reaction event");

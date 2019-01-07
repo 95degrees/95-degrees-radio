@@ -1,22 +1,21 @@
 package me.voidinvoid.discordmusic.songs;
 
 public abstract class Playlist {
-    protected String name;
+
     protected String internal;
-    protected boolean isDefault;
-    protected double coinMultiplier;
-    protected String statusOverrideMessage;
+
+    protected abstract PlaylistProperties getProperties();
 
     public Playlist(String internal) {
         this.internal = internal;
     }
 
     public String getName() {
-        return name;
+        return getProperties().getDisplayName();
     }
 
     public boolean isDefault() {
-        return isDefault;
+        return getProperties().isDefault();
     }
 
     public String getInternal() {
@@ -24,11 +23,11 @@ public abstract class Playlist {
     }
 
     public String getStatusOverrideMessage() {
-        return statusOverrideMessage;
+        return getProperties().getStatusOverrideMessage();
     }
 
     public double getCoinMultiplier() {
-        return coinMultiplier;
+        return getProperties().getCoinMultiplier();
     }
 
     public void onActivate() {}

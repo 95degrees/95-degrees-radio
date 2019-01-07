@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.utils;
 
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.AlbumArtType;
 import me.voidinvoid.discordmusic.songs.Song;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -11,10 +12,21 @@ import javax.annotation.CheckReturnValue;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
-public final class AlbumArtUtils {
+public final class AlbumArt {
 
     public static final int ALBUM_ART_SCALE_SIZE = 128;
+
+    public static final Path FALLBACK_ALBUM_ART;
+    public static final Path JINGLE_ALBUM_ART;
+    public static final Path ADVERT_ALBUM_ART;
+
+    static {
+        FALLBACK_ALBUM_ART = Paths.get(RadioConfig.config.images.fallbackAlbumArt);
+        JINGLE_ALBUM_ART = RadioConfig.config.images.jingleAlbumArt == null ? FALLBACK_ALBUM_ART : Paths.get(RadioConfig.config.images.jingleAlbumArt);
+        ADVERT_ALBUM_ART = RadioConfig.config.images.advertAlbumArt == null ? FALLBACK_ALBUM_ART : Paths.get(RadioConfig.config.images.advertAlbumArt);
+    }
 
     @CheckReturnValue
     public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel, boolean forceLocal) {

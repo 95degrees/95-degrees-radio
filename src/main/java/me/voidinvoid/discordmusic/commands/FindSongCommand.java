@@ -18,7 +18,7 @@ public class FindSongCommand extends Command {
     @Override
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
-        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+        Playlist active = Radio.getInstance().getOrchestrator().getActivePlaylist();
 
         if (!(active instanceof RadioPlaylist)) return;
 

@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
-import me.voidinvoid.discordmusic.songs.FileSong;
+import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -86,7 +86,7 @@ public class QuizManager implements SongEventListener, EventListener {
         config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9301 : 9501);
 
-        System.out.println("Started quiz server on " + config.getPort());
+        System.out.println("Started quiz rpc on " + config.getPort());
 
         SocketConfig sockets = new SocketConfig();
         sockets.setReuseAddress(true);
@@ -158,7 +158,7 @@ public class QuizManager implements SongEventListener, EventListener {
 
             if (activeQuiz != null) {
                 if (activeQuiz.progress(false)) {
-                    Radio.instance.getOrchestrator().playNextSong();
+                    Radio.getInstance().getOrchestrator().playNextSong();
                 }
             }
         });
@@ -221,14 +221,14 @@ public class QuizManager implements SongEventListener, EventListener {
                 QuizPlaylist playlist = loadQuiz(q);
                 if (playlist != null) {
                     quizzes.put(playlist.getQuiz(), playlist);
-                    Radio.instance.getOrchestrator().getPlaylists().add(playlist);
+                    Radio.getInstance().getOrchestrator().getPlaylists().add(playlist);
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        //Radio.instance.getOrchestrator().getPlaylists().addAll(quizzes.stream().map(q -> new QuizPlaylist(q, this)).collect(Collectors.toList()));
+        //Radio.getInstance().getOrchestrator().getPlaylists().addAll(quizzes.stream().map(q -> new QuizPlaylist(q, this)).collect(Collectors.toList()));
     }
 
     public boolean startQuiz(QuizPlaylist quiz) {
@@ -240,8 +240,8 @@ public class QuizManager implements SongEventListener, EventListener {
             emitToAuthenticated("quiz_activated", activeQuiz.getInternal());
         }
 
-        Radio.instance.getOrchestrator().setActivePlaylist(quiz);
-        Radio.instance.getOrchestrator().playNextSong();
+        Radio.getInstance().getOrchestrator().setActivePlaylist(quiz);
+        Radio.getInstance().getOrchestrator().playNextSong();
 
         return true;
     }
@@ -319,7 +319,7 @@ public class QuizManager implements SongEventListener, EventListener {
                 String emote = e.getReaction().getReactionEmote().getName();
 
                 if (emote.equals(QuizPlaylist.ADVANCE_QUIZ_EMOTE)) {
-                    if (activeQuiz.progress(true)) Radio.instance.getOrchestrator().playNextSong();
+                    if (activeQuiz.progress(true)) Radio.getInstance().getOrchestrator().playNextSong();
                     e.getReaction().removeReaction(e.getUser()).queue();
                 }
                 return;

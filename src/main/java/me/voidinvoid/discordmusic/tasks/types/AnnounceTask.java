@@ -5,14 +5,22 @@ import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
 import me.voidinvoid.discordmusic.tasks.RadioTaskExecutor;
+import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class AnnounceTask extends RadioTaskExecutor {
+
+    private static final String EVENT_SUBSCRIBE_REACTION = "🔔";
+
+    private Map<String, String> messageEventIds = new HashMap<>();
 
     @Override
     public void runTask(SongOrchestrator orch, ParameterList params) {
@@ -24,23 +32,56 @@ public class AnnounceTask extends RadioTaskExecutor {
         int colour = params.get("colour", Integer.class);
         long deleteAfter = params.get("delete_after", Long.class);
         String image = params.get("image_url", String.class);
+        String eventId = params.get("event_subscription_id", String.class);
 
-        MessageEmbed embed = new EmbedBuilder().setTitle(title).setDescription(message).setImage(image).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
+        MessageEmbed embed = new EmbedBuilder()
+                .setTitle(title)
+                .setDescription(message)
+                .setImage(image)
+                .setTimestamp(OffsetDateTime.now())
+                .setColor(colour)
+                .setFooter(eventId == null ? null : "Click the bell to subscribe to this event", null)
+                .build();
 
         if (announceToDj)
-            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
+            Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue(m -> {
+                if (eventId != null) {
+                    m.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+                }
+            });
+
         if (announceToText)
-            Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
+            Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue(m -> {
+                if (eventId != null) {
+                    m.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+                }
+            });
+
         if (additionalChannel != null) {
-            TextChannel channel = Radio.instance.getJda().getTextChannelById(additionalChannel);
+            TextChannel channel = Radio.getInstance().getJda().getTextChannelById(additionalChannel);
 
             if (channel != null) {
                 channel.sendMessage(embed).queue(m -> {
                     if (deleteAfter > 0) {
                         m.delete().queueAfter(deleteAfter, TimeUnit.SECONDS);
                     }
+
+                    if (eventId != null) {
+                        m.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+                    }
                 });
             }
         }
+    }
+
+    private void createSubscribeLink(Message message, String eventId) {
+        message.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+        messageEventIds.put(message.getId(), eventId);
+
+        MessageReactionCallbackManager callbacks = Radio.getInstance().getService(MessageReactionCallbackManager.class);
+
+        callbacks.registerCallback(message.getId(), e -> {
+            //TODO subscribe action here
+        });
     }
 }

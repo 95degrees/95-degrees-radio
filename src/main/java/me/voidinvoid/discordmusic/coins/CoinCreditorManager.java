@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.coins;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
@@ -63,7 +64,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
             if (e.getMember().getUser().isBot()) return;
             if (!voiceChannel.equals(e.getChannelJoined())) return;
 
-            coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened(), Radio.instance.getOrchestrator().getActivePlaylist().getCoinMultiplier()));
+            coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened(), Radio.getInstance().getOrchestrator().getActivePlaylist().getCoinMultiplier()));
 
         } else if (ev instanceof GuildVoiceDeafenEvent) { //user deafened
             GuildVoiceDeafenEvent e = (GuildVoiceDeafenEvent) ev;
@@ -75,7 +76,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
 
             UserCoinTracker coins = coinGains.get(user.getIdLong());
             if (coins == null) {
-                coinGains.put(user.getIdLong(), new UserCoinTracker(user, false, Radio.instance.getOrchestrator().getActivePlaylist().getCoinMultiplier()));
+                coinGains.put(user.getIdLong(), new UserCoinTracker(user, false, Radio.getInstance().getOrchestrator().getActivePlaylist().getCoinMultiplier()));
             } else {
                 coins.setFrozen(e.isDeafened()); //stop tracking coins if they're deafened, resume if undeafened
             }
@@ -92,7 +93,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
             if (e.getMember().getUser().isBot()) return;
 
             if (voiceChannel.equals(e.getChannelJoined())) {
-                coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened(), Radio.instance.getOrchestrator().getActivePlaylist().getCoinMultiplier()));
+                coinGains.put(e.getMember().getUser().getIdLong(), new UserCoinTracker(e.getMember().getUser(), e.getVoiceState().isDeafened(), Radio.getInstance().getOrchestrator().getActivePlaylist().getCoinMultiplier()));
             } else if (voiceChannel.equals(e.getChannelLeft())) {
                 giveCoins(e.getMember(), false);
             }
@@ -136,8 +137,10 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
                     .setFooter(user.getName(), user.getAvatarUrl()).build())
                     .queue();
 
-            if (Radio.instance.getSocketServer() != null) {
-                Radio.instance.getSocketServer().sendCoinNotification(user.getId(), amount, coins.getTotalTime());
+            RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
+
+            if (srv != null) {
+                srv.sendCoinNotification(user.getId(), amount, coins.getTotalTime());
             }
         } else {
             pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);

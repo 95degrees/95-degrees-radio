@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongQueue;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -36,7 +37,7 @@ public class AdvertisementManager implements SongEventListener {
     }
 
     public void reload() {
-        advertQueue = new SongQueue(null, Paths.get(RadioConfig.config.locations.advertPlaylist), SongType.ADVERTISEMENT, false);
+        advertQueue = new LocalSongQueue(Paths.get(RadioConfig.config.locations.advertPlaylist), null, SongType.ADVERTISEMENT, false);
         advertQueue.loadSongsAsync();
 
         try {
@@ -51,7 +52,7 @@ public class AdvertisementManager implements SongEventListener {
     public void pushAdvertisement() {
         if (advertQueue.getQueue().size() == 0) return;
 
-        List<Song> awaitingSongs = Radio.instance.getOrchestrator().getAwaitingSpecialSongs();
+        List<Song> awaitingSongs = Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs();
 
         if (awaitingSongs.stream().noneMatch(s -> s.getType() == SongType.ADVERTISEMENT)) { //only queue one ad at a time
             awaitingSongs.add(advertQueue.getNextAndMoveToEnd());

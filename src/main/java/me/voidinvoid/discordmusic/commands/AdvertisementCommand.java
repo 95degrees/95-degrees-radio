@@ -1,7 +1,6 @@
 package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.advertisements.Advertisement;
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -17,7 +16,7 @@ public class AdvertisementCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        AdvertisementManager adman = Radio.instance.getAdvertisementManager();
+        AdvertisementManager adman = Radio.getInstance().getService(AdvertisementManager.class);
 
         if (adman == null) {
             data.error("Adverts are not currently enabled");
@@ -36,7 +35,7 @@ public class AdvertisementCommand extends Command {
                 return;
             }
 
-            Radio.instance.getOrchestrator().getAwaitingSpecialSongs().add(ad);
+            Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs().add(ad);
             data.success("Queued specified advert");
             return;
         }

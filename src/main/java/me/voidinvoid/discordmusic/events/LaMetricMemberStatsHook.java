@@ -19,10 +19,11 @@ public class LaMetricMemberStatsHook implements EventListener {
 
     private static final String MEMBER_STATS_LOG_PREFIX = ConsoleColor.GREEN_BACKGROUND + " LAMETRIC STATS " + ConsoleColor.RESET_SPACE;
 
-    private Guild guild;
+    private String guildId;
 
     public LaMetricMemberStatsHook() {
-        guild = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).getGuild();
+        Guild guild = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).getGuild();
+        guildId = guild.getId();
 
         pushCount(guild.getMembers().size());
     }
@@ -30,8 +31,9 @@ public class LaMetricMemberStatsHook implements EventListener {
     @Override
     public void onEvent(Event ev) {
         if (ev instanceof GuildMemberLeaveEvent || ev instanceof GuildMemberJoinEvent) {
-            if (((GenericGuildMemberEvent) ev).getGuild().equals(guild)) {
-                pushCount(guild.getMembers().size());
+            Guild g = ((GenericGuildMemberEvent) ev).getGuild();
+            if (g.getId().equals(guildId)) {
+                pushCount(g.getMembers().size());
             }
         }
     }

@@ -19,7 +19,7 @@ public class SwitchPlaylistCommand extends Command {
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
 
-        List<Playlist> playlists = Radio.instance.getOrchestrator().getPlaylists().stream().filter(RadioPlaylist.class::isInstance).collect(Collectors.toList());
+        List<Playlist> playlists = Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(RadioPlaylist.class::isInstance).collect(Collectors.toList());
 
         if (args.length < 1) {
             data.error("Playlist name required. Valid playlists: " + String.join(", ", playlists.stream().map(Playlist::getInternal).collect(Collectors.toList())));
@@ -33,6 +33,6 @@ public class SwitchPlaylistCommand extends Command {
             return;
         }
 
-        Radio.instance.getOrchestrator().setActivePlaylist(playlist.get());
+        Radio.getInstance().getOrchestrator().setActivePlaylist(playlist.get());
     }
 }

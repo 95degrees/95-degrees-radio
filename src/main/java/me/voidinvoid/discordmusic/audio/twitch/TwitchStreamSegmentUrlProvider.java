@@ -100,7 +100,7 @@ public class TwitchStreamSegmentUrlProvider extends M3uStreamSegmentUrlProvider 
         String serverTimeValue = twitchInfoLine != null ? twitchInfoLine.directiveArguments.get("SERVER-TIME") : null;
 
         if (serverTimeValue == null) {
-            throw new IllegalStateException("Required server time information not available.");
+            throw new IllegalStateException("Required rpc time information not available.");
         }
 
         return new ChannelStreams(

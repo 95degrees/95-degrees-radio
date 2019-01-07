@@ -11,7 +11,7 @@ public class SkipCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        Radio.instance.getOrchestrator().playNextSong();
+        Radio.getInstance().getOrchestrator().playNextSong();
 
         data.success("Skipped to the next track");
     }

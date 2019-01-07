@@ -43,10 +43,10 @@ public class SongSuggestionManager implements EventListener {
     }
 
     public void addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
-        Radio.instance.getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
+        Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                Radio.instance.getOrchestrator().addNetworkTrack(member, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
+                Radio.getInstance().getOrchestrator().addNetworkTrack(member, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
                 if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
             }
 

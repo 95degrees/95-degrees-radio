@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.songs.SongQueue;
+import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
 import me.voidinvoid.discordmusic.tasks.RadioTaskExecutor;
@@ -30,7 +31,7 @@ public class PlaySongTask extends RadioTaskExecutor {
         if (!(playlist instanceof RadioPlaylist)) return;
 
         if (!jingle && params.get("remote", Boolean.class)) {
-            Radio.instance.getSuggestionManager().addSuggestion(song, null, null, null, false, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
+            Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion(song, null, null, null, false, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
             return;
         }
 

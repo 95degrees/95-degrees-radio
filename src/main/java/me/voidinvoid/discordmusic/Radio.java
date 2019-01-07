@@ -4,16 +4,17 @@ import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.*;
 import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
+import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
-import me.voidinvoid.discordmusic.dj.SongDJ;
-import me.voidinvoid.discordmusic.server.SocketServer;
-import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
+import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -30,11 +31,13 @@ import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class Radio implements EventListener {
 
-    public static Radio instance;
+    private static Radio instance;
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -55,17 +58,13 @@ public class Radio implements EventListener {
     private RadioConfig config;
     private JDA jda;
 
-    private SongOrchestrator orchestrator;
+    public static Radio getInstance() {
+        return instance;
+    }
 
-    private SongDJ dj;
-    private KaraokeManager karaokeManager;
-    private CommandManager commandManager;
-    private StatusManager statusManager;
-    private CoinCreditorManager coinCreditorManager;
-    private SongSuggestionManager suggestionManager;
-    private AdvertisementManager advertisementManager;
-    private SocketServer socketServer;
-    private QuizManager quizManager;
+    private Map<Class, Object> radioServices = new HashMap<>();
+
+    private SongOrchestrator orchestrator;
 
     private boolean loaded;
 
@@ -81,8 +80,6 @@ public class Radio implements EventListener {
         }
 
         this.config = config;
-
-        startTaskManager();
     }
 
     @Override
@@ -102,27 +99,33 @@ public class Radio implements EventListener {
         EmbedBuilder loading = new EmbedBuilder().setTitle("⏱ Loading").setColor(Colors.ACCENT_LOADING).setDescription("`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
         Message msg = djChannel == null ? null : djChannel.sendMessage(loading.setTimestamp(OffsetDateTime.now()).build()).complete();
 
+        registerService(new DatabaseManager());
+
         orchestrator = new SongOrchestrator(this, config);
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
-        register(commandManager = new CommandManager());
-        register(suggestionManager = new SongSuggestionManager());
-        register(new PlaylistTesterListener(radioChannel));
-        if (RadioConfig.config.useSocketServer) register(socketServer = new SocketServer(radioVoiceChannel));
+        registerService(new MessageReactionCallbackManager());
+        registerService(new CommandManager());
+        registerService(new SongSuggestionManager());
+        registerService(new PlaylistTesterListener(radioChannel));
+        if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager(radioVoiceChannel));
 
-        register(karaokeManager = new KaraokeManager());
-        register(dj = new SongDJ(orchestrator, djChannel));
-        register(new RadioMessageListener(radioChannel));
-        register(quizManager = new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
+        registerService(new KaraokeManager());
+        registerService(new SongDJ(orchestrator, djChannel));
+        registerService(new RadioMessageListener(radioChannel));
+        registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
 
         if (RadioConfig.config.useCoinGain)
-            register(coinCreditorManager = new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
-        if (!RadioConfig.config.debug) register(new TotoAfricaSongListener(radioChannel));
-        if (RadioConfig.config.useStatus) register(statusManager = new StatusManager(jda));
-        if (RadioConfig.config.useAdverts) register(advertisementManager = new AdvertisementManager(jda));
-        if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug) register(new LaMetricMemberStatsHook()); //todo?
+            registerService(new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
+        if (!RadioConfig.config.debug) registerService(new TotoAfricaSongListener(radioChannel));
+        if (RadioConfig.config.useStatus) registerService(new StatusManager(jda));
+        if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager(jda));
+        if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug)
+            registerService(new LaMetricMemberStatsHook()); //todo
+
+        registerService(new TaskManager(Paths.get(config.locations.tasks)));
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();
@@ -140,10 +143,19 @@ public class Radio implements EventListener {
         orchestrator.playNextSong();
     }
 
-    private void register(Object listener) {
-        if (listener instanceof SongEventListener)
-            orchestrator.registerSongEventListener(((SongEventListener) listener));
-        if (listener instanceof EventListener) jda.addEventListener(listener);
+    private void registerService(Object service) {
+        radioServices.put(service.getClass(), service);
+
+        if (service instanceof SongEventListener)
+            orchestrator.registerSongEventListener(((SongEventListener) service));
+        if (service instanceof EventListener) jda.addEventListener(service);
+    }
+
+    public <T> T getService(Class<T> service) {
+        Object srv = radioServices.get(service);
+        if (srv == null) return null;
+
+        return service.cast(srv);
     }
 
     public JDA getJda() {
@@ -154,48 +166,8 @@ public class Radio implements EventListener {
         return orchestrator;
     }
 
-    public SongDJ getDj() {
-        return dj;
-    }
-
-    public KaraokeManager getKaraokeManager() {
-        return karaokeManager;
-    }
-
-    public CommandManager getCommandManager() {
-        return commandManager;
-    }
-
-    public StatusManager getStatusManager() {
-        return statusManager;
-    }
-
-    public CoinCreditorManager getCoinCreditorManager() {
-        return coinCreditorManager;
-    }
-
-    public SocketServer getSocketServer() {
-        return socketServer;
-    }
-
-    public void startTaskManager() {
-        TaskManager.loadTasks(new File(config.locations.tasks));
-    }
-
-    public static void shutdown(boolean restart) {
-        if (instance.orchestrator.getActivePlaylist() != null) instance.orchestrator.getActivePlaylist().onDeactivate();
+    public void shutdown(boolean restart) {
+        if (orchestrator.getActivePlaylist() != null) orchestrator.getActivePlaylist().onDeactivate();
         System.exit(restart ? 1 : 0);
-    }
-
-    public SongSuggestionManager getSuggestionManager() {
-        return suggestionManager;
-    }
-
-    public AdvertisementManager getAdvertisementManager() {
-        return advertisementManager;
-    }
-
-    public QuizManager getQuizManager() {
-        return quizManager;
     }
 }

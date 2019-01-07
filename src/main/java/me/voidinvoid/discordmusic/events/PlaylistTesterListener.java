@@ -3,11 +3,13 @@ package me.voidinvoid.discordmusic.events;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.songs.FileSong;
-import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
+import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSongQueue;
+import me.voidinvoid.discordmusic.songs.local.FileSong;
+import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
+import me.voidinvoid.discordmusic.utils.AlbumArt;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
@@ -40,7 +42,8 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!(song instanceof FileSong)) return;
         if (song.getType() != SongType.SONG) return;
-        if (!(song.getQueue().getPlaylist() instanceof RadioPlaylist) || !((RadioPlaylist) song.getQueue().getPlaylist()).isTestingMode()) return;
+        if (!(song.getQueue().getPlaylist() instanceof RadioPlaylist) || !((RadioPlaylist) song.getQueue().getPlaylist()).isTestingMode())
+            return;
 
         currentSong = song;
 
@@ -49,7 +52,7 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
                 .setDescription("Does this song feature music video specific elements?\n" + VALID_REACTION + " - song is valid\n" + INVALID_REACTION + " - song is invalid")
                 .setTimestamp(new Date().toInstant());
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
+        AlbumArt.attachAlbumArt(embed, song, textChannel).queue(m -> {
             reactionMessages.put(m.getId(), song);
 
             m.addReaction(VALID_REACTION).queue();
@@ -89,10 +92,10 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
             song.getQueue().getSongMap().remove(song);
 
             if (song.equals(currentSong)) {
-                Radio.instance.getOrchestrator().playNextSong();
+                Radio.getInstance().getOrchestrator().playNextSong();
             }
 
-            Path parent = song.getQueue().getDirectory(); // /Songs directory
+            Path parent = ((LocalSongQueue) song.getQueue()).getDirectory(); // /Songs directory
 
             Path validSongs = parent.resolve("valid");
             Path invalidSongs = parent.resolve("invalid");

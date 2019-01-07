@@ -43,7 +43,7 @@ public class AudioListener implements AudioReceiveHandler {
         Thread t = new Thread(() -> {
             try {
                 if (save && !empty) {
-                    //RequestFuture<Message> msg = Radio.instance.getOrchestrator().onRecordingStarted(title);
+                    //RequestFuture<Message> msg = Radio.getInstance().getOrchestrator().onRecordingStarted(title);
 
                     try (ByteArrayOutputStream encOutput = new ByteArrayOutputStream()) {
 
@@ -66,7 +66,7 @@ public class AudioListener implements AudioReceiveHandler {
                             encOutput.writeTo(fileOut);
                         }
 
-                        //Radio.instance.getOrchestrator().onRecordingReady(msg.get(), title, fileName);
+                        //Radio.getInstance().getOrchestrator().onRecordingReady(msg.get(), title, fileName);
                     }
                 }
             } catch (Exception e) {

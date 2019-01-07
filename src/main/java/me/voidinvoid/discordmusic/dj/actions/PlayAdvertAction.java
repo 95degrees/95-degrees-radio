@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.dj.actions;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
+import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
@@ -17,12 +18,12 @@ public class PlayAdvertAction extends DJAction {
 
     @Override
     public boolean shouldShow(AudioTrack track) {
-        return Radio.instance.getAdvertisementManager() != null;
+        return Radio.getInstance().getService(AdvertisementManager.class) != null;
     }
 
     @Override
     public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
-        Radio.instance.getAdvertisementManager().pushAdvertisement();
+        Radio.getInstance().getService(AdvertisementManager.class).pushAdvertisement();
 
         djChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Queued Advert")

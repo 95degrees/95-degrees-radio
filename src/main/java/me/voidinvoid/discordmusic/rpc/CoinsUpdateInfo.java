@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.server;
+package me.voidinvoid.discordmusic.rpc;
 
 public class CoinsUpdateInfo {
 

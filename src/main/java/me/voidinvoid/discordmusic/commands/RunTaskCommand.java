@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.commands;
 
+import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.tasks.RadioTaskComposition;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -27,13 +28,15 @@ public class RunTaskCommand extends Command {
             return;
         }
 
-        if (id < 1 || id > TaskManager.getTasks().size()) {
+        TaskManager taskManager = Radio.getInstance().getService(TaskManager.class);
+
+        if (id < 1 || id > taskManager.getTasks().size()) {
             data.error("Invalid task ID. Use `!tasks` to list tasks");
             return;
         }
 
-        RadioTaskComposition comp = TaskManager.getTasks().get(id - 1);
-        TaskManager.executeComposition(comp, true);
+        RadioTaskComposition comp = taskManager.getTasks().get(id - 1);
+        taskManager.executeComposition(comp, true);
 
         data.success("Executed task");
     }

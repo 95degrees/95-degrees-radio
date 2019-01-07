@@ -21,7 +21,7 @@ public class TotoAfricaSongListener implements SongEventListener {
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        Playlist playlist = Radio.instance.getOrchestrator().getActivePlaylist();
+        Playlist playlist = Radio.getInstance().getOrchestrator().getActivePlaylist();
         if (!(playlist instanceof RadioPlaylist)) return;
         
         if (((RadioPlaylist) playlist).isDirectMessageNotifications() && track instanceof LocalAudioTrack && track.getInfo().title.equals("Africa") && track.getInfo().author.equals("Toto")) {

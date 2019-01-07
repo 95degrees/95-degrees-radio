@@ -32,7 +32,7 @@ public class PollCommand extends Command {
 
         MessageEmbed embed = new EmbedBuilder().setTitle("Poll").setDescription("**" + question.trim() + "**\nReact with the corresponding number to cast your vote!\n\n" + IntStream.range(0, answers.length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + answers[i].trim()).collect(Collectors.joining("\n"))).setTimestamp(OffsetDateTime.now()).setColor(Colors.ACCENT_POLL).build();
 
-        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue(m -> {
+        Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue(m -> {
             for (int i = 0; i < answers.length; i++) {
                 m.addReaction(FormattingUtils.NUMBER_EMOTES.get(i)).queue();
             }

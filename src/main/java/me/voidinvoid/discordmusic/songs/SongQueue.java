@@ -3,32 +3,29 @@ package me.voidinvoid.discordmusic.songs;
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.User;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class SongQueue extends AudioEventAdapter {
+public abstract class SongQueue extends AudioEventAdapter {
 
     private static final Random RANDOM = new Random();
 
     private List<Song> queue;
     private List<Song> songMap;
     private Playlist playlist;
-    private Path directory;
     private SongType queueType;
     private boolean shuffleSongs;
 
     private String queueCache;
 
-    public SongQueue(Playlist playlist, Path directory, SongType queueType, boolean shuffleSongs) {
+    public SongQueue(Playlist playlist, SongType queueType, boolean shuffleSongs) {
         this.playlist = playlist;
-        this.directory = directory;
         this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
     }
@@ -62,19 +59,7 @@ public class SongQueue extends AudioEventAdapter {
         return files;
     }
 
-    private List<Song> initSongs() {
-        try {
-            return Files.walk(directory, 1)
-                    .filter(f -> !Files.isDirectory(f))
-            .map(f -> new FileSong(queueType, f, this)).collect(Collectors.toList());
-
-        } catch (Exception ex) {
-            System.err.println("Error fetching songs for playlist");
-            ex.printStackTrace();
-
-            return null;
-        }
-    }
+    protected abstract List<Song> initSongs();
 
     public Song getNextAndRemove() {
         if (queue.size() == 0) return null;
@@ -136,8 +121,8 @@ public class SongQueue extends AudioEventAdapter {
         return queue.stream().filter(s -> s instanceof NetworkSong && ((NetworkSong) s).getSuggestedBy().equals(user)).collect(Collectors.toList());
     }
 
-    public Path getDirectory() {
-        return directory;
+    public SongType getQueueType() {
+        return queueType;
     }
 
     public List<Song> getSongMap() {
@@ -173,8 +158,11 @@ public class SongQueue extends AudioEventAdapter {
         for (Song s : queue) {
             i++;
             output.append(i).append(i < 10 ? " " : "").append(": ");
-            if (s.getTrack() != null) {
+            if (s.getTrack() != null) { //todo abstract this into Song?
                 output.append(s.getTrack().getInfo().title).append(" (").append(s.getTrack().getInfo().author).append(")");
+            } else if (s instanceof DatabaseSong) {
+                DatabaseSong ds = (DatabaseSong) s;
+                output.append(ds.getArtist()).append(" - ").append(ds.getTitle());
             } else {
                 boolean addedDesc = false;
                 try {
