@@ -27,14 +27,16 @@ public class DatabaseSongQueue extends SongQueue {
         this.listing = listing;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected List<Song> initSongs() {
         try {
             return listing.stream().flatMap(d -> {
                 String type = d.getString("type");
                 if ("SONG".equals(type)) {
-                    return Stream.of(new DatabaseSong(getQueueType(), d));
+                    return Stream.of(new DatabaseSong(getQueueType(), d).setQueue(this));
                 } else if ("SOURCE".equals(type)) {
+                    System.out.println("FOUND SOURCE: " + d.toJson());
                     String sourceName = d.getString("source");
                     DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
                     Document source = db.getCollection("sources").find(eq("_id", sourceName)).first();
@@ -44,7 +46,7 @@ public class DatabaseSongQueue extends SongQueue {
                         return Stream.empty();
                     } else {
                         List<Document> listing = (ArrayList<Document>) source.get("listing"); //todo check
-                        return listing.stream().map(v -> new DatabaseSong(getQueueType(), v));
+                        return listing.stream().map(v -> new DatabaseSong(getQueueType(), v).setQueue(this));
                     }
                 } else {
                     System.out.println("Unknown song listing type '" + type + "'");

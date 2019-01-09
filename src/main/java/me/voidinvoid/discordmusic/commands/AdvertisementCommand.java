@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.advertisements.Advertisement;
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -24,18 +25,18 @@ public class AdvertisementCommand extends Command {
         }
 
         if (data.getArgs().length > 0) {
-            List<Song> ads = adman.getAdvertQueue().getQueue();
+            List<Advertisement> ads = adman.getAdverts();
 
             String title = data.getArgsString();
 
-            Song ad = ads.stream().filter(a -> title.equals(a.getFileName())).findAny().orElse(null);
+            Advertisement ad = ads.stream().filter(a -> title.equals(a.getTitle())).findAny().orElse(null);
 
             if (ad == null) {
-                data.error("Invalid ad file name. Valid file names:\n" + ads.stream().map(Song::getFileName).collect(Collectors.joining("\n", "`", "`")));
+                data.error("Invalid ad file name. Valid file names:\n" + ads.stream().map(Advertisement::getTitle).collect(Collectors.joining("\n", "`", "`")));
                 return;
             }
 
-            Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs().add(ad);
+            Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs().add(ad.getSong());
             data.success("Queued specified advert");
             return;
         }

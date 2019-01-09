@@ -20,6 +20,8 @@ public class FileSong extends Song {
     private Path file;
     private Path albumArtFile;
 
+    private String mp3Title, mp3Artist;
+
     public FileSong(SongType type, Path file) {
         this(type, file, null);
     }
@@ -36,6 +38,9 @@ public class FileSong extends Song {
                 ID3v2 tag = song.getId3v2Tag();
                 byte[] art = tag.getAlbumImage();
 
+                mp3Title = tag.getTitle();
+                mp3Artist = tag.getArtist();
+
                 if (art == null) return;
 
                 String mime = tag.getAlbumImageMimeType().replace("image/", "");
@@ -50,6 +55,11 @@ public class FileSong extends Song {
             }
         } catch (Exception ignored) {
         }
+    }
+
+    @Override
+    public String getFriendlyName() {
+        return mp3Artist + " - " + mp3Title;
     }
 
     @Override

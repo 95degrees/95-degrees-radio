@@ -39,7 +39,7 @@ public class PlaySongTask extends RadioTaskExecutor {
             orch.setTimeUntilJingle(-1);
 
             if (force) {
-                orch.getPlayer().setPaused(false);
+                orch.setPaused(false);
                 orch.getPlayer().stopTrack();
                 orch.playNextSong();
             }
@@ -65,7 +65,7 @@ public class PlaySongTask extends RadioTaskExecutor {
         queue.getQueue().add(0, foundSongs.get(0));
 
         if (force) {
-            orch.getPlayer().setPaused(false);
+            orch.setPaused(false);
             orch.getPlayer().stopTrack();
             orch.playNextSong();
         }

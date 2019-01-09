@@ -53,6 +53,6 @@ public class PlaySongCommand extends Command {
         }
 
         Radio.getInstance().getOrchestrator().playSong(toPlay);
-        data.success("Now playing " + toPlay.getFileName());
+        data.success("Now playing " + toPlay.getFriendlyName());
     }
 }

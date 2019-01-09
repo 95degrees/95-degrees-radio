@@ -48,6 +48,6 @@ public class QueueSongCommand extends Command {
         Song song = map.get(songId);
 
         ((RadioPlaylist) active).getSongs().moveSongToFront(song);
-        data.success("Queued `" + song.getFileName().replace("`", "") + "`");
+        data.success("Queued `" + song.getFriendlyName().replace("`", "") + "`");
     }
 }

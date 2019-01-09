@@ -13,6 +13,6 @@ public class PauseSongAction extends DJAction {
 
     @Override
     public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
-        orch.getPlayer().setPaused(!orch.getPlayer().isPaused());
+        orch.setPaused(!orch.getPlayer().isPaused());
     }
 }

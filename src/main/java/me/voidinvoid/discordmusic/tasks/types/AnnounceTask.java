@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
 import me.voidinvoid.discordmusic.tasks.RadioTaskExecutor;
+import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
@@ -46,14 +47,14 @@ public class AnnounceTask extends RadioTaskExecutor {
         if (announceToDj)
             Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue(m -> {
                 if (eventId != null) {
-                    m.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+                    createSubscribeLink(m, eventId);
                 }
             });
 
         if (announceToText)
             Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue(m -> {
                 if (eventId != null) {
-                    m.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+                    createSubscribeLink(m, eventId);
                 }
             });
 
@@ -67,7 +68,7 @@ public class AnnounceTask extends RadioTaskExecutor {
                     }
 
                     if (eventId != null) {
-                        m.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
+                        createSubscribeLink(m, eventId);
                     }
                 });
             }
@@ -81,6 +82,14 @@ public class AnnounceTask extends RadioTaskExecutor {
         MessageReactionCallbackManager callbacks = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 
         callbacks.registerCallback(message.getId(), e -> {
+            e.getUser().openPrivateChannel().queue(c -> c.sendMessage(
+                    new EmbedBuilder()
+                            .setTitle("Event Subscription")
+                            .setDescription("🔔 You're now subscribed to **" + eventId + "** and you will be notified when this event happens in the future")
+                            .setFooter("95 Degrees Radio", e.getJDA().getSelfUser().getAvatarUrl())
+                            .setTimestamp(OffsetDateTime.now())
+                            .setColor(Colors.ACCENT_EVENT_SUBSCRIPTION)
+                            .build()).queue());
             //TODO subscribe action here
         });
     }

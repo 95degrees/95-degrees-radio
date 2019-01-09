@@ -25,7 +25,7 @@ public class SwitchPlaylistTask extends RadioTaskExecutor {
         orch.setActivePlaylist(first.get());
 
         if (force) {
-            orch.getPlayer().setPaused(false);
+            orch.setPaused(false);
             orch.getPlayer().stopTrack();
         }
     }

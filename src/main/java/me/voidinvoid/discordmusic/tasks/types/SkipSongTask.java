@@ -8,7 +8,7 @@ public class SkipSongTask extends RadioTaskExecutor {
 
     @Override
     public void runTask(SongOrchestrator orch, ParameterList params) {
-        orch.getPlayer().setPaused(false);
+        orch.setPaused(false);
         orch.getPlayer().stopTrack();
 
         orch.playNextSong();

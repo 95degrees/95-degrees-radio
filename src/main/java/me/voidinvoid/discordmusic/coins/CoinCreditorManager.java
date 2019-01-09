@@ -130,7 +130,7 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
             CoinsServerManager.addCredit(user, amount);
 
             textChannel.sendMessage(new EmbedBuilder()
-                    .setTitle("Earned Coins")
+                    .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))
                     .setDescription(user.getName() + " has earned <:degreecoin:431982714212843521> " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))
                     .setTimestamp(OffsetDateTime.now())
@@ -148,12 +148,12 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
 
         if (RadioConfig.config.roles.notificationsOptOutRole == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(RadioConfig.config.roles.notificationsOptOutRole))) {
             user.openPrivateChannel().queue(c -> c.sendMessage(new EmbedBuilder()
-                    .setTitle("Earned Coins")
+                    .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))
                     .setThumbnail("https://cdn.discordapp.com/attachments/476557027431284769/479733204224311296/dc.png")
                     .setDescription("You have earned Đ" + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()) + "!")
                     .setTimestamp(OffsetDateTime.now())
-                    .setFooter("95 Degrees", "https://cdn.discordapp.com/icons/202600401281744896/40d9b8c72e0a288f8f3f5c99ce1691ca.webp").build()).queue());
+                    .setFooter("95 Degrees Radio", user.getJDA().getSelfUser().getAvatarUrl()).build()).queue());
         }
     }
 }

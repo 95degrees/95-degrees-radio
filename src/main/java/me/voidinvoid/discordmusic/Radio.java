@@ -5,10 +5,14 @@ import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
-import me.voidinvoid.discordmusic.events.*;
+import me.voidinvoid.discordmusic.events.LaMetricMemberStatsHook;
+import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
+import me.voidinvoid.discordmusic.events.RadioMessageListener;
+import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
+import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
@@ -112,14 +116,14 @@ public class Radio implements EventListener {
         registerService(new PlaylistTesterListener(radioChannel));
         if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager(radioVoiceChannel));
 
+        registerService(new SongTriggerManager());
         registerService(new KaraokeManager());
-        registerService(new SongDJ(orchestrator, djChannel));
+        registerService(new SongDJ());
         registerService(new RadioMessageListener(radioChannel));
         registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
 
         if (RadioConfig.config.useCoinGain)
             registerService(new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
-        if (!RadioConfig.config.debug) registerService(new TotoAfricaSongListener(radioChannel));
         if (RadioConfig.config.useStatus) registerService(new StatusManager(jda));
         if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager(jda));
         if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug)

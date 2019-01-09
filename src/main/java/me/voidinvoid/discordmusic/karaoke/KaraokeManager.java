@@ -154,6 +154,8 @@ public class KaraokeManager implements SongEventListener {
                 embed.setDescription(desc);
 
                 message.editMessage(embed.build()).complete();
+
+                radioChannel.getManager().setTopic("📜 " + lyricsList.get(index).getText()).queue();
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
     }

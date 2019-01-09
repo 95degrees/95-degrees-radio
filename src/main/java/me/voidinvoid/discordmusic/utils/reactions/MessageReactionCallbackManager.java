@@ -25,9 +25,12 @@ public class MessageReactionCallbackManager implements EventListener {
         if (ev instanceof MessageReactionAddEvent) {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
 
+            if (e.getUser().getId().equals(e.getJDA().getSelfUser().getId())) return;
+
             Consumer<MessageReactionAddEvent> cb = callbacks.get(e.getMessageId());
 
             if (cb == null) return;
+            e.getReaction().removeReaction(e.getUser()).queue();
             cb.accept(e);
         }
     }

@@ -15,6 +15,6 @@ public class PauseSongTask extends RadioTaskExecutor {
 
     @Override
     public void runTask(SongOrchestrator orch, ParameterList params) {
-        orch.getPlayer().setPaused(pause);
+        orch.setPaused(pause);
     }
 }

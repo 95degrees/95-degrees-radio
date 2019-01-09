@@ -141,7 +141,7 @@ public abstract class SongQueue extends AudioEventAdapter {
         for (Song s : songMap) {
             i++;
             if (i - 1 < min || i - 1 >= max) continue;
-            String loc = s.getFileName();
+            String loc = s.getFriendlyName();
             output.append(i).append(i < 10 ? "  " : i < 100 ? " " : "").append(": ").append(loc, 0, Math.min(loc.length(), 150)).append("\n");
         }
 
@@ -157,28 +157,8 @@ public abstract class SongQueue extends AudioEventAdapter {
         int i = 0;
         for (Song s : queue) {
             i++;
-            output.append(i).append(i < 10 ? " " : "").append(": ");
-            if (s.getTrack() != null) { //todo abstract this into Song?
-                output.append(s.getTrack().getInfo().title).append(" (").append(s.getTrack().getInfo().author).append(")");
-            } else if (s instanceof DatabaseSong) {
-                DatabaseSong ds = (DatabaseSong) s;
-                output.append(ds.getArtist()).append(" - ").append(ds.getTitle());
-            } else {
-                boolean addedDesc = false;
-                try {
-                    Mp3File m = new Mp3File(s.getFullLocation());
-                    if (m.hasId3v2Tag()) {
-                        ID3v2 tag = m.getId3v2Tag();
-                        output.append(tag.getArtist()).append(" - ").append(tag.getTitle());
-                        addedDesc = true;
-                    }
-                } catch (Exception ignored) {
-                }
+            output.append(i).append(i < 10 ? " " : "").append(": ").append(s.getFriendlyName()).append("\n");
 
-                if (!addedDesc) output.append(s.getFileName());
-            }
-
-            output.append("\n");
             if (i >= 10) break;
         }
 

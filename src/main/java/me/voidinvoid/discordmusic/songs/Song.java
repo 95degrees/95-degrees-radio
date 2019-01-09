@@ -26,6 +26,8 @@ public abstract class Song {
 
     public abstract Path getAlbumArtFile();
 
+    public abstract String getFriendlyName();
+
     public String getAlbumArtURL() {
         return null;
     }
@@ -40,7 +42,8 @@ public abstract class Song {
         return queue;
     }
 
-    public void setQueue(SongQueue queue) {
+    public Song setQueue(SongQueue queue) {
         this.queue = queue;
+        return this;
     }
 }

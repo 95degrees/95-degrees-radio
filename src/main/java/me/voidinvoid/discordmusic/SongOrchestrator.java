@@ -376,17 +376,17 @@ public class SongOrchestrator extends AudioEventAdapter {
 
             @Override
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
-
+                callback.accept(null);
             }
 
             @Override
             public void noMatches() {
-
+                callback.accept(null);
             }
 
             @Override
             public void loadFailed(FriendlyException e) {
-
+                callback.accept(null);
             }
         });
     }
@@ -483,6 +483,26 @@ public class SongOrchestrator extends AudioEventAdapter {
         });
 
         return suggestionsEnabled = enabled;
+    }
+
+    public void setPaused(boolean paused) {
+        boolean wasPaused = player.isPaused();
+        if (wasPaused == paused) return;
+
+        player.setPaused(paused);
+
+        final boolean p = player.isPaused(); //since setPaused might not have an effect (e.g. for streams)
+        final AudioTrack t = player.getPlayingTrack();
+        final Song s = t.getUserData(Song.class);
+
+        songEventListeners.forEach(l -> {
+            try {
+                l.onSongPause(paused, s, t, player);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
     }
 
     public SongQueue getSpecialQueue() {
