@@ -129,7 +129,7 @@ public class Radio implements EventListener {
         if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug)
             registerService(new LaMetricMemberStatsHook()); //todo
 
-        registerService(new TaskManager(Paths.get(config.locations.tasks)));
+        registerService(new TaskManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

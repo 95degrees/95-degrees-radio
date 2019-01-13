@@ -187,6 +187,17 @@ public class SongDJ implements SongEventListener, EventListener {
                     }
 
                 }, 0, 1, TimeUnit.SECONDS);
+            } else {
+                String title = song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title;
+                String author = song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author;
+
+                String topic = "🎵 **" + title + "** - " + author + (song.getType() == SongType.SONG ? " - --/--" : "");
+
+                KaraokeManager km = Radio.getInstance().getService(KaraokeManager.class);
+                if (km == null || !km.isKaraokeMode()) { //TODO
+                    djChannel.getManager().setTopic(topic).queue();
+                    radioChannel.getManager().setTopic(topic).queue();
+                }
             }
 
             availableActions.forEach(a -> m.addReaction(a.getEmoji()).queue());

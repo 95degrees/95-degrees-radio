@@ -47,7 +47,9 @@ public class NetworkSong extends Song {
 
     @Override
     public AudioTrack getTrack() {
-        return track.makeClone();
+        track = track.makeClone();
+        track.setUserData(this);
+        return track;
     }
 
     @Override

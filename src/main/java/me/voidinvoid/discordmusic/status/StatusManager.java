@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Game;
 
@@ -36,7 +37,7 @@ public class StatusManager implements SongEventListener {
             if (track.getInfo().isStream) {
                 jda.getPresence().setGame(Game.streaming(track.getInfo().title, track.getInfo().uri));
             } else {
-                jda.getPresence().setGame(Game.playing(song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
+                jda.getPresence().setGame(Game.playing(song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() + " - " + ((DatabaseSong) song).getTitle() : song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
             }
         }
     }

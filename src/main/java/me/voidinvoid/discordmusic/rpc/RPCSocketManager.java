@@ -22,7 +22,7 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RPCSocketManager implements SongEventListener, EventListener {
+public class RPCSocketManager implements SongEventListener, EventListener { //todo adapt this for db songs
 
     private final SocketIOServer server;
     private SongInfo currentSongInfo;
