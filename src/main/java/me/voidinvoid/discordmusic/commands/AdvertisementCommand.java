@@ -17,7 +17,7 @@ public class AdvertisementCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        AdvertisementManager adman = Radio.instance.getAdvertisementManager();
+        AdvertisementManager adman = Radio.getInstance().getService(AdvertisementManager.class);
 
         if (adman == null) {
             data.error("Adverts are not currently enabled");
@@ -25,18 +25,18 @@ public class AdvertisementCommand extends Command {
         }
 
         if (data.getArgs().length > 0) {
-            List<Song> ads = adman.getAdvertQueue().getQueue();
+            List<Advertisement> ads = adman.getAdverts();
 
             String title = data.getArgsString();
 
-            Song ad = ads.stream().filter(a -> title.equals(a.getFileName())).findAny().orElse(null);
+            Advertisement ad = ads.stream().filter(a -> title.equals(a.getTitle())).findAny().orElse(null);
 
             if (ad == null) {
-                data.error("Invalid ad file name. Valid file names:\n" + ads.stream().map(Song::getFileName).collect(Collectors.joining("\n", "`", "`")));
+                data.error("Invalid ad file name. Valid file names:\n" + ads.stream().map(Advertisement::getTitle).collect(Collectors.joining("\n", "`", "`")));
                 return;
             }
 
-            Radio.instance.getOrchestrator().getAwaitingSpecialSongs().add(ad);
+            Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs().add(ad.getSong());
             data.success("Queued specified advert");
             return;
         }

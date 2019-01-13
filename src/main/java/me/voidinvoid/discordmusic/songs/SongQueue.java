@@ -3,32 +3,29 @@ package me.voidinvoid.discordmusic.songs;
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.User;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class SongQueue extends AudioEventAdapter {
+public abstract class SongQueue extends AudioEventAdapter {
 
     private static final Random RANDOM = new Random();
 
     private List<Song> queue;
     private List<Song> songMap;
     private Playlist playlist;
-    private Path directory;
     private SongType queueType;
     private boolean shuffleSongs;
 
     private String queueCache;
 
-    public SongQueue(Playlist playlist, Path directory, SongType queueType, boolean shuffleSongs) {
+    public SongQueue(Playlist playlist, SongType queueType, boolean shuffleSongs) {
         this.playlist = playlist;
-        this.directory = directory;
         this.queueType = queueType;
         this.shuffleSongs = shuffleSongs;
     }
@@ -36,11 +33,7 @@ public class SongQueue extends AudioEventAdapter {
     public CompletableFuture<List<Song>> loadSongsAsync() {
         CompletableFuture<List<Song>> files = CompletableFuture.supplyAsync(this::initSongs); //find all files async
         files.whenComplete((l, e) -> {
-            if (e != null) {
-                System.err.println("Error loading songs (async callback) for playlist: " + e.getMessage());
-                e.printStackTrace();
-                return;
-            }
+            if (l == null) return;
 
             System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + (playlist == null ? "<null>" : playlist.getName()));
 
@@ -66,19 +59,7 @@ public class SongQueue extends AudioEventAdapter {
         return files;
     }
 
-    private List<Song> initSongs() {
-        try {
-            return Files.walk(directory, 1)
-                    .filter(f -> !Files.isDirectory(f))
-                    .map(f -> new FileSong(queueType, f, this)).collect(Collectors.toList());
-
-        } catch (Exception ex) {
-            System.err.println("Error fetching songs for playlist");
-            ex.printStackTrace();
-
-            return null;
-        }
-    }
+    protected abstract List<Song> initSongs();
 
     public Song getNextAndRemove() {
         if (queue.size() == 0) return null;
@@ -140,8 +121,8 @@ public class SongQueue extends AudioEventAdapter {
         return queue.stream().filter(s -> s instanceof NetworkSong && ((NetworkSong) s).getSuggestedBy().equals(user)).collect(Collectors.toList());
     }
 
-    public Path getDirectory() {
-        return directory;
+    public SongType getQueueType() {
+        return queueType;
     }
 
     public List<Song> getSongMap() {
@@ -160,7 +141,7 @@ public class SongQueue extends AudioEventAdapter {
         for (Song s : songMap) {
             i++;
             if (i - 1 < min || i - 1 >= max) continue;
-            String loc = s.getFileName();
+            String loc = s.getFriendlyName();
             output.append(i).append(i < 10 ? "  " : i < 100 ? " " : "").append(": ").append(loc, 0, Math.min(loc.length(), 150)).append("\n");
         }
 
@@ -176,25 +157,8 @@ public class SongQueue extends AudioEventAdapter {
         int i = 0;
         for (Song s : queue) {
             i++;
-            output.append(i).append(i < 10 ? " " : "").append(": ");
-            if (s.getTrack() != null) {
-                output.append(s.getTrack().getInfo().title).append(" (").append(s.getTrack().getInfo().author).append(")");
-            } else {
-                boolean addedDesc = false;
-                try {
-                    Mp3File m = new Mp3File(s.getFullLocation());
-                    if (m.hasId3v2Tag()) {
-                        ID3v2 tag = m.getId3v2Tag();
-                        output.append(tag.getArtist()).append(" - ").append(tag.getTitle());
-                        addedDesc = true;
-                    }
-                } catch (Exception ignored) {
-                }
+            output.append(i).append(i < 10 ? " " : "").append(": ").append(s.getFriendlyName()).append("\n");
 
-                if (!addedDesc) output.append(s.getFileName());
-            }
-
-            output.append("\n");
             if (i >= 10) break;
         }
 

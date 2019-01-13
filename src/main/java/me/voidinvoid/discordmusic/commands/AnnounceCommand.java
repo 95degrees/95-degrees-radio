@@ -42,7 +42,7 @@ public class AnnounceCommand extends Command {
 
         MessageEmbed embed = new EmbedBuilder().setTitle("Announcement").setDescription(announcement).setTimestamp(OffsetDateTime.now()).setColor(colour).build();
 
-        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
-        Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
+        Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat).sendMessage(embed).queue();
+        Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue();
     }
 }

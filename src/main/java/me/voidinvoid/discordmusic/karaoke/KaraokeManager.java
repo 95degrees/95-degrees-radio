@@ -48,13 +48,13 @@ public class KaraokeManager implements SongEventListener {
 
         executor = Executors.newScheduledThreadPool(1);
 
-        radioChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-        djChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.djChat);
+        radioChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+        djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
     }
 
     private boolean initialiseKaraoke() {
         if (textChannel == null)
-            textChannel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
+            textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
         if (textChannel == null) return false;
 
         List<Message> lyricsMsgs = textChannel.getHistory().retrievePast(10).complete(); //clear out old messages if for whatever reason there's some there
@@ -154,6 +154,8 @@ public class KaraokeManager implements SongEventListener {
                 embed.setDescription(desc);
 
                 message.editMessage(embed.build()).complete();
+
+                radioChannel.getManager().setTopic("📜 " + lyricsList.get(index).getText()).queue();
             }
         }, 0, 50, TimeUnit.MILLISECONDS);
     }

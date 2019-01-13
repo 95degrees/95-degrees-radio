@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.TextChannel;
 
@@ -21,9 +22,9 @@ public class KaraokeCommand extends Command {
             data.error("No lyrics channel ID supplied and no default lyrics channel is configured");
             return;
         } else if (args.length == 0) {
-            channel = Radio.instance.getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
+            channel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.lyricsChat);
         } else {
-            channel = Radio.instance.getJda().getTextChannelById(args[0]);
+            channel = Radio.getInstance().getJda().getTextChannelById(args[0]);
 
             if (channel == null) {
                 data.error("Specified lyrics channel ID is invalid");
@@ -32,7 +33,8 @@ public class KaraokeCommand extends Command {
         }
 
         boolean enabled;
-        Radio.instance.getKaraokeManager().setKaraokeMode(enabled = !Radio.instance.getKaraokeManager().isKaraokeMode(), channel);
+        KaraokeManager karaokeManager = Radio.getInstance().getService(KaraokeManager.class);
+        karaokeManager.setKaraokeMode(enabled = !karaokeManager.isKaraokeMode(), channel);
         data.success("Karaoke mode " + (enabled ? "enabled" : "disabled"));
     }
 }

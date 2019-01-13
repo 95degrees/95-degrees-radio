@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.commands;
 
+import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.tasks.RadioTaskComposition;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -14,7 +15,7 @@ public class TasksCommand extends Command {
     public void invoke(CommandData data) {
         StringBuilder built = new StringBuilder("[Tasks]\n\n");
         int i = 0;
-        for (RadioTaskComposition c : TaskManager.getTasks()) {
+        for (RadioTaskComposition c : Radio.getInstance().getService(TaskManager.class).getTasks()) {
             i++;
 
             built.append(i).append(": ").append(c.getName()).append(" (").append(c.getExecutionCron()).append(")\n");

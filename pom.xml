@@ -77,6 +77,11 @@
             <artifactId>netty-socketio</artifactId>
             <version>1.7.12</version>
         </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>3.9.1</version>
+        </dependency>
     </dependencies>
 
     <repositories>

@@ -1,11 +1,15 @@
 package me.voidinvoid.discordmusic.advertisements;
 
+import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 
 public class Advertisement {
 
-    private String fileName;
+    private String identifier;
     private String title;
     private String url;
     private String description;
@@ -14,9 +18,10 @@ public class Advertisement {
     private String iconUrl;
     private String imageUrl;
     private boolean partnerAd;
+    private NetworkSong song;
 
-    public String getFileName() {
-        return fileName;
+    public String getIdentifier() {
+        return identifier;
     }
 
     public String getTitle() {
@@ -37,6 +42,18 @@ public class Advertisement {
 
     public String getIconUrl() {
         return iconUrl;
+    }
+
+    public Song getSong() {
+        return song;
+    }
+
+    public void generateSong() {
+        System.out.println("id > " + identifier);
+        Radio.getInstance().getOrchestrator().createNetworkTrack(SongType.ADVERTISEMENT, identifier, n -> {
+            song = n;
+            System.out.println(song);
+        });
     }
 
     public EmbedBuilder constructAdvertMessage() {

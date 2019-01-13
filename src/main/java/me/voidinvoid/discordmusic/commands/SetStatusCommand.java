@@ -22,7 +22,7 @@ public class SetStatusCommand extends Command {
             return;
         }
 
-        Radio.instance.getJda().getPresence().setGame(Game.playing(data.getArgsString()));
+        Radio.getInstance().getJda().getPresence().setGame(Game.playing(data.getArgsString()));
         data.success("Discord status has been changed.\nℹ This may be overridden by playlists or songs when they are played");
     }
 }

@@ -36,12 +36,19 @@ public class NetworkSong extends Song {
     }
 
     @Override
+    public String getFriendlyName() {
+        return track.getInfo().title + " (" + track.getInfo().author + ")";
+    }
+
+    @Override
     public String getFileName() {
         return track.getInfo().uri;
     }
 
     @Override
     public AudioTrack getTrack() {
+        track = track.makeClone();
+        track.setUserData(this);
         return track;
     }
 

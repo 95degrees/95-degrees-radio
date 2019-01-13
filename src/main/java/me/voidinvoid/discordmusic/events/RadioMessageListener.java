@@ -3,9 +3,11 @@ package me.voidinvoid.discordmusic.events;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
+import me.voidinvoid.discordmusic.utils.AlbumArt;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
@@ -31,8 +33,8 @@ public class RadioMessageListener implements SongEventListener {
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
                 .setColor(new Color(230, 230, 230))
-                .addField("Title", track.getInfo().title, true)
-                .addField(song instanceof NetworkSong ? "Uploader" : "Artist", track.getInfo().author, true)
+                .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, true)
+                .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, true)
                 .setTimestamp(new Date().toInstant());
 
         if (song instanceof NetworkSong) {
@@ -41,9 +43,11 @@ public class RadioMessageListener implements SongEventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
-            if (Radio.instance.getSocketServer() != null) {
-                Radio.instance.getSocketServer().updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl());
+        AlbumArt.attachAlbumArt(embed, song, textChannel).queue(m -> {
+            RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
+
+            if (srv != null) {
+                srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl());
             }
         });
     }
@@ -63,12 +67,12 @@ public class RadioMessageListener implements SongEventListener {
             embed.setFooter(user.getName(), user.getAvatarUrl());
         }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
+        AlbumArt.attachAlbumArt(embed, song, textChannel).queue();
     }
 
     @Override
     public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
-        if (member == null || !Radio.instance.getOrchestrator().areSuggestionsEnabled()) return;
+        if (member == null || !Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) return;
         User user = member.getUser();
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
@@ -80,6 +84,6 @@ public class RadioMessageListener implements SongEventListener {
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(user.getName(), user.getAvatarUrl());
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
+        AlbumArt.attachAlbumArt(embed, song, textChannel).queue();
     }
 }

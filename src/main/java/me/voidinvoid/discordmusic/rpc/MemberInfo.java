@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.server;
+package me.voidinvoid.discordmusic.rpc;
 
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;

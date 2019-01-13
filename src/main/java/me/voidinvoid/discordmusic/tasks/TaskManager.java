@@ -4,17 +4,21 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import org.bson.Document;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
-import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 
@@ -24,9 +28,13 @@ public class TaskManager implements Job {
 
     private static Scheduler scheduler;
 
-    private static List<RadioTaskComposition> tasks;
+    private List<RadioTaskComposition> tasks;
 
-    public static void loadTasks(File file) {
+    public TaskManager() {
+        reload();
+    }
+
+    public void reload() {
         try {
             tasks = new ArrayList<>();
 
@@ -35,12 +43,22 @@ public class TaskManager implements Job {
                 scheduler.shutdown(false);
             }
 
-            Gson gson = new Gson();
-            JsonArray arr = new JsonParser().parse(new String(Files.readAllBytes(file.toPath()))).getAsJsonObject().get("task_compositions").getAsJsonArray();
+            DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
+            if (db != null) {
+                db.getCollection("tasks").find().forEach((Consumer<? super Document>) comp -> {
+                    System.out.println(TASK_LOG_PREFIX + "Found database task composition");
+                    tasks.add(new RadioTaskComposition(comp));
+                });
+            }
 
-            for (JsonElement e : arr) {
-                System.out.println(TASK_LOG_PREFIX + "Found task composition");
-                tasks.add(new RadioTaskComposition(gson, e.getAsJsonObject()));
+            if (RadioConfig.config.locations.tasks != null) {
+                Gson gson = new Gson();
+                JsonArray arr = new JsonParser().parse(new String(Files.readAllBytes(Paths.get(RadioConfig.config.locations.tasks)))).getAsJsonObject().get("task_compositions").getAsJsonArray();
+
+                for (JsonElement e : arr) {
+                    System.out.println(TASK_LOG_PREFIX + "Found task composition");
+                    tasks.add(new RadioTaskComposition(gson, e.getAsJsonObject()));
+                }
             }
 
             scheduler = StdSchedulerFactory.getDefaultScheduler();
@@ -71,7 +89,7 @@ public class TaskManager implements Job {
     }
 
     @Override
-    public void execute(JobExecutionContext ctx) {
+    public void execute(JobExecutionContext ctx) { //internal job execution task
         try {
             RadioTaskComposition comp = (RadioTaskComposition) ctx.getJobDetail().getJobDataMap().get("comp");
             executeComposition(comp, false);
@@ -81,7 +99,7 @@ public class TaskManager implements Job {
         }
     }
 
-    public static void executeComposition(RadioTaskComposition comp, boolean ignoreCancellation) {
+    public void executeComposition(RadioTaskComposition comp, boolean ignoreCancellation) {
         try {
             if (comp.isCancelled() && !ignoreCancellation) {
                 System.out.println(TASK_LOG_PREFIX + "Ignoring task invocation due to being cancelled");
@@ -89,18 +107,18 @@ public class TaskManager implements Job {
                 return;
             }
             System.out.println(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
-            comp.getTasks().forEach(r -> r.invoke(Radio.instance.getOrchestrator()));
+            comp.getTasks().forEach(r -> r.invoke(Radio.getInstance().getOrchestrator()));
         } catch (Exception e) {
             System.out.println(TASK_LOG_PREFIX + "Error invoking task");
             e.printStackTrace();
         }
     }
 
-    public static List<RadioTaskComposition> getTasks() {
+    public List<RadioTaskComposition> getTasks() {
         return tasks;
     }
 
-    public static void shutdown() {
+    public void shutdown() {
         try {
             scheduler.shutdown(false);
         } catch (SchedulerException e) {

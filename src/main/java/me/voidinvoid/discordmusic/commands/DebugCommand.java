@@ -2,6 +2,8 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.quiz.QuizManager;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 
 import java.util.Arrays;
@@ -35,14 +37,14 @@ public class DebugCommand extends Command {
     public enum DebugAction {
 
         LIST_ACTIVE_CLIENTS(d -> {
-            d.success(Radio.instance.getSocketServer().getServer().getAllClients().stream().map(c -> c.getSessionId().toString()).collect(Collectors.joining(", ")));
+            d.success(Radio.getInstance().getService(RPCSocketManager.class).getServer().getAllClients().stream().map(c -> c.getSessionId().toString()).collect(Collectors.joining(", ")));
         }),
         TEST_QUIZ(d -> {
 
         }),
         QUIZ_PROGRESS(d -> {
-            if (Radio.instance.getQuizManager().getActiveQuiz().progress(false)) {
-                Radio.instance.getOrchestrator().playNextSong();
+            if (Radio.getInstance().getService(QuizManager.class).getActiveQuiz().progress(false)) {
+                Radio.getInstance().getOrchestrator().playNextSong();
             }
         });
 

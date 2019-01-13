@@ -17,25 +17,25 @@ public class QueueCommand extends Command {
 
         if (args.length > 0 && (data.getTextChannel() == null || ChannelScope.DJ_CHAT.check(data.getTextChannel()))) {
             if (args[0].equalsIgnoreCase("on")) {
-                Radio.instance.getOrchestrator().setQueueCommandEnabled(true);
+                Radio.getInstance().getOrchestrator().setQueueCommandEnabled(true);
                 data.success("The queue command has been enabled");
                 return;
 
             } else if (args[0].equalsIgnoreCase("off")) {
-                Radio.instance.getOrchestrator().setQueueCommandEnabled(false);
+                Radio.getInstance().getOrchestrator().setQueueCommandEnabled(false);
                 data.success("The queue command has been disabled");
                 return;
             }
         }
 
-        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+        Playlist active = Radio.getInstance().getOrchestrator().getActivePlaylist();
 
         if (!(active instanceof RadioPlaylist)) {
             data.error("This command can only be used when a song playlist is active");
             return;
         }
 
-        if (data.getTextChannel() != null && !Radio.instance.getOrchestrator().isQueueCommandEnabled() && !ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
+        if (data.getTextChannel() != null && !Radio.getInstance().getOrchestrator().isQueueCommandEnabled() && !ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
             data.error("The queue command is currently disabled");
             return;
         }

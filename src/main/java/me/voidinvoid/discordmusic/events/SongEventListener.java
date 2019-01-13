@@ -17,6 +17,9 @@ public interface SongEventListener {
     default void onSongEnd(Song song, AudioTrack track) {
     }
 
+    default void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
+    }
+
     default void onSongLoadError(Song song, FriendlyException error) {
     }
 

@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.quiz;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.Playlist;
+import me.voidinvoid.discordmusic.songs.PlaylistProperties;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Colors;
@@ -50,19 +51,25 @@ public class QuizPlaylist extends Playlist {
 
     private String nextProgressionAction;
 
-    public Message getQuizManagerMessage() {
-        return quizManagerMessage;
+    private PlaylistProperties properties;
+
+    @Override
+    protected PlaylistProperties getProperties() {
+        return properties;
     }
 
     public QuizPlaylist(Quiz quiz, QuizManager manager) {
         super(quiz.getInternal());
-        this.name = quiz.getTitle();
+
+        properties = new PlaylistProperties();
+
+        properties.setDisplayName(quiz.getTitle());
         this.quiz = quiz;
         this.manager = manager;
 
         for (QuizQuestion c : quiz.getQuestions()) {
             if (c.getAudioUrl() != null) {
-                Radio.instance.getOrchestrator().createNetworkTrack(SongType.QUIZ, c.getAudioUrl(), s -> songTracks.put(c, s));
+                Radio.getInstance().getOrchestrator().createNetworkTrack(SongType.QUIZ, c.getAudioUrl(), s -> songTracks.put(c, s));
             }
         }
     }
@@ -70,6 +77,10 @@ public class QuizPlaylist extends Playlist {
     @Override
     public void awaitLoad() {
 
+    }
+
+    public Message getQuizManagerMessage() {
+        return quizManagerMessage;
     }
 
     @Override

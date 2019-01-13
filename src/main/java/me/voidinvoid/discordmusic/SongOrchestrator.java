@@ -22,11 +22,15 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.*;
+import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
+import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
+import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.User;
+import org.bson.Document;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -39,10 +43,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class SongOrchestrator extends AudioEventAdapter {
-
-    public static final int JINGLE_FREQUENCY = 3;
-    public static final int MAX_SONG_LENGTH = 300000;
-    public static final int USER_QUEUE_LIMIT = 3;
 
     private List<Playlist> playlists;
     private Playlist activePlaylist;
@@ -161,17 +161,19 @@ public class SongOrchestrator extends AudioEventAdapter {
 
     public void loadPlaylists() {
         System.out.println("Loading special queue...");
-        specialQueue = new SongQueue(null, Paths.get(RadioConfig.config.locations.specialPlaylist), SongType.SPECIAL, false);
+        specialQueue = new LocalSongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), null, SongType.SPECIAL, false);
         specialQueue.loadSongsAsync();
 
-        System.out.println("Loading playlists...");
+        playlists = new ArrayList<>();
+
+        System.out.println("Loading local playlists...");
 
         Playlist prevActive = activePlaylist;
 
         try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
             playlists = playlistFolder
                     .filter(Files::isDirectory)
-                    .map(RadioPlaylist::new)
+                    .map(LocalRadioPlaylist::new)
                     .collect(Collectors.toList());
         } catch (IOException e) {
             System.out.println(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
@@ -179,10 +181,16 @@ public class SongOrchestrator extends AudioEventAdapter {
             return;
         }
 
+        DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
+        if (db != null) {
+            System.out.println("Loading database playlists...");
+            //TODO debug
+            ((Iterable<Document>) db.getCollection("playlists_debug").find()).forEach(d -> playlists.add(new DatabaseRadioPlaylist(d)));
+        }
 
         playlists.forEach(p -> {
             System.out.println(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " PLAYLIST " + ConsoleColor.RESET_SPACE + p.getName());
-
+            System.out.println(p.getInternal() + ", " + p.getCoinMultiplier() + ", " + p.getStatusOverrideMessage());
             if (p.isDefault()) activePlaylist = p;
         });
 
@@ -235,7 +243,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         }
 
         if (jingle) {
-            timeUntilJingle = JINGLE_FREQUENCY;
+            timeUntilJingle = RadioConfig.config.orchestration.jingleFrequency;
             playSong(activePlaylist.provideNextSong(true));
             return;
         }
@@ -368,17 +376,17 @@ public class SongOrchestrator extends AudioEventAdapter {
 
             @Override
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
-
+                callback.accept(null);
             }
 
             @Override
             public void noMatches() {
-
+                callback.accept(null);
             }
 
             @Override
             public void loadFailed(FriendlyException e) {
-
+                callback.accept(null);
             }
         });
     }
@@ -404,11 +412,11 @@ public class SongOrchestrator extends AudioEventAdapter {
 
             if (!suggestionsEnabled) {
                 error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
-            } else if (sp.getSongs().suggestionsBy(user).size() >= USER_QUEUE_LIMIT) {
+            } else if (sp.getSongs().suggestionsBy(user).size() >= RadioConfig.config.orchestration.userQueueLimit) {
                 error = NetworkSongError.QUEUE_LIMIT_REACHED;
             } else if (track.getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
-            } else if (track.getDuration() > MAX_SONG_LENGTH) {
+            } else if (track.getDuration() > RadioConfig.config.orchestration.maxSongLength) {
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
             } else if (suggestedBy != null && (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel()))) {
                 error = NetworkSongError.NOT_IN_VOICE_CHANNEL;
@@ -475,6 +483,26 @@ public class SongOrchestrator extends AudioEventAdapter {
         });
 
         return suggestionsEnabled = enabled;
+    }
+
+    public void setPaused(boolean paused) {
+        boolean wasPaused = player.isPaused();
+        if (wasPaused == paused) return;
+
+        player.setPaused(paused);
+
+        final boolean p = player.isPaused(); //since setPaused might not have an effect (e.g. for streams)
+        final AudioTrack t = player.getPlayingTrack();
+        final Song s = t.getUserData(Song.class);
+
+        songEventListeners.forEach(l -> {
+            try {
+                l.onSongPause(paused, s, t, player);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
     }
 
     public SongQueue getSpecialQueue() {

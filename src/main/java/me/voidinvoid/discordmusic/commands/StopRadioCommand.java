@@ -11,6 +11,6 @@ public class StopRadioCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        Radio.shutdown(false);
+        Radio.getInstance().shutdown(false);
     }
 }

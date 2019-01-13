@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.tasks;
 
 import com.google.gson.*;
 import me.voidinvoid.discordmusic.tasks.types.TaskType;
+import org.bson.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,6 +16,41 @@ public class RadioTaskComposition {
     private String executionCron;
 
     private boolean cancelled;
+
+    @SuppressWarnings("unchecked")
+    public RadioTaskComposition(Document elem) {
+        if (!elem.containsKey("tasks")) {
+            throw new JsonSyntaxException("No 'tasks' specified for radio task");
+        }
+
+        if (!elem.containsKey("execution_time")) {
+            throw new JsonSyntaxException("No 'execution_time' specified for radio task");
+        }
+
+        if (elem.containsKey("label")) {
+            name = elem.getString("label");
+        }
+
+        executionCron = elem.getString("execution_time");
+
+        List<Document> rawTasks = (List<Document>) elem.get("tasks");
+
+        for (Document obj : rawTasks) {
+            TaskType type = TaskType.valueOf(obj.getString("type"));
+            Document rawParams = obj.containsKey("params") ? obj.get("params", Document.class) : null;
+
+            Map<Parameter, Object> paramMap = new HashMap<>();
+
+            for (Parameter p : type.getParams()) {
+                if (!p.isOptional() && (rawParams == null || !rawParams.containsKey(p.getName()))) {
+                    throw new JsonSyntaxException("Mandatory parameter '" + p.getName() + "' has no value");
+                }
+                paramMap.put(p, rawParams != null && rawParams.containsKey(p.getName()) ? rawParams.get(p.getName()) : null);
+            }
+
+            tasks.add(new RadioTask(type.getExecutor(), new ParameterList(paramMap)));
+        }
+    }
 
     public RadioTaskComposition(Gson gson, JsonObject elem) {
         if (!elem.has("tasks")) {

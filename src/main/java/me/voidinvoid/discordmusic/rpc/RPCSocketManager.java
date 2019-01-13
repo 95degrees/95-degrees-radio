@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.server;
+package me.voidinvoid.discordmusic.rpc;
 
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketConfig;
@@ -22,7 +22,7 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SocketServer implements SongEventListener, EventListener {
+public class RPCSocketManager implements SongEventListener, EventListener { //todo adapt this for db songs
 
     private final SocketIOServer server;
     private SongInfo currentSongInfo;
@@ -31,7 +31,7 @@ public class SocketServer implements SongEventListener, EventListener {
     private VoiceChannel voiceChannel;
     private Guild guild;
 
-    public SocketServer(VoiceChannel voiceChannel) {
+    public RPCSocketManager(VoiceChannel voiceChannel) {
         this.voiceChannel = voiceChannel;
 
         guild = voiceChannel.getGuild();

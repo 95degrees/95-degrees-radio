@@ -17,7 +17,7 @@ public class QueueSongCommand extends Command {
     @Override
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
-        Playlist active = Radio.instance.getOrchestrator().getActivePlaylist();
+        Playlist active = Radio.getInstance().getOrchestrator().getActivePlaylist();
 
         if (!(active instanceof RadioPlaylist)) {
             data.error("This command can only be used when a song playlist is active");
@@ -48,6 +48,6 @@ public class QueueSongCommand extends Command {
         Song song = map.get(songId);
 
         ((RadioPlaylist) active).getSongs().moveSongToFront(song);
-        data.success("Queued `" + song.getFileName().replace("`", "") + "`");
+        data.success("Queued `" + song.getFriendlyName().replace("`", "") + "`");
     }
 }

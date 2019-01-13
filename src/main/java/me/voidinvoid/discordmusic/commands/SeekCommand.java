@@ -15,7 +15,7 @@ public class SeekCommand extends Command {
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
 
-        AudioTrack track = Radio.instance.getOrchestrator().getPlayer().getPlayingTrack();
+        AudioTrack track = Radio.getInstance().getOrchestrator().getPlayer().getPlayingTrack();
 
         if (args.length < 1) {
             data.error("Time to seek to required (in secs)");
@@ -45,7 +45,7 @@ public class SeekCommand extends Command {
             return;
         }
 
-        Radio.instance.getOrchestrator().seekTrack(time);
+        Radio.getInstance().getOrchestrator().seekTrack(time);
         data.success("Seeked track to " + FormattingUtils.getFormattedMsTime(time));
     }
 }
