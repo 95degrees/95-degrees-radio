@@ -2,9 +2,12 @@ package me.voidinvoid.discordmusic.config;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
+import org.bson.Document;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class RadioConfig {
 
@@ -49,14 +52,30 @@ public class RadioConfig {
         public int userQueueLimit;
     }
 
-    public static boolean loadFromFile(File file) {
+    private static boolean loadFromString(String json) {
         try {
-            config = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(new String(Files.readAllBytes(file.toPath())), RadioConfig.class);
+            config = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create().fromJson(json, RadioConfig.class);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
 
         return true;
+    }
+
+    public static boolean load(Document first) {
+        if (first == null) return false;
+
+        return loadFromString(first.toJson());
+    }
+
+    public static boolean loadFromFile(Path path) {
+        try {
+            return loadFromString(new String(Files.readAllBytes(path)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return false;
     }
 }

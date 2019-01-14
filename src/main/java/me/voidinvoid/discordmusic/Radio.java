@@ -39,24 +39,29 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.mongodb.client.model.Filters.eq;
+
 public class Radio implements EventListener {
 
     private static Radio instance;
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.out.println("Please specify the radio settings file location as an argument.");
+            System.out.println("Please specify the radio configuration name.");
             return;
         }
 
-        if (!RadioConfig.loadFromFile(new File(args[0]))) {
+        DatabaseManager db = new DatabaseManager();
+
+        if (!RadioConfig.load(db.getCollection("config").find(eq("_id", args[0])).first())) {
             System.out.println(ConsoleColor.RED + "Failed to load config!" + ConsoleColor.RESET);
             return;
         }
 
-        System.out.println(ConsoleColor.BLUE_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
+        System.out.println(ConsoleColor.CYAN_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
+        System.out.println("> " + args[0] + " config");
 
-        instance = new Radio(RadioConfig.config);
+        instance = new Radio(RadioConfig.config, db);
     }
 
     private RadioConfig config;
@@ -69,10 +74,13 @@ public class Radio implements EventListener {
     private Map<Class, Object> radioServices = new HashMap<>();
 
     private SongOrchestrator orchestrator;
+    private DatabaseManager databaseManager;
 
     private boolean loaded;
 
-    public Radio(RadioConfig config) {
+    public Radio(RadioConfig config, DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
+
         try {
             jda = new JDABuilder(AccountType.BOT).setToken(config.botToken).addEventListener(this).build();
 
@@ -103,8 +111,7 @@ public class Radio implements EventListener {
         EmbedBuilder loading = new EmbedBuilder().setTitle("⏱ Loading").setColor(Colors.ACCENT_LOADING).setDescription("`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
         Message msg = djChannel == null ? null : djChannel.sendMessage(loading.setTimestamp(OffsetDateTime.now()).build()).complete();
 
-        registerService(new DatabaseManager());
-
+        registerService(databaseManager);
         orchestrator = new SongOrchestrator(this, config);
 
         if (djChannel != null)
