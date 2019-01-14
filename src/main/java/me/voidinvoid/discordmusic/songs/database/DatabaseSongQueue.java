@@ -46,7 +46,7 @@ public class DatabaseSongQueue extends SongQueue {
                         return Stream.empty();
                     } else {
                         List<Document> listing = (ArrayList<Document>) source.get("listing"); //todo check
-                        return listing.stream().map(v -> new DatabaseSong(getQueueType(), v).setQueue(this));
+                        return listing.stream().map(v -> new DatabaseSong(getQueueType(), v, sourceName).setQueue(this));
                     }
                 } else {
                     System.out.println("Unknown song listing type '" + type + "'");

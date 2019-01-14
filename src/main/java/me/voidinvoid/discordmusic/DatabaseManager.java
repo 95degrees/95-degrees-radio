@@ -36,9 +36,11 @@ public class DatabaseManager extends RadioService {
         if (d == null) {
             d = new Document("_id", user.getId())
                     .append("subscriptions", Collections.emptyList())
+                    .append("achievements", Collections.emptyList())
                     .append("created", System.currentTimeMillis())
                     .append("total_earned_coins", 0)
-                    .append("total_listen_time", 0);
+                    .append("total_listen_time", 0)
+                    .append("data_version", 1);
 
             if (insertIfEmpty) {
                 users.insertOne(d);

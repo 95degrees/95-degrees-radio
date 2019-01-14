@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.coins;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
@@ -138,9 +139,13 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
                     .queue();
 
             RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
-
             if (srv != null) {
                 srv.sendCoinNotification(user.getId(), amount, coins.getTotalTime());
+            }
+
+            LevellingManager levelling = Radio.getInstance().getService(LevellingManager.class);
+            if (levelling != null) {
+                //todo?
             }
         } else {
             pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);

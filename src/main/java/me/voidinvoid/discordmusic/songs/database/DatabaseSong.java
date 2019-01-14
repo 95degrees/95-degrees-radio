@@ -27,6 +27,12 @@ public class DatabaseSong extends Song {
     private String albumArtId;
     private Path albumArt;
     private List<SongTrigger> triggers = new ArrayList<>();
+    private String sourceName;
+
+    public DatabaseSong(SongType songType, Document document, String sourceName) {
+        this(songType, document);
+        this.sourceName = sourceName;
+    }
 
     @SuppressWarnings("unchecked")
     public DatabaseSong(SongType songType, Document document) {
@@ -82,6 +88,10 @@ public class DatabaseSong extends Song {
 
     public List<SongTrigger> getTriggers() {
         return triggers;
+    }
+
+    public String getSourceName() {
+        return sourceName;
     }
 
     @Override
