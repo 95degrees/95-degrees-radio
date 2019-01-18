@@ -156,7 +156,7 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public Song getCurrentSong() {
-        return player.getPlayingTrack().getUserData(Song.class);
+        return player.getPlayingTrack() == null ? null : player.getPlayingTrack().getUserData(Song.class);
     }
 
     public void loadPlaylists() {

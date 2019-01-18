@@ -2,6 +2,8 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -46,6 +48,10 @@ public class DebugCommand extends Command {
             if (Radio.getInstance().getService(QuizManager.class).getActiveQuiz().progress(false)) {
                 Radio.getInstance().getOrchestrator().playNextSong();
             }
+        }),
+        GRANT_ACHIEVEMENT(d -> {
+            Achievement a = Achievement.valueOf(d.getArgs()[1]);
+            Radio.getInstance().getService(AchievementManager.class).rewardAchievement(d.getMember().getUser(), a);
         });
 
         private Consumer<CommandData> action;

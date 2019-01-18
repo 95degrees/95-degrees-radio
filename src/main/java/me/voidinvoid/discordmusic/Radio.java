@@ -10,6 +10,8 @@ import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
 import me.voidinvoid.discordmusic.events.RadioMessageListener;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
+import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
@@ -44,6 +46,7 @@ import static com.mongodb.client.model.Filters.eq;
 public class Radio implements EventListener {
 
     private static Radio instance;
+    private static String configName;
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -53,7 +56,9 @@ public class Radio implements EventListener {
 
         DatabaseManager db = new DatabaseManager();
 
-        if (!RadioConfig.load(db.getCollection("config").find(eq("_id", args[0])).first())) {
+        configName = args[0];
+
+        if (!RadioConfig.load(db.getCollection("config").find(eq("_id", configName)).first())) {
             System.out.println(ConsoleColor.RED + "Failed to load config!" + ConsoleColor.RESET);
             return;
         }
@@ -69,6 +74,10 @@ public class Radio implements EventListener {
 
     public static Radio getInstance() {
         return instance;
+    }
+
+    private static void reloadConfig() {
+        //TODO
     }
 
     private Map<Class, Object> radioServices = new HashMap<>();
@@ -135,6 +144,9 @@ public class Radio implements EventListener {
         if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager(jda));
         if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug)
             registerService(new LaMetricMemberStatsHook()); //todo
+
+        registerService(new LevellingManager());
+        registerService(new AchievementManager());
 
         registerService(new TaskManager());
 

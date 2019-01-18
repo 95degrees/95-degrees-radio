@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 
@@ -32,8 +33,11 @@ public class ReloadCommand extends Command {
                 } else {
                     data.error("The advertisement service is currently disabled");
                 }
+
+            } else if (args[0].equalsIgnoreCase("config")) {
+                //Radio.getInstance().reloadConfig();
             } else {
-                data.error("Unknown parameter. Use `playlists`, `tasks`, or `adverts`");
+                data.error("Unknown parameter. Use `playlists`, `tasks`, `adverts` or `config`");
             }
 
             return;
