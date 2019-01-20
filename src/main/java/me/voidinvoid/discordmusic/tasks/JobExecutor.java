@@ -4,9 +4,6 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
-
-import java.util.List;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -17,7 +14,7 @@ public class JobExecutor implements Job {
     private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " TASK EXECUTOR " + ConsoleColor.RESET_SPACE;
 
     @Override
-    public void execute(JobExecutionContext ctx) throws JobExecutionException {
+    public void execute(JobExecutionContext ctx) {
         try {
             TaskManager taskManager = Radio.getInstance().getService(TaskManager.class);
             RadioTaskComposition comp = (RadioTaskComposition) ctx.getJobDetail().getJobDataMap().get("comp");

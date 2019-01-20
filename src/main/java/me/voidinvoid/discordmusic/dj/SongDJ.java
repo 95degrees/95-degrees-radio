@@ -245,7 +245,7 @@ public class SongDJ implements SongEventListener, EventListener {
             embed.addField("Title", FormattingUtils.escapeMarkup(ds.getTitle()), true);
             embed.addField("Artist", FormattingUtils.escapeMarkup(ds.getArtist()), true);
             embed.addField("Album Art ID", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + FormattingUtils.escapeMarkup(ds.getFileName()), true);
-            embed.addField("MBID", FormattingUtils.escapeMarkup(ds.getMbId()), true);
+            embed.addField("MBID", ds.getMbId() == null ? "Unknown" : FormattingUtils.escapeMarkup(ds.getMbId()), true);
 
         } else if (song instanceof FileSong) {
 
