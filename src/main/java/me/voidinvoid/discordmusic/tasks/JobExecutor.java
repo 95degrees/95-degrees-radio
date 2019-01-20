@@ -19,25 +19,11 @@ public class JobExecutor implements Job {
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
         try {
+            TaskManager taskManager = Radio.getInstance().getService(TaskManager.class);
             RadioTaskComposition comp = (RadioTaskComposition) ctx.getJobDetail().getJobDataMap().get("comp");
-            executeComposition(comp, false);
+            taskManager.executeComposition(comp, false);
         } catch (Exception e) {
             System.out.println(TASK_LOG_PREFIX + "Scheduler task exception");
-            e.printStackTrace();
-        }
-    }
-
-    public void executeComposition(RadioTaskComposition comp, boolean ignoreCancellation) {
-        try {
-            if (comp.isCancelled() && !ignoreCancellation) {
-                System.out.println(TASK_LOG_PREFIX + "Ignoring task invocation due to being cancelled");
-                comp.setCancelled(false);
-                return;
-            }
-            System.out.println(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
-            comp.getTasks().forEach(r -> r.invoke(Radio.getInstance().getOrchestrator()));
-        } catch (Exception e) {
-            System.out.println(TASK_LOG_PREFIX + "Error invoking task");
             e.printStackTrace();
         }
     }
