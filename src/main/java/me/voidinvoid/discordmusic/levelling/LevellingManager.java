@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.levelling;
 
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.GuildVoiceState;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
@@ -19,5 +20,9 @@ public class LevellingManager implements EventListener {
 
             }
         }
+    }
+
+    public void rewardExperience(User user, int amount) {
+        
     }
 }

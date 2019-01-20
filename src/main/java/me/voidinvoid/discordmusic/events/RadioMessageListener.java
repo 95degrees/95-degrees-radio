@@ -9,6 +9,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.AlbumArt;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -19,6 +20,8 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 
 public class RadioMessageListener implements SongEventListener {
+
+    private static final String SUBSCRIPTION_EMOTE = "🔔";
 
     private TextChannel textChannel;
 
@@ -48,6 +51,17 @@ public class RadioMessageListener implements SongEventListener {
 
             if (srv != null) {
                 srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl());
+            }
+
+            if (!(song instanceof NetworkSong)) {
+                m.addReaction(SUBSCRIPTION_EMOTE).queue();
+                MessageReactionCallbackManager cb = Radio.getInstance().getService(MessageReactionCallbackManager.class);
+
+                cb.registerCallback(m.getId(), e -> {
+                    if (e.getReaction().getReactionEmote().getName().equals(SUBSCRIPTION_EMOTE)) {
+
+                    }
+                });
             }
         });
     }
