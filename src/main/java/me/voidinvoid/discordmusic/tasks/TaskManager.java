@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 
-public class TaskManager implements Job {
+public class TaskManager {
 
     private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " TASK " + ConsoleColor.RESET_SPACE;
 
@@ -32,6 +32,10 @@ public class TaskManager implements Job {
 
     public TaskManager() {
         reload();
+    }
+
+    public List<RadioTaskComposition> getTasks() {
+        return tasks;
     }
 
     public void reload() {
@@ -72,7 +76,7 @@ public class TaskManager implements Job {
                     System.out.println(TASK_LOG_PREFIX + "Scheduling task for " + t.getExecutionCron());
 
                     scheduler.scheduleJob(
-                            JobBuilder.newJob(TaskManager.class)
+                            JobBuilder.newJob(JobExecutor.class)
                                     .withIdentity("job_" + i++)
                                     .usingJobData(new JobDataMap(data)).build(),
 
@@ -86,36 +90,6 @@ public class TaskManager implements Job {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void execute(JobExecutionContext ctx) { //internal job execution task
-        try {
-            RadioTaskComposition comp = (RadioTaskComposition) ctx.getJobDetail().getJobDataMap().get("comp");
-            executeComposition(comp, false);
-        } catch (Exception e) {
-            System.out.println(TASK_LOG_PREFIX + "Scheduler task exception");
-            e.printStackTrace();
-        }
-    }
-
-    public void executeComposition(RadioTaskComposition comp, boolean ignoreCancellation) {
-        try {
-            if (comp.isCancelled() && !ignoreCancellation) {
-                System.out.println(TASK_LOG_PREFIX + "Ignoring task invocation due to being cancelled");
-                comp.setCancelled(false);
-                return;
-            }
-            System.out.println(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
-            comp.getTasks().forEach(r -> r.invoke(Radio.getInstance().getOrchestrator()));
-        } catch (Exception e) {
-            System.out.println(TASK_LOG_PREFIX + "Error invoking task");
-            e.printStackTrace();
-        }
-    }
-
-    public List<RadioTaskComposition> getTasks() {
-        return tasks;
     }
 
     public void shutdown() {
