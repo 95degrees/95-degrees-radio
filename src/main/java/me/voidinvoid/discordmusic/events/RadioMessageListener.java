@@ -21,7 +21,7 @@ import java.util.Date;
 
 public class RadioMessageListener implements SongEventListener {
 
-    private static final String SUBSCRIPTION_EMOTE = "🔔";
+    private static final String SUBSCRIPTION_EMOTE = "🔔", UP_VOTE = "👍", DOWN_VOTE = "👎";
 
     private TextChannel textChannel;
 
@@ -55,11 +55,14 @@ public class RadioMessageListener implements SongEventListener {
 
             if (!(song instanceof NetworkSong)) {
                 m.addReaction(SUBSCRIPTION_EMOTE).queue();
+                m.addReaction(UP_VOTE).queue();
+                m.addReaction(DOWN_VOTE).queue();
+
                 MessageReactionCallbackManager cb = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 
                 cb.registerCallback(m.getId(), e -> {
                     if (e.getReaction().getReactionEmote().getName().equals(SUBSCRIPTION_EMOTE)) {
-
+                        e.getUser().openPrivateChannel().queue(c -> c.sendMessage("todo lol").queue());
                     }
                 });
             }

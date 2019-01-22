@@ -36,6 +36,7 @@ public class DatabaseManager extends RadioService {
         if (d == null) {
             d = new Document("_id", user.getId())
                     .append("subscriptions", Collections.emptyList())
+                    .append("ratings", Collections.emptyList())
                     .append("achievements", Collections.emptyList())
                     .append("created", System.currentTimeMillis())
                     .append("total_earned_coins", 0)
