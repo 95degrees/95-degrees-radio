@@ -4,6 +4,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
+import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -52,6 +53,9 @@ public class DebugCommand extends Command {
         GRANT_ACHIEVEMENT(d -> {
             Achievement a = Achievement.valueOf(d.getArgs()[1]);
             Radio.getInstance().getService(AchievementManager.class).rewardAchievement(d.getMember().getUser(), a);
+        }),
+        LEVEL_UP(d -> {
+            Radio.getInstance().getService(LevellingManager.class).rewardExperience(d.getMember().getUser(), 0);
         });
 
         private Consumer<CommandData> action;

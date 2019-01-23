@@ -49,10 +49,8 @@ public class Advertisement {
     }
 
     public void generateSong() {
-        System.out.println("id > " + identifier);
         Radio.getInstance().getOrchestrator().createNetworkTrack(SongType.ADVERTISEMENT, identifier, n -> {
             song = n;
-            System.out.println(song);
         });
     }
 

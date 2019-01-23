@@ -261,8 +261,9 @@ public class SongDJ implements SongEventListener, EventListener {
 
         if (!ended) {
             embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
+            embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
             //embed.addField("Elapsed", track.getInfo().isStream ? "-" : FormattingUtils.getFormattedMsTime(track.getPosition()) + " / " + FormattingUtils.getFormattedMsTime(track.getDuration()), false);
-            embed.addField("", actions.stream().map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false);
+            //embed.addField("", actions.stream().map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false);
         }
 
         return AlbumArt.attachAlbumArt(embed, song, djChannel, true);

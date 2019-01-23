@@ -4,6 +4,7 @@ import com.sun.org.apache.xerces.internal.xs.StringList;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
@@ -34,8 +35,10 @@ public class AchievementManager {
 
             c.sendMessage(new EmbedBuilder()
                     .setTitle("Achievement Unlocked")
+                    .setColor(Colors.ACCENT_ACHIEVEMENT)
+                    .setThumbnail("https://cdn.discordapp.com/attachments/505174503752728597/537703976032796712/todo.png")
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")
-                    .addField("Achievement", "**" + achievement.getDisplay() + "**\n" + achievement.getDescription(), false)
+                    .addField(achievement.getDisplay(), achievement.getDescription(), false)
                     .addField("Reward", "<:degreecoin:431982714212843521> " + achievement.getReward(), false)
                     .build()
             ).queue();

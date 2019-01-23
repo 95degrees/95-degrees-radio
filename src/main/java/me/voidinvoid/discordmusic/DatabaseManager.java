@@ -41,11 +41,13 @@ public class DatabaseManager extends RadioService {
                     .append("created", System.currentTimeMillis())
                     .append("total_earned_coins", 0)
                     .append("total_listen_time", 0)
-                    .append("data_version", 1);
+                    .append("data_version", 2);
 
             if (insertIfEmpty) {
                 users.insertOne(d);
             }
+        } else {
+            d = migrateDocument(d);
         }
 
         return d;
@@ -53,5 +55,21 @@ public class DatabaseManager extends RadioService {
 
     public Document findOrCreateUser(User user) {
         return findOrCreateUser(user, false);
+    }
+
+    private Document migrateDocument(Document doc) {
+        int dv = doc.getInteger("data_version");
+        boolean modified = false;
+
+        if (dv < 2) {
+            doc.append("ratings", Collections.emptyList());
+            modified = true;
+        }
+
+        if (modified) {
+            doc.put("data_version", 2);
+        }
+
+        return doc;
     }
 }

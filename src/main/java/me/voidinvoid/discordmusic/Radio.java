@@ -64,7 +64,7 @@ public class Radio implements EventListener {
         }
 
         System.out.println(ConsoleColor.CYAN_BACKGROUND + ConsoleColor.BLACK_BOLD + " Starting 95 Degrees Radio... " + ConsoleColor.RESET);
-        System.out.println("> " + args[0] + " config");
+        System.out.println("Loaded config: " + args[0]);
 
         instance = new Radio(RadioConfig.config, db);
     }
