@@ -182,7 +182,7 @@ public class KaraokeManager implements SongEventListener {
                 .setTitle("Karaoke")
                 .setDescription("🎤 Karaoke mode has " + (karaokeMode ? "been activated!" : "ended!"))
                 .setTimestamp(OffsetDateTime.now())
-                .setColor(new Color(82, 255, 238)).build();
+                .setColor(Colors.ACCENT_KARAOKE_LYRICS).build();
 
         if (radioChannel != null) radioChannel.sendMessage(embed).queue();
         if (djChannel != null) djChannel.sendMessage(embed).queue();

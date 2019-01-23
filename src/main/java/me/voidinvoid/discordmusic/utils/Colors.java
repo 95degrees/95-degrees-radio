@@ -16,6 +16,8 @@ public final class Colors {
     public static final Color ACCENT_QUIZ = new Color(230, 230, 230);
     public static final Color ACCENT_FINISHED_SONG = new Color(180, 180, 180);
     public static final Color ACCENT_EVENT_SUBSCRIPTION = new Color(221, 144, 63);
+    public static final Color ACCENT_TASK_SUCCESS = new Color(51, 200, 188);
+    public static final Color ACCENT_TASK_ERROR = new Color(200, 138, 42);
     public static final Color ACCENT_ACHIEVEMENT = new Color(255, 172, 0);
     public static final Color ACCENT_LEVEL_UP = new Color(251, 255, 8);
 }
