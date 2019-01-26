@@ -13,6 +13,7 @@ import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
+import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
@@ -127,27 +128,22 @@ public class Radio implements EventListener {
             msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
         registerService(new MessageReactionCallbackManager());
+        registerService(new SongRatingManager());
         registerService(new CommandManager());
         registerService(new SongSuggestionManager());
         registerService(new PlaylistTesterListener(radioChannel));
         if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager(radioVoiceChannel));
-
         registerService(new SongTriggerManager());
         registerService(new KaraokeManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener(radioChannel));
         registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
-
-        if (RadioConfig.config.useCoinGain)
-            registerService(new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
+        if (RadioConfig.config.useCoinGain) registerService(new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
         if (RadioConfig.config.useStatus) registerService(new StatusManager(jda));
         if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager(jda));
-        if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug)
-            registerService(new LaMetricMemberStatsHook()); //todo
-
+        if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug) registerService(new LaMetricMemberStatsHook()); //todo
         registerService(new LevellingManager());
         registerService(new AchievementManager());
-
         registerService(new TaskManager());
 
         if (djChannel != null)

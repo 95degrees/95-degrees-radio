@@ -23,8 +23,6 @@ import java.util.Date;
 
 public class RadioMessageListener implements SongEventListener {
 
-    private static final String SUBSCRIPTION_EMOTE = "🔔";
-
     private TextChannel textChannel;
 
     public RadioMessageListener(TextChannel textChannel) {
@@ -56,8 +54,6 @@ public class RadioMessageListener implements SongEventListener {
             }
 
             if (song instanceof DatabaseSong) {
-                m.addReaction(SUBSCRIPTION_EMOTE).queue();
-
                 for (Rating r : Rating.values()) {
                     m.addReaction(r.getEmote()).queue();
                 }
@@ -66,15 +62,11 @@ public class RadioMessageListener implements SongEventListener {
 
                 cb.registerCallback(m.getId(), e -> {
                     String re = e.getReaction().getReactionEmote().getName();
-                    if (re.equals(SUBSCRIPTION_EMOTE)) {
-                        e.getUser().openPrivateChannel().queue(c -> c.sendMessage("todo lol").queue());
-                    } else {
-                        for (Rating r : Rating.values()) {
-                            if (r.getEmote().equals(re)) {
-                                SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
-                                rm.rateSong(e.getUser(), (DatabaseSong) song, r);
-                                return;
-                            }
+                    for (Rating r : Rating.values()) {
+                        if (r.getEmote().equals(re)) {
+                            SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
+                            rm.rateSong(e.getUser(), (DatabaseSong) song, r);
+                            return;
                         }
                     }
                 });

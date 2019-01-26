@@ -6,10 +6,7 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.*;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -38,28 +35,26 @@ public class LevellingManager implements EventListener {
     @Override
     public void onEvent(Event ev) {
         if (ev instanceof GuildVoiceJoinEvent) {
-            trackIfEligible(((GenericGuildVoiceEvent) ev).getVoiceState(), ((GuildVoiceJoinEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
+            trackIfEligible(((GuildVoiceJoinEvent) ev).getMember().getUser(), ((GuildVoiceJoinEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceLeaveEvent) {
-            trackIfEligible(((GenericGuildVoiceEvent) ev).getVoiceState(), ((GenericGuildVoiceEvent) ev).getVoiceState().getChannel(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
+            trackIfEligible(((GuildVoiceLeaveEvent) ev).getMember().getUser(), ((GuildVoiceLeaveEvent) ev).getChannelLeft(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceMoveEvent) {
-            trackIfEligible(((GuildVoiceMoveEvent) ev).getVoiceState(), ((GuildVoiceMoveEvent) ev).getChannelJoined(), ((GuildVoiceMoveEvent) ev).getVoiceState().isDeafened());
+            trackIfEligible(((GuildVoiceMoveEvent) ev).getMember().getUser(), ((GuildVoiceMoveEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceDeafenEvent) {
-            trackIfEligible(((GuildVoiceDeafenEvent) ev).getVoiceState(), ((GuildVoiceDeafenEvent) ev).getVoiceState().getChannel(), ((GuildVoiceDeafenEvent) ev).isDeafened());
+            trackIfEligible(((GuildVoiceDeafenEvent) ev).getMember().getUser(), ((GuildVoiceDeafenEvent) ev).getVoiceState().getChannel(), ((GuildVoiceDeafenEvent) ev).isDeafened());
         }
     }
 
-    private void trackIfEligible(GuildVoiceState vs, VoiceChannel channel, boolean deafened) {
+    private void trackIfEligible(User user, VoiceChannel channel, boolean deafened) {
 
-        User u = vs.getMember().getUser();
-
-        if (vs.inVoiceChannel() && ChannelScope.RADIO_VOICE.check(channel) && deafened) {
-            if (!listeningTracker.containsKey(u.getId())) {
-                listeningTracker.put(u.getId(), track(u));
+        if (ChannelScope.RADIO_VOICE.check(channel) && deafened) {
+            if (!listeningTracker.containsKey(user.getId())) {
+                listeningTracker.put(user.getId(), track(user));
             }
         } else {
-            ScheduledFuture s = listeningTracker.get(u.getId());
+            ScheduledFuture s = listeningTracker.get(user.getId());
             if (s != null) {
-                System.out.println("LEVELLING: CANCELLED TRACKING " + u);
+                System.out.println("LEVELLING: CANCELLED TRACKING " + user);
                 s.cancel(false);
             }
         }

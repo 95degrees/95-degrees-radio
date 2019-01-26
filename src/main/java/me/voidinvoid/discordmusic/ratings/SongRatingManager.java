@@ -33,6 +33,12 @@ public class SongRatingManager {
             return true;
         }
 
+        Document rt = new Document();
+        for (Rating r : Rating.values()) {
+            rt.put("ratings." + r, user.getId());
+        }
+
+        ratings.updateOne(eq("song", song.getFileName()), new Document("$pullAll", rt));
         return ratings.updateOne(eq("song", song.getFileName()), new Document("$addToSet", new Document("ratings." + rating, user.getId()))).getModifiedCount() != 0;
     }
 }

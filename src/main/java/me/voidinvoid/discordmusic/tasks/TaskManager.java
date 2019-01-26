@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
@@ -107,7 +108,7 @@ public class TaskManager {
             System.out.println(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
             comp.getTasks().forEach(r -> r.invoke(Radio.getInstance().getOrchestrator()));
 
-            djChannel.sendMessage(new EmbedBuilder().setTitle("➡ Executed task " + comp.getName()).setColor(Colors.ACCENT_TASK_SUCCESS).build()).queue();
+            djChannel.sendMessage(new EmbedBuilder().setTitle("➡ Executed task " + comp.getName()).setColor(Colors.ACCENT_TASK_SUCCESS).build()).queue(m -> m.delete().queueAfter(10, TimeUnit.SECONDS));
         } catch (Exception e) {
             System.out.println(TASK_LOG_PREFIX + "Error invoking task");
             e.printStackTrace();

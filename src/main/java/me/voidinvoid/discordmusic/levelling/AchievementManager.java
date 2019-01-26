@@ -1,6 +1,5 @@
 package me.voidinvoid.discordmusic.levelling;
 
-import com.sun.org.apache.xerces.internal.xs.StringList;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
@@ -10,7 +9,6 @@ import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
