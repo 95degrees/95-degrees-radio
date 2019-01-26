@@ -3,6 +3,8 @@ package me.voidinvoid.discordmusic.events;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.ratings.Rating;
+import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
@@ -21,7 +23,7 @@ import java.util.Date;
 
 public class RadioMessageListener implements SongEventListener {
 
-    private static final String SUBSCRIPTION_EMOTE = "🔔", UP_VOTE = "👍", DOWN_VOTE = "👎";
+    private static final String SUBSCRIPTION_EMOTE = "🔔";
 
     private TextChannel textChannel;
 
@@ -53,16 +55,27 @@ public class RadioMessageListener implements SongEventListener {
                 srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl());
             }
 
-            if (!(song instanceof NetworkSong)) {
+            if (song instanceof DatabaseSong) {
                 m.addReaction(SUBSCRIPTION_EMOTE).queue();
-                m.addReaction(UP_VOTE).queue();
-                m.addReaction(DOWN_VOTE).queue();
+
+                for (Rating r : Rating.values()) {
+                    m.addReaction(r.getEmote()).queue();
+                }
 
                 MessageReactionCallbackManager cb = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 
                 cb.registerCallback(m.getId(), e -> {
-                    if (e.getReaction().getReactionEmote().getName().equals(SUBSCRIPTION_EMOTE)) {
+                    String re = e.getReaction().getReactionEmote().getName();
+                    if (re.equals(SUBSCRIPTION_EMOTE)) {
                         e.getUser().openPrivateChannel().queue(c -> c.sendMessage("todo lol").queue());
+                    } else {
+                        for (Rating r : Rating.values()) {
+                            if (r.getEmote().equals(re)) {
+                                SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
+                                rm.rateSong(e.getUser(), (DatabaseSong) song, r);
+                                return;
+                            }
+                        }
                     }
                 });
             }

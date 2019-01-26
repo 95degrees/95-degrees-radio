@@ -6,7 +6,10 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.GuildVoiceState;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.*;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -34,7 +37,9 @@ public class LevellingManager implements EventListener {
 
     @Override
     public void onEvent(Event ev) {
-        if (ev instanceof GuildVoiceJoinEvent || ev instanceof GuildVoiceLeaveEvent) {
+        if (ev instanceof GuildVoiceJoinEvent) {
+            trackIfEligible(((GenericGuildVoiceEvent) ev).getVoiceState(), ((GuildVoiceJoinEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
+        } else if (ev instanceof GuildVoiceLeaveEvent) {
             trackIfEligible(((GenericGuildVoiceEvent) ev).getVoiceState(), ((GenericGuildVoiceEvent) ev).getVoiceState().getChannel(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceMoveEvent) {
             trackIfEligible(((GuildVoiceMoveEvent) ev).getVoiceState(), ((GuildVoiceMoveEvent) ev).getChannelJoined(), ((GuildVoiceMoveEvent) ev).getVoiceState().isDeafened());
@@ -45,7 +50,7 @@ public class LevellingManager implements EventListener {
 
     private void trackIfEligible(GuildVoiceState vs, VoiceChannel channel, boolean deafened) {
 
-         User u = vs.getMember().getUser();
+        User u = vs.getMember().getUser();
 
         if (vs.inVoiceChannel() && ChannelScope.RADIO_VOICE.check(channel) && deafened) {
             if (!listeningTracker.containsKey(u.getId())) {
