@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.karaoke.lyrics.SongLyrics;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.status.TickerManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -127,6 +128,11 @@ public class KaraokeManager implements SongEventListener {
 
                     closestLyric = lastClosestLyric;
                     lyricActive = false;
+                }
+
+                TickerManager t = Radio.getInstance().getService(TickerManager.class);
+                if (t != null) {
+                    t.setLyric(closestLyric.getText());
                 }
 
                 lastClosestLyric = closestLyric;

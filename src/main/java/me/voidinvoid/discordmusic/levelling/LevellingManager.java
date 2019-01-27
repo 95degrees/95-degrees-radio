@@ -41,7 +41,7 @@ public class LevellingManager implements EventListener {
         if (ev instanceof GuildVoiceJoinEvent) {
             trackIfEligible(((GuildVoiceJoinEvent) ev).getMember().getUser(), ((GuildVoiceJoinEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceLeaveEvent) {
-            trackIfEligible(((GuildVoiceLeaveEvent) ev).getMember().getUser(), ((GuildVoiceLeaveEvent) ev).getChannelLeft(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
+            trackIfEligible(((GuildVoiceLeaveEvent) ev).getMember().getUser(), ((GuildVoiceLeaveEvent) ev).getVoiceState().getChannel(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceMoveEvent) {
             trackIfEligible(((GuildVoiceMoveEvent) ev).getMember().getUser(), ((GuildVoiceMoveEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceDeafenEvent) {

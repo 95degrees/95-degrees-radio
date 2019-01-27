@@ -5,7 +5,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.managers.ChannelManager;
 
@@ -17,11 +20,14 @@ public class TickerManager implements SongEventListener {
 
     private ScheduledExecutorService executor;
 
-    private String lastTickerMessage;
+    private String lastTickerMessageRadio = "", lastTickerMessageDj = "";
 
     private ChannelManager djChannel, textChannel;
 
+    private int animator;
+
     private boolean paused;
+    private boolean pausePending;
     private String lyric;
     private AudioTrack activeTrack;
 
@@ -33,35 +39,103 @@ public class TickerManager implements SongEventListener {
         this.executor = Executors.newScheduledThreadPool(1);
 
         executor.scheduleAtFixedRate(() -> {
-
+            animator++;
+            update();
         }, 0, 500, TimeUnit.MILLISECONDS);
+    }
+
+    public void setLyric(String lyric) {
+        this.lyric = lyric;
+        update();
     }
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-
+        this.activeTrack = track;
+        update();
     }
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
-
+        this.activeTrack = null;
+        update();
     }
 
     @Override
     public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
-
+        this.paused = paused;
+        this.activeTrack = track;
+        update();
     }
 
-    public String generateTickerMessage() {
-        return "todo lol";
+    @Override
+    public void onPausePending(boolean isPending) {
+        this.pausePending = isPending;
+        update();
     }
 
-    public void updateTicker(String message) {
-        if (message.equals(lastTickerMessage)) return;
+    private void update() {
+        updateTicker(generateTickerMessage(false), generateTickerMessage(true));
+    }
 
-        lastTickerMessage = message;
+    public String generateTickerMessage(boolean dj) {
+        StringBuilder sb = new StringBuilder();
 
-        djChannel.setTopic(message).queue();
-        textChannel.setTopic(message).queue();
+        if (dj) {
+            if (pausePending) sb.append("🛑");
+            if (paused) sb.append("⏸");
+        }
+
+        Song s;
+        if (activeTrack == null || (s = activeTrack.getUserData(Song.class)).getType() == SongType.JINGLE) {
+            sb.append("🎵 **95 Degrees Radio**");
+        } else if (s.getType() == SongType.ADVERTISEMENT) {
+            sb.append("🎵 **95 Degrees Radio - Advertisement**");
+        } else if (s.getType() == SongType.SPECIAL) {
+            sb.append("🎵 ");
+            sb.append(s.getFriendlyName());
+        } else if (s.getType() == SongType.SONG) {
+            if (lyric != null) {
+                sb.append("📜 **");
+                sb.append(FormattingUtils.escapeMarkup(lyric));
+                sb.append("**");
+
+                if (dj) {
+                    sb.append(" | ");
+                }
+            }
+
+            if (lyric == null || dj) {
+                NetworkSong ns;
+                sb.append("🎵 ");
+                //round to nearest 10 and check if higher (unit >= 5)
+                if ((((animator + 5) / 10) * 10 > animator) && s instanceof NetworkSong && (ns = (NetworkSong) s).getSuggestedBy() != null) {
+                    sb.append("Suggested by: **");
+                    sb.append(ns.getSuggestedBy().getName());
+                    sb.append("**");
+                } else {
+                    sb.append("**");
+                    sb.append(s.getFriendlyName());
+                    sb.append("**");
+                }
+
+                if (!activeTrack.getInfo().isStream) {
+                    sb.append(" - ");
+                    sb.append(FormattingUtils.getFormattedMsTime(activeTrack.getPosition()));
+                    sb.append("/");
+                    sb.append(FormattingUtils.getFormattedMsTime(activeTrack.getDuration()));
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public void updateTicker(String radio, String dj) {
+        if (!lastTickerMessageRadio.equals(dj)) textChannel.setTopic(radio).queue();
+        if (!lastTickerMessageDj.equals(dj)) djChannel.setTopic(dj).queue();
+
+        lastTickerMessageRadio = radio;
+        lastTickerMessageDj = dj;
     }
 }

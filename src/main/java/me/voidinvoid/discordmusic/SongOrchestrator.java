@@ -221,6 +221,14 @@ public class SongOrchestrator extends AudioEventAdapter {
 
         if (pausePending) {
             pausePending = false;
+            songEventListeners.forEach(l -> {
+                try {
+                    l.onPausePending(false);
+                } catch (Exception ex) {
+                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    ex.printStackTrace();
+                }
+            });
 
             player.stopTrack();
             songEventListeners.forEach(l -> {
@@ -530,6 +538,16 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void setPausePending(boolean pausePending) {
+        if (pausePending == this.pausePending) return;
         this.pausePending = pausePending;
+
+        songEventListeners.forEach(l -> {
+            try {
+                l.onPausePending(pausePending);
+            } catch (Exception ex) {
+                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                ex.printStackTrace();
+            }
+        });
     }
 }

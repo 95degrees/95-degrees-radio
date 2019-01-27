@@ -7,7 +7,6 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.actions.*;
 import me.voidinvoid.discordmusic.events.SongEventListener;
-import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.quiz.QuizPlaylist;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Playlist;
@@ -18,6 +17,7 @@ import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.utils.AlbumArt;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
@@ -30,12 +30,8 @@ import net.dv8tion.jda.core.requests.restaction.MessageAction;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.*;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SongDJ implements SongEventListener, EventListener {
@@ -48,13 +44,7 @@ public class SongDJ implements SongEventListener, EventListener {
 
     private AudioTrack activeTrack;
 
-    private ScheduledExecutorService executor;
-    private ScheduledFuture taskTimer;
-
     private Message currentMessage;
-    private User currentSuggestionUser;
-
-    private int tickerAnimate = 0;
 
     public SongDJ() {
 
@@ -68,8 +58,30 @@ public class SongDJ implements SongEventListener, EventListener {
         actions.add(new PlayJingleAction());
         actions.add(new ToggleSuggestionsAction());
         actions.add(new PlayAdvertAction());
+    }
 
-        executor = Executors.newScheduledThreadPool(1);
+    public void removeSongFromQueue(Message m, NetworkSong song) {
+
+        song.getQueue().remove(song);
+
+        m.delete().reason("Network radio song suggestion removed").queue();
+
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
+                .setDescription("Song has been removed from the queue")
+                .setColor(new Color(230, 230, 230))
+                .addField("Name", song.getTrack().getInfo().title, true)
+                .addField("URL", song.getTrack().getInfo().uri, true)
+                .setTimestamp(new Date().toInstant());
+
+        if (song.getSuggestedBy() != null) {
+            embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
+        }
+
+        AlbumArt.attachAlbumArt(embed, song, djChannel).queue(); //TODO split into another event? and remove via orchestrator
+
+        if (Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) {
+            AlbumArt.attachAlbumArt(embed, song, radioChannel).queue();
+        }
     }
 
     @Override
@@ -78,33 +90,6 @@ public class SongDJ implements SongEventListener, EventListener {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
 
             if (e.getUser().isBot()) return;
-
-            if (queueDeletionMessages.containsKey(e.getMessageId())) {
-                NetworkSong song = queueDeletionMessages.remove(e.getMessageId());
-
-                song.getQueue().remove(song);
-
-                e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Network radio song suggestion removed").queue();
-
-                EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
-                        .setDescription("Song has been removed from the queue")
-                        .setColor(new Color(230, 230, 230))
-                        .addField("Name", song.getTrack().getInfo().title, true)
-                        .addField("URL", song.getTrack().getInfo().uri, true)
-                        .setTimestamp(new Date().toInstant());
-
-                if (song.getSuggestedBy() != null) {
-                    embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
-                }
-
-                AlbumArt.attachAlbumArt(embed, song, djChannel).queue(); //TODO split into another event? and remove via orchestrator
-
-                if (Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) {
-                    AlbumArt.attachAlbumArt(embed, song, radioChannel).queue();
-                }
-
-                return;
-            }
 
             if (currentMessage == null) return;
 
@@ -130,6 +115,9 @@ public class SongDJ implements SongEventListener, EventListener {
         if (song instanceof NetworkSong) {
             for (String id : queueDeletionMessages.keySet()) {
                 if (queueDeletionMessages.get(id).equals(song)) {
+                    MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
+                    mr.removeCallback(id);
+                    djChannel.getMessageById(id).queue(m -> m.clearReactions().queue());
                     queueDeletionMessages.remove(id); //remove the ability to cancel this song since it's already playing by now
                     break;
                 }
@@ -138,78 +126,8 @@ public class SongDJ implements SongEventListener, EventListener {
 
         List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(track)).collect(Collectors.toList());
 
-        currentSuggestionUser = null;
-        MessageAction msg = createMessage(song, track, availableActions, player, timeUntilJingle, false); //send original message and then queue to update every 5 secs
-
-        String tickerTopic = null;
-
-        if (song.getType() == SongType.ADVERTISEMENT) {
-            tickerTopic = "🎵 Advertisement";
-        } else if (song.getType() != SongType.SONG) {
-            tickerTopic = "🎵  **95 Degrees Radio**"; //todo maybe ticker stuff should be isolated
-        }
-
-        if (tickerTopic != null) {
-            djChannel.getManager().setTopic(tickerTopic).queue();
-            radioChannel.getManager().setTopic(tickerTopic).queue();
-        }
-
-        msg.queue(m -> {
+        createMessage(song, track, player, timeUntilJingle).queue(m -> {
             currentMessage = m;
-
-            tickerAnimate = 0;
-
-            if (taskTimer != null) taskTimer.cancel(false);
-
-            if (!track.getInfo().isStream) { //TODO ticker otherwise
-                taskTimer = executor.scheduleAtFixedRate(() -> {
-                    //if (currentMessageFuture != null) currentMessageFuture.cancel(true);
-
-                    //if (tickerAnimate % 2 == 0) //every 2 secs
-                    //    currentMessageFuture = SongDJ.this.editMessage(song, track, player, timeUntilJingle, m).submit();
-
-                    if (song.getType() == SongType.SONG) {
-                        String title = song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title;
-                        String author = song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author;
-
-                        String topic = (tickerAnimate >= 6 && currentSuggestionUser != null ? " 🎵 Suggested by **" + FormattingUtils.escapeMarkup(currentSuggestionUser.getName()) + "**" : " 🎵 **" + title + "** - " + author) + (song.getType() == SongType.SONG ? " - " + FormattingUtils.getFormattedMsTime(track.getPosition()) + " / " + FormattingUtils.getFormattedMsTime(track.getDuration()) : "");
-
-                        if (Radio.getInstance().getOrchestrator().getPlayer().isPaused()) {
-                            topic = "⏸" + topic;
-                        }
-
-                        if (Radio.getInstance().getOrchestrator().isPausePending()) {
-                            topic = "🛑" + topic;
-                        }
-
-                        topic = topic.trim();
-
-                        tickerAnimate++;
-                        if (tickerAnimate >= 12) {
-                            tickerAnimate = 0; //todo
-                        }
-
-                        KaraokeManager km = Radio.getInstance().getService(KaraokeManager.class);
-                        if (km == null || !km.isKaraokeMode()) { //TODO
-                            djChannel.getManager().setTopic(topic).queue();
-                            radioChannel.getManager().setTopic(topic).queue();
-                        }
-                    }
-
-                }, 0, 1, TimeUnit.SECONDS);
-            } else {
-                String title = song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title;
-                String author = song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author;
-
-                String topic = "🎵 **" + title + "** - " + author + (song.getType() == SongType.SONG ? " - --/--" : "");
-
-                KaraokeManager km = Radio.getInstance().getService(KaraokeManager.class);
-                if (km == null || !km.isKaraokeMode()) { //TODO
-                    djChannel.getManager().setTopic(topic).queue();
-                    radioChannel.getManager().setTopic(topic).queue();
-                }
-            }
-
             availableActions.forEach(a -> m.addReaction(a.getEmoji()).queue());
         });
     }
@@ -220,8 +138,6 @@ public class SongDJ implements SongEventListener, EventListener {
 
         currentMessage = null;
         activeTrack = null;
-
-        if (taskTimer != null) taskTimer.cancel(false);
     }
 
     @Override
@@ -231,11 +147,11 @@ public class SongDJ implements SongEventListener, EventListener {
         }
     }
 
-    public MessageAction createMessage(Song song, AudioTrack track, List<DJAction> actions, AudioPlayer player, int timeUntilJingle, boolean ended) {
+    private MessageAction createMessage(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
 
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle((ended ? "Previously " : "") + "Playing " + FormattingUtils.getSongType(track))
-                .setColor(ended ? Colors.ACCENT_FINISHED_SONG : player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN)
+                .setTitle("Playing " + FormattingUtils.getSongType(track))
+                .setColor(player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN)
                 .setTimestamp(OffsetDateTime.now());
 
         if (song instanceof NetworkSong) {
@@ -246,7 +162,6 @@ public class SongDJ implements SongEventListener, EventListener {
             NetworkSong ns = (NetworkSong) song;
             if (ns.getSuggestedBy() != null) {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
-                currentSuggestionUser = ns.getSuggestedBy();
             }
 
         } else if (song instanceof DatabaseSong) {
@@ -269,12 +184,8 @@ public class SongDJ implements SongEventListener, EventListener {
             embed.addField("Unknown Track Details", "😢", false);
         }
 
-        if (!ended) {
-            embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
-            embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
-            //embed.addField("Elapsed", track.getInfo().isStream ? "-" : FormattingUtils.getFormattedMsTime(track.getPosition()) + " / " + FormattingUtils.getFormattedMsTime(track.getDuration()), false);
-            //embed.addField("", actions.stream().map(r -> r.getEmoji() + " " + r.getName()).collect(Collectors.joining("\n")), false);
-        }
+        embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
+        embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
 
         return AlbumArt.attachAlbumArt(embed, song, djChannel, true);
     }
@@ -284,7 +195,7 @@ public class SongDJ implements SongEventListener, EventListener {
         djChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Failed to Load Track")
                 .setColor(Colors.ACCENT_ERROR)
-                .setDescription("Failed to load " + song.getFriendlyName() + ".\nCheck the console for stack trace")
+                .setDescription("⚠ Failed to load " + song.getFriendlyName() + ".\nCheck the console for stack trace")
                 .addField("Error Message", error.getMessage(), false)
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
     }
@@ -293,8 +204,8 @@ public class SongDJ implements SongEventListener, EventListener {
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
         djChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Playlist")
+                .setColor(Colors.ACCENT_MAIN)
                 .setDescription("Active playlist has been changed")
-                .setColor(new Color(230, 230, 230))
                 .addField("Name", newPlaylist.getName(), true)
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
     }
@@ -304,6 +215,7 @@ public class SongDJ implements SongEventListener, EventListener {
         if (source == null) return;
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Suggestions")
+                .setColor(Colors.ACCENT_MAIN)
                 .setDescription("Song suggestions have been " + (enabled ? "enabled" : "disabled"))
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(source.getName(), source.getAvatarUrl());
@@ -326,9 +238,12 @@ public class SongDJ implements SongEventListener, EventListener {
             embed.setFooter(user.getName(), user.getAvatarUrl());
         }
 
+        MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
+
         AlbumArt.attachAlbumArt(embed, song, djChannel).queue(m -> {
             m.addReaction("❌").queue();
             queueDeletionMessages.put(m.getId(), song);
+            mr.registerCallback(m.getId(), e -> removeSongFromQueue(m, song));
         });
     }
 }

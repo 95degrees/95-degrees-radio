@@ -17,6 +17,7 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
+import me.voidinvoid.discordmusic.status.TickerManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
@@ -135,6 +136,7 @@ public class Radio implements EventListener {
         if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager(radioVoiceChannel));
         registerService(new SongTriggerManager());
         registerService(new KaraokeManager());
+        registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener(radioChannel));
         registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
