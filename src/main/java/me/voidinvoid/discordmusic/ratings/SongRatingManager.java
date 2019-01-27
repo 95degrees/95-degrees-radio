@@ -17,7 +17,7 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class SongRatingManager {
 
-    public boolean rateSong(User user, DatabaseSong song, Rating rating) {
+    public void rateSong(User user, DatabaseSong song, Rating rating) {
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
         MongoCollection<Document> ratings = db.getCollection("ratings");
 
@@ -30,7 +30,7 @@ public class SongRatingManager {
             }
             d.put("ratings", rt);
             ratings.insertOne(d);
-            return true;
+            return;
         }
 
         Document rt = new Document();
@@ -38,7 +38,7 @@ public class SongRatingManager {
             rt.put("ratings." + r, user.getId());
         }
 
-        ratings.updateOne(eq("song", song.getFileName()), new Document("$pullAll", rt));
-        return ratings.updateOne(eq("song", song.getFileName()), new Document("$addToSet", new Document("ratings." + rating, user.getId()))).getModifiedCount() != 0;
+        ratings.updateOne(eq("song", song.getFileName()), new Document("$pull", rt));
+        ratings.updateOne(eq("song", song.getFileName()), new Document("$addToSet", new Document("ratings." + rating, user.getId()))).getModifiedCount();
     }
 }

@@ -172,7 +172,17 @@ public class SongDJ implements SongEventListener, EventListener {
                         String title = song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title;
                         String author = song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author;
 
-                        String topic = (tickerAnimate >= 6 && currentSuggestionUser != null ? "🎵 Suggested by **" + FormattingUtils.escapeMarkup(currentSuggestionUser.getName()) + "**" : "🎵 **" + title + "** - " + author) + (song.getType() == SongType.SONG ? " - " + FormattingUtils.getFormattedMsTime(track.getPosition()) + " / " + FormattingUtils.getFormattedMsTime(track.getDuration()) : "");
+                        String topic = (tickerAnimate >= 6 && currentSuggestionUser != null ? " 🎵 Suggested by **" + FormattingUtils.escapeMarkup(currentSuggestionUser.getName()) + "**" : " 🎵 **" + title + "** - " + author) + (song.getType() == SongType.SONG ? " - " + FormattingUtils.getFormattedMsTime(track.getPosition()) + " / " + FormattingUtils.getFormattedMsTime(track.getDuration()) : "");
+
+                        if (Radio.getInstance().getOrchestrator().getPlayer().isPaused()) {
+                            topic = "⏸" + topic;
+                        }
+
+                        if (Radio.getInstance().getOrchestrator().isPausePending()) {
+                            topic = "🛑" + topic;
+                        }
+
+                        topic = topic.trim();
 
                         tickerAnimate++;
                         if (tickerAnimate >= 12) {

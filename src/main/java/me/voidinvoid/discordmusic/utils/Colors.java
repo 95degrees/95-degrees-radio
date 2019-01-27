@@ -20,4 +20,5 @@ public final class Colors {
     public static final Color ACCENT_TASK_ERROR = new Color(200, 138, 42);
     public static final Color ACCENT_ACHIEVEMENT = new Color(255, 172, 0);
     public static final Color ACCENT_LEVEL_UP = new Color(251, 255, 8);
+    public static final Color ACCENT_SONG_RATING = new Color(200, 86, 169);
 }

@@ -2,11 +2,13 @@ package me.voidinvoid.discordmusic.dj.actions;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.SongOrchestrator;
+import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 
 import java.time.OffsetDateTime;
+import java.util.concurrent.TimeUnit;
 
 public class PauseAtEndAction extends DJAction {
 
@@ -21,9 +23,10 @@ public class PauseAtEndAction extends DJAction {
 
         djChannel.sendMessage(new EmbedBuilder()
                 .setTitle("Pause")
-                .setDescription(paused ? "Now pausing after this song ends" : "No longer pausing after this song ends")
+                .setColor(Colors.ACCENT_MAIN)
+                .setDescription(paused ? "⏸ Now pausing after this song ends" : "▶ No longer pausing after this song ends")
                 .setFooter(invoker.getName(), invoker.getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
-                .build()).queue();
+                .build()).queue(m -> m.delete().queueAfter(10, TimeUnit.SECONDS));
     }
 }

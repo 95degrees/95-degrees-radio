@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.AlbumArt;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
@@ -20,10 +21,15 @@ import net.dv8tion.jda.core.entities.User;
 import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class RadioMessageListener implements SongEventListener {
 
     private TextChannel textChannel;
+
+    private Map<String, Long> lastRatingAttempt = new HashMap<>();
 
     public RadioMessageListener(TextChannel textChannel) {
 
@@ -64,8 +70,15 @@ public class RadioMessageListener implements SongEventListener {
                     String re = e.getReaction().getReactionEmote().getName();
                     for (Rating r : Rating.values()) {
                         if (r.getEmote().equals(re)) {
+                            if ((System.currentTimeMillis() - lastRatingAttempt.getOrDefault(e.getUser().getId(), 0L)) < 10000L) {
+                                return;
+                            }
+
+                            lastRatingAttempt.put(e.getUser().getId(), System.currentTimeMillis());
+
                             SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
                             rm.rateSong(e.getUser(), (DatabaseSong) song, r);
+                            m.getChannel().sendMessage(new EmbedBuilder().setTitle("Song Rating").setColor(Colors.ACCENT_SONG_RATING).setDescription(e.getMember().getAsMention() + ", your rating of **" + FormattingUtils.escapeMarkup(((DatabaseSong) song).getTitle()) + "** has been saved").setTimestamp(OffsetDateTime.now()).setFooter(e.getMember().getUser().getName(), e.getMember().getUser().getAvatarUrl()).build()).queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
                             return;
                         }
                     }

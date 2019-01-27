@@ -12,6 +12,7 @@ import net.dv8tion.jda.core.events.guild.voice.*;
 import net.dv8tion.jda.core.hooks.EventListener;
 import org.bson.Document;
 
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -30,6 +31,9 @@ public class LevellingManager implements EventListener {
     public LevellingManager() {
         executor = Executors.newScheduledThreadPool(1);
         databaseManager = Radio.getInstance().getService(DatabaseManager.class);
+
+        VoiceChannel v = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
+        v.getMembers().forEach(m -> trackIfEligible(m.getUser(), v, m.getVoiceState().isDeafened()));
     }
 
     @Override
@@ -47,7 +51,9 @@ public class LevellingManager implements EventListener {
 
     private void trackIfEligible(User user, VoiceChannel channel, boolean deafened) {
 
-        if (ChannelScope.RADIO_VOICE.check(channel) && deafened) {
+        if (user.isBot()) return;
+
+        if (ChannelScope.RADIO_VOICE.check(channel) && !deafened) {
             if (!listeningTracker.containsKey(user.getId())) {
                 listeningTracker.put(user.getId(), track(user));
             }
@@ -78,6 +84,8 @@ public class LevellingManager implements EventListener {
                 .setThumbnail("https://cdn.discordapp.com/attachments/505174503752728597/537703976032796712/todo.png")
                 .setDescription(user.getAsMention() + " has levelled up!\n3 ➠ **4**")
                 .addField("Reward", "<:degreecoin:431982714212843521> ?", false)
+                .setTimestamp(OffsetDateTime.now())
+                .setFooter(user.getName(), user.getAvatarUrl())
                 .build()
         ).queue();
     }

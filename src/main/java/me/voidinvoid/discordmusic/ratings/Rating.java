@@ -5,7 +5,7 @@ package me.voidinvoid.discordmusic.ratings;
  * 2019
  */
 public enum Rating {
-    POSTIIVE("👍"),
+    POSITIVE("👍"),
     NEGATIVE("👎");
 
     private final String emote;

@@ -37,7 +37,5 @@ public class RunTaskCommand extends Command {
 
         RadioTaskComposition comp = taskManager.getTasks().get(id - 1);
         taskManager.executeComposition(comp, true);
-
-        data.success("Executed task");
     }
 }
