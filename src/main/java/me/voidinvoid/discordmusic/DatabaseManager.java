@@ -11,7 +11,7 @@ import java.util.Collections;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class DatabaseManager extends RadioService {
+public class DatabaseManager implements RadioService {
 
     private MongoClient client;
     private MongoDatabase db;
@@ -41,7 +41,8 @@ public class DatabaseManager extends RadioService {
                     .append("created", System.currentTimeMillis())
                     .append("total_earned_coins", 0)
                     .append("total_listen_time", 0)
-                    .append("data_version", 2);
+                    .append("total_experience", 0)
+                    .append("data_version", 3);
 
             if (insertIfEmpty) {
                 users.insertOne(d);
@@ -66,8 +67,13 @@ public class DatabaseManager extends RadioService {
             modified = true;
         }
 
+        if (dv < 3) {
+            doc.append("total_experience", 0);
+            modified = true;
+        }
+
         if (modified) {
-            doc.put("data_version", 2);
+            doc.put("data_version", 3);
         }
 
         return doc;

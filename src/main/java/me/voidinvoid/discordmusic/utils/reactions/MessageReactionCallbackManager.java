@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.utils.reactions;
 
+import me.voidinvoid.discordmusic.RadioService;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -8,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class MessageReactionCallbackManager implements EventListener {
+public class MessageReactionCallbackManager implements RadioService, EventListener {
 
     private Map<String, Consumer<MessageReactionAddEvent>> callbacks = new HashMap<>();
 

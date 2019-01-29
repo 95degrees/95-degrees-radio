@@ -5,9 +5,12 @@ import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
@@ -22,42 +25,49 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RPCSocketManager implements SongEventListener, EventListener { //todo adapt this for db songs
+public class RPCSocketManager implements RadioService, SongEventListener, EventListener { //todo adapt this for db songs
 
-    private final SocketIOServer server;
+    private SocketIOServer server;
     private SongInfo currentSongInfo;
 
     private List<MemberInfo> listeners;
     private VoiceChannel voiceChannel;
     private Guild guild;
 
-    public RPCSocketManager(VoiceChannel voiceChannel) {
-        this.voiceChannel = voiceChannel;
-
-        guild = voiceChannel.getGuild();
+    @Override
+    public void onLoad() {
+        this.voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
+        this.guild = voiceChannel.getGuild();
 
         listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList());
 
-        Configuration config = new Configuration();
-        config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
-        config.setPort(RadioConfig.config.debug ? 9300 : 9500);
+        if (server == null) {
+            Configuration config = new Configuration();
+            config.setHostname("0.0.0.0");
+            config.setPort(RadioConfig.config.debug ? 9300 : 9500);
 
-        SocketConfig sockets = new SocketConfig();
-        sockets.setReuseAddress(true);
+            SocketConfig sockets = new SocketConfig();
+            sockets.setReuseAddress(true);
 
-        config.setSocketConfig(sockets);
+            config.setSocketConfig(sockets);
 
-        server = new SocketIOServer(config);
+            server = new SocketIOServer(config);
 
-        server.addEventListener("request_status", Object.class, (c, o, ack) -> {
-            RadioInfo info = new RadioInfo(listeners, guild.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList()), currentSongInfo);
+            server.addEventListener("request_status", Object.class, (c, o, ack) -> {
+                RadioInfo info = new RadioInfo(listeners, guild.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList()), currentSongInfo);
 
-            c.sendEvent("status", info);
-        });
+                c.sendEvent("status", info);
+            });
 
-        server.startAsync();
+            server.startAsync();
+        }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+        // TODO CHECK Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+    }
+
+    @Override
+    public void onShutdown() {
+        if (server != null) server.stop();
     }
 
     public SocketIOServer getServer() {
@@ -70,7 +80,10 @@ public class RPCSocketManager implements SongEventListener, EventListener { //to
     }
 
     public void updateSongInfo(AudioTrack track, String albumArtUrl) {
-        currentSongInfo = new SongInfo(track.getInfo().title, track.getInfo().author, albumArtUrl, System.currentTimeMillis(), System.currentTimeMillis() + track.getDuration());
+        Song s = track.getUserData(Song.class);
+        DatabaseSong ds = null;
+        if (s instanceof DatabaseSong) ds = (DatabaseSong) s;
+        currentSongInfo = new SongInfo(ds == null ? track.getInfo().title : ds.getTitle(), ds == null ? track.getInfo().author : ds.getArtist(), albumArtUrl, System.currentTimeMillis(), System.currentTimeMillis() + track.getDuration());
         server.getAllClients().forEach(c -> c.sendEvent("song_update", currentSongInfo));
     }
 

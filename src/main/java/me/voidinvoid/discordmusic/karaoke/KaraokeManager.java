@@ -4,11 +4,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.karaoke.lyrics.LyricLine;
 import me.voidinvoid.discordmusic.karaoke.lyrics.LyricsFetcher;
 import me.voidinvoid.discordmusic.karaoke.lyrics.SongLyrics;
-import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.status.TickerManager;
@@ -20,7 +21,6 @@ import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 
-import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-public class KaraokeManager implements SongEventListener {
+public class KaraokeManager implements RadioService, SongEventListener {
 
     private static final long LYRIC_LAG_COMPENSATION_MS = 400L; //always be 0.4s ahead to compensate for lag
 
@@ -48,6 +48,10 @@ public class KaraokeManager implements SongEventListener {
     public KaraokeManager() {
 
         executor = Executors.newScheduledThreadPool(1);
+    }
+
+    @Override
+    public void onLoad() {
 
         radioChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
         djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);

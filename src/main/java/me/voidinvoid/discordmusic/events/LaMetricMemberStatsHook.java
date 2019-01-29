@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.events;
 
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import net.dv8tion.jda.core.entities.Guild;
@@ -15,7 +16,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 
-public class LaMetricMemberStatsHook implements EventListener {
+public class LaMetricMemberStatsHook implements RadioService, EventListener {
 
     private static final String MEMBER_STATS_LOG_PREFIX = ConsoleColor.GREEN_BACKGROUND + " LAMETRIC STATS " + ConsoleColor.RESET_SPACE;
 

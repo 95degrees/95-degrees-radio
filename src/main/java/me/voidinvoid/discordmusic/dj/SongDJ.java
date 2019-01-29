@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.actions.*;
 import me.voidinvoid.discordmusic.events.SongEventListener;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SongDJ implements SongEventListener, EventListener {
+public class SongDJ implements RadioService, SongEventListener, EventListener {
 
     private TextChannel djChannel, radioChannel;
 
@@ -48,9 +49,6 @@ public class SongDJ implements SongEventListener, EventListener {
 
     public SongDJ() {
 
-        djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
-        radioChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-
         actions.add(new SkipSongAction());
         actions.add(new PauseSongAction());
         actions.add(new RestartSongAction());
@@ -58,6 +56,13 @@ public class SongDJ implements SongEventListener, EventListener {
         actions.add(new PlayJingleAction());
         actions.add(new ToggleSuggestionsAction());
         actions.add(new PlayAdvertAction());
+    }
+
+    @Override
+    public void onLoad() {
+
+        djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
+        radioChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
     }
 
     public void removeSongFromQueue(Message m, NetworkSong song) {

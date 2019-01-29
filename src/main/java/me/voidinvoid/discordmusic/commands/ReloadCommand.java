@@ -22,13 +22,13 @@ public class ReloadCommand extends Command {
                 data.success("Reloaded playlists");
 
             } else if (args[0].equalsIgnoreCase("tasks")) {
-                Radio.getInstance().getService(TaskManager.class).reload();
+                Radio.getInstance().getService(TaskManager.class).onLoad();
                 data.success("Reloaded tasks");
 
             } else if (args[0].equalsIgnoreCase("adverts") || args[0].equalsIgnoreCase("ads")) {
                 AdvertisementManager adman = Radio.getInstance().getService(AdvertisementManager.class);
                 if (adman != null) {
-                    adman.reload();
+                    adman.onLoad();
                     data.success("Reloaded adverts");
                 } else {
                     data.error("The advertisement service is currently disabled");
@@ -44,10 +44,10 @@ public class ReloadCommand extends Command {
         }
 
         Radio.getInstance().getOrchestrator().loadPlaylists();
-        Radio.getInstance().getService(TaskManager.class).reload();
+        Radio.getInstance().getService(TaskManager.class).onLoad();
         AdvertisementManager adman = Radio.getInstance().getService(AdvertisementManager.class);
         if (adman != null) {
-            adman.reload();
+            adman.onLoad();
         }
 
         data.success("Reloaded playlists, tasks and adverts");

@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -17,7 +18,7 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SongSuggestionManager implements EventListener {
+public class SongSuggestionManager implements RadioService, EventListener {
 
     private Map<String, SongSearchResult> searches = new HashMap<>();
 

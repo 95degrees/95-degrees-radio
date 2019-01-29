@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.commands;
 
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 
-public class CommandManager implements EventListener {
+public class CommandManager implements RadioService, EventListener {
 
     private final List<Command> commands = new ArrayList<>();
 
@@ -40,6 +41,7 @@ public class CommandManager implements EventListener {
         register(new RestartRadioCommand());
         register(new StopRadioCommand());
         register(new DebugCommand());
+        register(new ServicesCommand());
         if (RadioConfig.config.useQuizSocketServer) register(new QuizSocketServerKeyCommand());
         register(new HelpCommand(commands));
 

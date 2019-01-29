@@ -26,7 +26,8 @@ public class DebugCommand extends Command {
             DebugAction action = null;
             try {
                 action = DebugAction.valueOf(data.getArgs()[0].toUpperCase());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             if (action != null) {
                 data.success("Invoking " + action.name());
@@ -55,7 +56,9 @@ public class DebugCommand extends Command {
             Radio.getInstance().getService(AchievementManager.class).rewardAchievement(d.getMember().getUser(), a);
         }),
         LEVEL_UP(d -> {
-            Radio.getInstance().getService(LevellingManager.class).rewardExperience(d.getMember().getUser(), 0);
+            int i = d.getArgs().length < 2 ? 1 : Integer.valueOf(d.getArgs()[1]);
+            d.success("Level up x" + i);
+            Radio.getInstance().getService(LevellingManager.class).rewardExperience(d.getMember().getUser(), i);
         });
 
         private Consumer<CommandData> action;

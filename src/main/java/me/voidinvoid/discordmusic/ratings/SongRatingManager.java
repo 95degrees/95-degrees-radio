@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.ratings;
 import com.mongodb.client.MongoCollection;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
@@ -15,7 +16,7 @@ import static com.mongodb.client.model.Filters.eq;
  * This code was developed by VoidInVoid / Exfusion
  * 2019
  */
-public class SongRatingManager {
+public class SongRatingManager implements RadioService {
 
     public void rateSong(User user, DatabaseSong song, Rating rating) {
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);

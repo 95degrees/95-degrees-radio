@@ -3,6 +3,8 @@ package me.voidinvoid.discordmusic.events;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -25,7 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PlaylistTesterListener implements SongEventListener, EventListener {
+public class PlaylistTesterListener implements RadioService, SongEventListener, EventListener {
 
     private static final String VALID_REACTION = "✅", INVALID_REACTION = "❌";
 
@@ -33,9 +35,9 @@ public class PlaylistTesterListener implements SongEventListener, EventListener 
     private Map<String, Song> reactionMessages = new HashMap<>();
     private Song currentSong;
 
-    public PlaylistTesterListener(TextChannel textChannel) {
-
-        this.textChannel = textChannel;
+    @Override
+    public void onLoad() {
+        this.textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
     }
 
     @Override

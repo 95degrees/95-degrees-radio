@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.levelling;
 
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -17,7 +18,7 @@ import static com.mongodb.client.model.Filters.eq;
  * This code was developed by VoidInVoid / Exfusion
  * 2019
  */
-public class AchievementManager {
+public class AchievementManager implements RadioService {
 
     public void rewardAchievement(User user, Achievement achievement) {
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);

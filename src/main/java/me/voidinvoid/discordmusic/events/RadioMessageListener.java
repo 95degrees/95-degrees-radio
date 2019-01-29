@@ -3,6 +3,8 @@ package me.voidinvoid.discordmusic.events;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.ratings.Rating;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
@@ -25,15 +27,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class RadioMessageListener implements SongEventListener {
+public class RadioMessageListener implements RadioService, SongEventListener {
 
     private TextChannel textChannel;
 
     private Map<String, Long> lastRatingAttempt = new HashMap<>();
 
-    public RadioMessageListener(TextChannel textChannel) {
-
-        this.textChannel = textChannel;
+    @Override
+    public void onLoad() {
+        textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
     }
 
     @Override

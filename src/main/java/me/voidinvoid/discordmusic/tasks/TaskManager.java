@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 
 import static org.quartz.CronScheduleBuilder.cronSchedule;
 
-public class TaskManager {
+public class TaskManager implements RadioService {
 
     private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " TASK " + ConsoleColor.RESET_SPACE;
 
@@ -34,15 +35,8 @@ public class TaskManager {
 
     private List<RadioTaskComposition> tasks;
 
-    public TaskManager() {
-        reload();
-    }
-
-    public List<RadioTaskComposition> getTasks() {
-        return tasks;
-    }
-
-    public void reload() {
+    @Override
+    public void onLoad() {
         try {
             tasks = new ArrayList<>();
 
@@ -94,6 +88,10 @@ public class TaskManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public List<RadioTaskComposition> getTasks() {
+        return tasks;
     }
 
     public void executeComposition(RadioTaskComposition comp, boolean ignoreCancellation) {

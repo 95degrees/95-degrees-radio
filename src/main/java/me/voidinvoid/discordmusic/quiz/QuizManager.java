@@ -7,6 +7,7 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
@@ -32,7 +33,7 @@ import java.util.*;
  * This code was developed by VoidInVoid / Exfusion
  * 2018
  */
-public class QuizManager implements SongEventListener, EventListener {
+public class QuizManager implements RadioService, SongEventListener, EventListener {
 
     private static Gson GSON = new GsonBuilder().create();
 
@@ -70,6 +71,11 @@ public class QuizManager implements SongEventListener, EventListener {
         reload();
 
         if (RadioConfig.config.useQuizSocketServer) runServer();
+    }
+
+    @Override
+    public void onLoad() {
+        //TODO move constructor code here and remove parameters
     }
 
     public boolean checkAuth(SocketIOClient c) {

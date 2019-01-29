@@ -39,6 +39,7 @@ import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +83,7 @@ public class Radio implements EventListener {
         //TODO
     }
 
-    private Map<Class, Object> radioServices = new HashMap<>();
+    private Map<Class, RadioService> radioServices = new HashMap<>();
 
     private SongOrchestrator orchestrator;
     private DatabaseManager databaseManager;
@@ -132,17 +133,17 @@ public class Radio implements EventListener {
         registerService(new SongRatingManager());
         registerService(new CommandManager());
         registerService(new SongSuggestionManager());
-        registerService(new PlaylistTesterListener(radioChannel));
-        if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager(radioVoiceChannel));
+        registerService(new PlaylistTesterListener());
+        if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
         registerService(new KaraokeManager());
         registerService(new TickerManager());
         registerService(new SongDJ());
-        registerService(new RadioMessageListener(radioChannel));
+        registerService(new RadioMessageListener());
         registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
-        if (RadioConfig.config.useCoinGain) registerService(new CoinCreditorManager(jda, orchestrator.getActivePlaylist()));
-        if (RadioConfig.config.useStatus) registerService(new StatusManager(jda));
-        if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager(jda));
+        if (RadioConfig.config.useCoinGain) registerService(new CoinCreditorManager());
+        if (RadioConfig.config.useStatus) registerService(new StatusManager());
+        if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager());
         if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug) registerService(new LaMetricMemberStatsHook()); //todo
         registerService(new LevellingManager());
         registerService(new AchievementManager());
@@ -164,12 +165,14 @@ public class Radio implements EventListener {
         orchestrator.playNextSong();
     }
 
-    private void registerService(Object service) {
+    private void registerService(RadioService service) {
         radioServices.put(service.getClass(), service);
 
         if (service instanceof SongEventListener)
             orchestrator.registerSongEventListener(((SongEventListener) service));
         if (service instanceof EventListener) jda.addEventListener(service);
+
+        service.onLoad();
     }
 
     public <T> T getService(Class<T> service) {
@@ -189,6 +192,11 @@ public class Radio implements EventListener {
 
     public void shutdown(boolean restart) {
         if (orchestrator.getActivePlaylist() != null) orchestrator.getActivePlaylist().onDeactivate();
+        getServices().forEach(RadioService::onShutdown);
         System.exit(restart ? 1 : 0);
+    }
+
+    public Collection<RadioService> getServices() {
+        return radioServices.values();
     }
 }

@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.status;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
@@ -13,14 +14,15 @@ import net.dv8tion.jda.core.entities.Game;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StatusManager implements SongEventListener {
+public class StatusManager implements RadioService, SongEventListener {
 
     private Map<Song, String> songStatusOverrides = new HashMap<>();
 
     private JDA jda;
 
-    public StatusManager(JDA jda) {
-        this.jda = jda;
+    @Override
+    public void onLoad() {
+        jda = Radio.getInstance().getJda();
     }
 
     @Override

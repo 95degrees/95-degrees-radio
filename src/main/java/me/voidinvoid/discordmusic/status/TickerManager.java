@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.status;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
@@ -16,7 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class TickerManager implements SongEventListener {
+public class TickerManager implements RadioService, SongEventListener {
 
     private ScheduledExecutorService executor;
 
@@ -31,10 +32,13 @@ public class TickerManager implements SongEventListener {
     private String lyric;
     private AudioTrack activeTrack;
 
-    public TickerManager() {
+    @Override
+    public void onLoad() {
         JDA jda = Radio.getInstance().getJda();
         djChannel = jda.getTextChannelById(RadioConfig.config.channels.djChat).getManager();
         textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat).getManager();
+
+        if (this.executor != null) this.executor.shutdown();
 
         this.executor = Executors.newScheduledThreadPool(1);
 
@@ -96,9 +100,8 @@ public class TickerManager implements SongEventListener {
             sb.append(s.getFriendlyName());
         } else if (s.getType() == SongType.SONG) {
             if (lyric != null) {
-                sb.append("📜 **");
+                sb.append("📜 ");
                 sb.append(FormattingUtils.escapeMarkup(lyric));
-                sb.append("**");
 
                 if (dj) {
                     sb.append(" | ");

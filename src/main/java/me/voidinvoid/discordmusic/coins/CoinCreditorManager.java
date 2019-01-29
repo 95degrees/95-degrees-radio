@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.coins;
 
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
@@ -27,7 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CoinCreditorManager implements EventListener, SongEventListener {
+public class CoinCreditorManager implements RadioService, EventListener, SongEventListener {
 
     private VoiceChannel voiceChannel;
 
@@ -37,15 +38,19 @@ public class CoinCreditorManager implements EventListener, SongEventListener {
 
     private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
 
-    public CoinCreditorManager(JDA jda, Playlist playlist) {
+    @Override
+    public void onLoad() {
 
+        JDA jda = Radio.getInstance().getJda();
         voiceChannel = jda.getVoiceChannelById(RadioConfig.config.channels.voice);
         textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat);
+
+        if (!coinGains.isEmpty()) return;
 
         for (Member m : voiceChannel.getMembers()) {
             User u = m.getUser();
             if (u.isBot()) continue;
-            coinGains.put(u.getIdLong(), new UserCoinTracker(u, m.getVoiceState().isDeafened(), playlist.getCoinMultiplier()));
+            coinGains.put(u.getIdLong(), new UserCoinTracker(u, m.getVoiceState().isDeafened(), Radio.getInstance().getOrchestrator().getActivePlaylist().getCoinMultiplier()));
         }
     }
 

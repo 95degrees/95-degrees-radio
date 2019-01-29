@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
@@ -27,7 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdvertisementManager implements SongEventListener {
+public class AdvertisementManager implements RadioService, SongEventListener {
 
     private static final String AD_LOG_PREFIX = ConsoleColor.CYAN_BACKGROUND + " AD " + ConsoleColor.RESET_SPACE;
     private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
@@ -37,13 +38,10 @@ public class AdvertisementManager implements SongEventListener {
 
     private TextChannel textChannel;
 
-    public AdvertisementManager(JDA jda) {
-        textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat);
+    @Override
+    public void onLoad() {
+        textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
-        reload();
-    }
-
-    public void reload() {
         try {
             DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
             if (db != null) {
