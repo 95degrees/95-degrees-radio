@@ -56,12 +56,14 @@ public class TickerManager implements RadioService, SongEventListener {
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         this.activeTrack = track;
+        lyric = null;
         update();
     }
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
         this.activeTrack = null;
+        lyric = null;
         update();
     }
 
@@ -88,15 +90,19 @@ public class TickerManager implements RadioService, SongEventListener {
         if (dj) {
             if (pausePending) sb.append("🛑");
             if (paused) sb.append("⏸");
+
+            if (pausePending || paused) sb.append(" | ");
         }
 
         Song s;
-        if (activeTrack == null || (s = activeTrack.getUserData(Song.class)).getType() == SongType.JINGLE) {
-            sb.append("🎵 **95 Degrees Radio**");
+        if (activeTrack == null) {
+
+        } else if ((s = activeTrack.getUserData(Song.class)).getType() == SongType.JINGLE) {
+            sb.append("🎹 **95 Degrees Radio**");
         } else if (s.getType() == SongType.ADVERTISEMENT) {
-            sb.append("🎵 **95 Degrees Radio - Advertisement**");
+            sb.append("📰 **95 Degrees Radio - Advertisement**");
         } else if (s.getType() == SongType.SPECIAL) {
-            sb.append("🎵 ");
+            sb.append("⭐ ");
             sb.append(s.getFriendlyName());
         } else if (s.getType() == SongType.SONG) {
             if (lyric != null) {
@@ -111,15 +117,12 @@ public class TickerManager implements RadioService, SongEventListener {
             if (lyric == null || dj) {
                 NetworkSong ns;
                 sb.append("🎵 ");
-                //round to nearest 10 and check if higher (unit >= 5)
-                if ((((animator + 5) / 10) * 10 > animator) && s instanceof NetworkSong && (ns = (NetworkSong) s).getSuggestedBy() != null) {
-                    sb.append("Suggested by: **");
+                //round to nearest 20 and check if higher
+                if ((((animator + 10) / 20) * 20 > animator) && s instanceof NetworkSong && (ns = (NetworkSong) s).getSuggestedBy() != null) {
+                    sb.append("Suggested by: ");
                     sb.append(ns.getSuggestedBy().getName());
-                    sb.append("**");
                 } else {
-                    sb.append("**");
                     sb.append(s.getFriendlyName());
-                    sb.append("**");
                 }
 
                 if (!activeTrack.getInfo().isStream) {

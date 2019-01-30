@@ -110,10 +110,14 @@ public class QuizPlaylist extends Playlist {
         quizManagerMessage = manager.getQuizManagerChannel().sendMessage(generateStatusMessage()).complete();
         quizManagerMessage.addReaction(ADVANCE_QUIZ_EMOTE).complete();
 
-        GuildController controller = manager.getController(); //TODO \/ config-ify
-        controller.getGuild().getCategoryById("514598617575850013").putPermissionOverride(controller.getGuild().getPublicRole()).setAllow(Permission.VIEW_CHANNEL).queue();
+        try {
+            GuildController controller = manager.getController(); //TODO \/ config-ify
+            controller.getGuild().getCategoryById("514598617575850013").putPermissionOverride(controller.getGuild().getPublicRole()).setAllow(Permission.VIEW_CHANNEL).queue();
 
-        manager.getTextChannel().sendMessage(getBaseEmbed(false).setTitle("The quiz is starting soon! 🎲").build()).queue();
+            manager.getTextChannel().sendMessage(getBaseEmbed(false).setTitle("The quiz is starting soon! 🎲").build()).queue();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -121,11 +125,15 @@ public class QuizPlaylist extends Playlist {
         if (quizManagerMessage != null) quizManagerMessage.delete().reason("End of quiz").queue();
 
         GuildController controller = manager.getController();
-        allMembers.forEach(m -> controller.removeRolesFromMember(m, manager.getQuizInGameRole(), manager.getQuizEliminatedRole()).reason("Quiz has ended - removing roles").queue());
-        //TODO config-ify
-        controller.getGuild().getCategoryById("514598617575850013").putPermissionOverride(controller.getGuild().getPublicRole()).setDeny(Permission.VIEW_CHANNEL).queue();
+        try {
+            allMembers.forEach(m -> controller.removeRolesFromMember(m, manager.getQuizInGameRole(), manager.getQuizEliminatedRole()).reason("Quiz has ended - removing roles").queue());
+            //TODO config-ify
+            controller.getGuild().getCategoryById("514598617575850013").putPermissionOverride(controller.getGuild().getPublicRole()).setDeny(Permission.VIEW_CHANNEL).queue();
 
-        if (RadioConfig.config.useStatus) controller.getJDA().getPresence().setGame(null);
+            if (RadioConfig.config.useStatus) controller.getJDA().getPresence().setGame(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public MessageEmbed generateStatusMessage() {
