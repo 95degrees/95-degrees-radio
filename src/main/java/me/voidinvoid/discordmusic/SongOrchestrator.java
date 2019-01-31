@@ -21,6 +21,9 @@ import me.voidinvoid.discordmusic.audio.twitch.TwitchKrakenStreamAudioSourceMana
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.levelling.AppliedLevelExtra;
+import me.voidinvoid.discordmusic.levelling.LevelExtras;
+import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
@@ -418,13 +421,25 @@ public class SongOrchestrator extends AudioEventAdapter {
         if (!bypassErrors) {
             final NetworkSongError error;
 
+            long maxLength = RadioConfig.config.orchestration.maxSongLength;
+            int maxSuggestions = RadioConfig.config.orchestration.userQueueLimit;
+
+            LevellingManager lm = Radio.getInstance().getService(LevellingManager.class);
+            if (lm != null && suggestedBy != null) {
+                AppliedLevelExtra a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
+                if (a != null) maxLength = (long) (int) a.getValue();
+
+                a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
+                if (a != null) maxSuggestions = (int) a.getValue();
+            }
+
             if (!suggestionsEnabled) {
                 error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
-            } else if (sp.getSongs().suggestionsBy(user).size() >= RadioConfig.config.orchestration.userQueueLimit) {
+            } else if (sp.getSongs().suggestionsBy(user).size() >= maxSuggestions) {
                 error = NetworkSongError.QUEUE_LIMIT_REACHED;
             } else if (track.getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
-            } else if (track.getDuration() > RadioConfig.config.orchestration.maxSongLength) {
+            } else if (track.getDuration() > maxLength) {
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
             } else if (suggestedBy != null && (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel()))) {
                 error = NetworkSongError.NOT_IN_VOICE_CHANNEL;

@@ -7,9 +7,7 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.*;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -33,6 +31,7 @@ public class LevellingManager implements RadioService, EventListener {
     private ScheduledExecutorService executor;
     private Map<String, ScheduledFuture> listeningTracker = new HashMap<>();
     private DatabaseManager databaseManager;
+    private VoiceChannel voiceChannel;
     private Map<Integer, Level> levels = new HashMap<>();
 
     @Override
@@ -68,8 +67,8 @@ public class LevellingManager implements RadioService, EventListener {
         if (this.executor == null) {
             executor = Executors.newScheduledThreadPool(1);
 
-            VoiceChannel v = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
-            v.getMembers().forEach(m -> trackIfEligible(m.getUser(), v, m.getVoiceState().isDeafened()));
+            voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
+            voiceChannel.getMembers().forEach(m -> trackIfEligible(m.getUser(), voiceChannel, m.getVoiceState().isDeafened()));
         }
     }
 
@@ -78,7 +77,7 @@ public class LevellingManager implements RadioService, EventListener {
         if (ev instanceof GuildVoiceJoinEvent) {
             trackIfEligible(((GuildVoiceJoinEvent) ev).getMember().getUser(), ((GuildVoiceJoinEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceLeaveEvent) {
-            trackIfEligible(((GuildVoiceLeaveEvent) ev).getMember().getUser(), ((GuildVoiceLeaveEvent) ev).getVoiceState().getChannel(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
+            trackIfEligible(((GuildVoiceLeaveEvent) ev).getMember().getUser(), null, ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceMoveEvent) {
             trackIfEligible(((GuildVoiceMoveEvent) ev).getMember().getUser(), ((GuildVoiceMoveEvent) ev).getChannelJoined(), ((GenericGuildVoiceEvent) ev).getVoiceState().isDeafened());
         } else if (ev instanceof GuildVoiceDeafenEvent) {
@@ -90,12 +89,12 @@ public class LevellingManager implements RadioService, EventListener {
 
         if (user.isBot()) return;
 
-        if (ChannelScope.RADIO_VOICE.check(channel) && !deafened) {
+        if (channel != null && ChannelScope.RADIO_VOICE.check(channel) && !deafened) {
             if (!listeningTracker.containsKey(user.getId())) {
                 listeningTracker.put(user.getId(), track(user));
             }
         } else {
-            ScheduledFuture s = listeningTracker.get(user.getId());
+            ScheduledFuture s = listeningTracker.remove(user.getId());
             if (s != null) {
                 System.out.println("LEVELLING: CANCELLED TRACKING " + user);
                 s.cancel(false);
@@ -107,9 +106,14 @@ public class LevellingManager implements RadioService, EventListener {
         System.out.println("LEVELLING: TRACKING " + user);
         String id = user.getId();
         return executor.scheduleAtFixedRate(() -> {
+            GuildVoiceState v = voiceChannel.getGuild().getMember(user).getVoiceState();
+            if (v == null || !v.inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(v.getChannel()) || v.isDeafened()) {
+                log("LEVELLING: desync of " + user);
+                return;
+            }
             databaseManager.getCollection("users").updateOne(eq("_id", id), new Document("$inc", new Document("total_listen_time", 1)));
             rewardExperience(user, 1); //TODO
-        }, 0, 1, TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);
     }
 
     public AppliedLevelExtra getLatestExtra(User u, LevelExtras extra) {
@@ -154,13 +158,8 @@ public class LevellingManager implements RadioService, EventListener {
 
         int xp = doc.getInteger("total_experience", 0);
 
-        TextChannel cdebug = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-
         Level prevLevel = calculateLevel(xp);
         Level currentLevel = calculateLevel(xp + amount);
-
-        cdebug.sendMessage("prev xp: " + xp + "\ncurrent xp: " + (xp + amount)).queue();
-        cdebug.sendMessage("prev lvl: " + prevLevel.getLevel() + "\ncurrent lvl: " + currentLevel.getLevel()).queue();
 
         if (prevLevel.getLevel() < currentLevel.getLevel()) {
             List<AppliedLevelExtra> unlockedExtras = new ArrayList<>();
@@ -172,6 +171,8 @@ public class LevellingManager implements RadioService, EventListener {
                 unlockedExtras.addAll(l.getExtras());
             }
 
+            //todo actually give the degreecoin reward, but make sure that its only done once if the config is changed
+
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
             c.sendMessage(new EmbedBuilder()
@@ -180,18 +181,7 @@ public class LevellingManager implements RadioService, EventListener {
                     .setThumbnail("https://cdn.discordapp.com/attachments/505174503752728597/537703976032796712/todo.png")
                     .setDescription(user.getAsMention() + " has levelled up!\n" + prevLevel.getLevel() + " ➠ **" + currentLevel.getLevel() + "**")
                     .addField("Reward", "<:degreecoin:431982714212843521> " + reward
-                            + (unlockedExtras.isEmpty() ? "" : "\nTODO:" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " ? ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)
-                    .setTimestamp(OffsetDateTime.now())
-                    .setFooter(user.getName(), user.getAvatarUrl())
-                    .build()
-            ).queue();
-        } else {
-            TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-
-            c.sendMessage(new EmbedBuilder()
-                    .setTitle("Levelling Debug")
-                    .setColor(Colors.ACCENT_LEVEL_UP)
-                    .setDescription("Prev level: " + prevLevel.getLevel() + ", next lvl requirement: " + levels.get(prevLevel.getLevel() + 1).getRequiredXp() + " xp required. total xp: " + (xp + amount))
+                            + (unlockedExtras.isEmpty() ? "" : "\n" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " ? ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl())
                     .build()
