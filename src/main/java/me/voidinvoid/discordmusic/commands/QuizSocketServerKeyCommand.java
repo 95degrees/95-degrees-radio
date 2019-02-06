@@ -12,6 +12,6 @@ public class QuizSocketServerKeyCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        data.success("Key: `" + Radio.getInstance().getService(QuizManager.class).getServerCode() + "`\n**⚠ This code should be kept private. Restart the bot to regenerate**");
+        data.success("Key: ||" + Radio.getInstance().getService(QuizManager.class).getServerCode() + "||\n**⚠ This code should be kept private. Restart the bot to regenerate**");
     }
 }
