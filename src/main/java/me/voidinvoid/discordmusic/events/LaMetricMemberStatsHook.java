@@ -18,11 +18,22 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public class LaMetricMemberStatsHook implements RadioService, EventListener {
 
-    private static final String MEMBER_STATS_LOG_PREFIX = ConsoleColor.GREEN_BACKGROUND + " LAMETRIC STATS " + ConsoleColor.RESET_SPACE;
+    private static final String MEMBER_STATS_LOG_PREFIX = ConsoleColor.GREEN_BACKGROUND + " LAMETRIC STATS ";
+
+    @Override
+    public String getLogPrefix() {
+        return MEMBER_STATS_LOG_PREFIX;
+    }
 
     private String guildId;
 
-    public LaMetricMemberStatsHook() {
+    @Override
+    public boolean canRun(RadioConfig config) {
+        return !config.debug && config.useSocketServer;
+    }
+
+    @Override
+    public void onLoad() {
         Guild guild = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).getGuild();
         guildId = guild.getId();
 
@@ -59,7 +70,7 @@ public class LaMetricMemberStatsHook implements RadioService, EventListener {
             request.setEntity(params);
             HttpResponse response = http.execute(request);
 
-            System.out.println(MEMBER_STATS_LOG_PREFIX + " Pushed member count at " + count);
+            log("Pushed member count at " + count);
 
         } catch (Exception ex) {
             ex.printStackTrace();

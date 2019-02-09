@@ -59,7 +59,7 @@ public class CommandManager implements RadioService, EventListener {
                             .orElse(null);
 
                     if (match == null) {
-                        System.out.println("Unknown command. Use 'radio-commands' to list commands");
+                        log("Unknown command. Use 'radio-commands' to list commands");
                     } else {
                         match.invoke(new CommandData(msg, match, cmdName));
                     }

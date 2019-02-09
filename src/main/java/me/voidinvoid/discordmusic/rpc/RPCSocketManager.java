@@ -35,6 +35,11 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private Guild guild;
 
     @Override
+    public boolean canRun(RadioConfig config) {
+        return config.useSocketServer;
+    }
+
+    @Override
     public void onLoad() {
         this.voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
         this.guild = voiceChannel.getGuild();

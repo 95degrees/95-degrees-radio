@@ -45,7 +45,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SongOrchestrator extends AudioEventAdapter {
+public class SongOrchestrator extends AudioEventAdapter implements RadioService {
 
     private List<Playlist> playlists;
     private Playlist activePlaylist;
@@ -144,7 +144,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onPlaylistChange(this.activePlaylist, activePlaylist);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -163,13 +163,13 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public void loadPlaylists() {
-        System.out.println("Loading special queue...");
+        log("Loading special queue...");
         specialQueue = new LocalSongQueue(Paths.get(RadioConfig.config.locations.specialPlaylist), null, SongType.SPECIAL, false);
         specialQueue.loadSongsAsync();
 
         playlists = new ArrayList<>();
 
-        System.out.println("Loading local playlists...");
+        log("Loading local playlists...");
 
         Playlist prevActive = activePlaylist;
 
@@ -179,32 +179,32 @@ public class SongOrchestrator extends AudioEventAdapter {
                     .map(LocalRadioPlaylist::new)
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            System.out.println(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
+            log(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
             e.printStackTrace();
             return;
         }
 
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
         if (db != null) {
-            System.out.println("Loading database playlists...");
+            log("Loading database playlists...");
             //TODO debug
             ((Iterable<Document>) db.getCollection("playlists_debug").find()).forEach(d -> playlists.add(new DatabaseRadioPlaylist(d)));
         }
 
         playlists.forEach(p -> {
-            System.out.println(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " PLAYLIST " + ConsoleColor.RESET_SPACE + p.getName());
-            System.out.println(p.getInternal() + ", " + p.getCoinMultiplier() + ", " + p.getStatusOverrideMessage());
+            log(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " PLAYLIST " + ConsoleColor.RESET_SPACE + p.getName());
+            log(p.getInternal() + ", " + p.getCoinMultiplier() + ", " + p.getStatusOverrideMessage());
             if (p.isDefault()) activePlaylist = p;
         });
 
         if (playlists.size() == 0) {
-            System.out.println(ConsoleColor.RED + "No playlists found!" + ConsoleColor.RESET);
+            log(ConsoleColor.RED + "No playlists found!" + ConsoleColor.RESET);
             return;
         }
 
         if (activePlaylist == null) {
             activePlaylist = playlists.get(0);
-            System.out.println(ConsoleColor.YELLOW + "Warning: no default song directory found. Defaulted to " + activePlaylist.getName() + ConsoleColor.RESET);
+            log(ConsoleColor.YELLOW + "Warning: no default song directory found. Defaulted to " + activePlaylist.getName() + ConsoleColor.RESET);
         }
 
         if (prevActive != null) { //keep using the same playlist we had previously
@@ -228,7 +228,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                 try {
                     l.onPausePending(false);
                 } catch (Exception ex) {
-                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                     ex.printStackTrace();
                 }
             });
@@ -238,7 +238,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                 try {
                     l.onTrackStopped();
                 } catch (Exception ex) {
-                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                     ex.printStackTrace();
                 }
             });
@@ -268,15 +268,15 @@ public class SongOrchestrator extends AudioEventAdapter {
                 try {
                     l.onNoSongsInQueue(activePlaylist);
                 } catch (Exception ex) {
-                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                     ex.printStackTrace();
                 }
             });
             return;
         }
 
-        System.out.println(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFileName() + ConsoleColor.RESET);
-        System.out.println("              Jingle after " + timeUntilJingle + " more songs");
+        log(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFileName() + ConsoleColor.RESET);
+        log("              Jingle after " + timeUntilJingle + " more songs");
 
         if (song.getTrack() != null) {
             player.playTrack(song.getTrack());
@@ -293,12 +293,12 @@ public class SongOrchestrator extends AudioEventAdapter {
             }
 
             public void noMatches() {
-                System.out.println("No match found for file");
+                log("No match found for file");
                 playNextSong(false, false);
             }
 
             public void loadFailed(FriendlyException e) {
-                System.out.println("Load failed for file: (ID) " + song.getFullLocation());
+                log("Load failed for file: (ID) " + song.getFullLocation());
                 e.printStackTrace();
                 playNextSong(false, false);
 
@@ -306,7 +306,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                     try {
                         l.onSongLoadError(song, e);
                     } catch (Exception ex) {
-                        System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                        log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                         ex.printStackTrace();
                     }
                 });
@@ -328,7 +328,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onSongSeek(track, pos, player);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -342,7 +342,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onSongStart(song, track, player, timeUntilJingle);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -356,7 +356,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                 try {
                     l.onSongEnd(song, track);
                 } catch (Exception ex) {
-                    System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                     ex.printStackTrace();
                 }
             });
@@ -403,12 +403,12 @@ public class SongOrchestrator extends AudioEventAdapter {
     }
 
     public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
-        System.out.println("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
+        log("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
 
         User user = suggestedBy == null ? null : suggestedBy.getUser();
 
         if (!bypassErrors && track instanceof LocalAudioTrack) {
-            System.out.println(suggestedBy + " tried to play a local track - disallowed");
+            log(suggestedBy + " tried to play a local track - disallowed");
             return false;
         }
 
@@ -452,7 +452,7 @@ public class SongOrchestrator extends AudioEventAdapter {
                     try {
                         l.onNetworkSongQueueError(song, track, suggestedBy, error);
                     } catch (Exception ex) {
-                        System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                        log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                         ex.printStackTrace();
                     }
                 });
@@ -472,7 +472,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onNetworkSongQueued(song, track, suggestedBy, index);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -487,7 +487,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             }
         }
 
-        System.out.println("Network track is in the queue: #" + (index + 1));
+        log("Network track is in the queue: #" + (index + 1));
         return true;
     }
 
@@ -500,7 +500,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onSuggestionsToggle(enabled, source);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -522,7 +522,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onSongPause(paused, s, t, player);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -560,7 +560,7 @@ public class SongOrchestrator extends AudioEventAdapter {
             try {
                 l.onPausePending(pausePending);
             } catch (Exception ex) {
-                System.out.println(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });

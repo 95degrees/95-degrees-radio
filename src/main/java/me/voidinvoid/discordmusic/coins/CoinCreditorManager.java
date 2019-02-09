@@ -1,5 +1,7 @@
 package me.voidinvoid.discordmusic.coins;
 
+import com.mongodb.client.MongoCollection;
+import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
@@ -22,6 +24,7 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
+import org.bson.Document;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
@@ -31,12 +34,18 @@ import java.util.Map;
 public class CoinCreditorManager implements RadioService, EventListener, SongEventListener {
 
     private VoiceChannel voiceChannel;
-
     private TextChannel textChannel;
 
     private Map<Long, UserCoinTracker> coinGains = new HashMap<>();
 
     private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
+
+    private MongoCollection<Document> users;
+
+    @Override
+    public boolean canRun(RadioConfig config) {
+        return config.useCoinGain;
+    }
 
     @Override
     public void onLoad() {
@@ -44,6 +53,8 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
         JDA jda = Radio.getInstance().getJda();
         voiceChannel = jda.getVoiceChannelById(RadioConfig.config.channels.voice);
         textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat);
+
+        //todo when new guardian releases: users = Radio.getInstance().getService(DatabaseManager.class).getClient().getDatabase("95degrees").getCollection("users");
 
         if (!coinGains.isEmpty()) return;
 
@@ -128,7 +139,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
         if (coins == null) return;
 
         int amount = coins.getTotal();
-        System.out.println(ConsoleColor.YELLOW_BACKGROUND_BRIGHT + " COINS " + ConsoleColor.RESET_SPACE + user.getName() + " has earned " + amount + " coins");
+        log(ConsoleColor.YELLOW_BACKGROUND_BRIGHT + " COINS " + ConsoleColor.RESET_SPACE + user.getName() + " has earned " + amount + " coins");
 
         if (amount < 1) return;
 

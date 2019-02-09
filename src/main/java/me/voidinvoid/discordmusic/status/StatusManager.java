@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
@@ -19,6 +20,11 @@ public class StatusManager implements RadioService, SongEventListener {
     private Map<Song, String> songStatusOverrides = new HashMap<>();
 
     private JDA jda;
+
+    @Override
+    public boolean canRun(RadioConfig config) {
+        return config.useStatus;
+    }
 
     @Override
     public void onLoad() {

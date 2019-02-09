@@ -31,7 +31,7 @@ public enum TriggerType {
 
         TextChannel c = Radio.getInstance().getJda().getTextChannelById(channel);
         if (c == null) {
-            System.out.println("Warning: text channel is null for SEND_MESSAGE_TO_CHANNEL action");
+            log("Warning: text channel is null for SEND_MESSAGE_TO_CHANNEL action");
             return;
         }
 

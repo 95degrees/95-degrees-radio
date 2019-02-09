@@ -92,7 +92,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
         config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9301 : 9501);
 
-        System.out.println("Started quiz rpc on " + config.getPort());
+        log("Started quiz rpc on " + config.getPort());
 
         SocketConfig sockets = new SocketConfig();
         sockets.setReuseAddress(true);
@@ -180,7 +180,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
 
             return new QuizPlaylist(quiz, this);
         } catch (Exception e) {
-            System.out.println("Error loading quiz data");
+            log("Error loading quiz data");
             e.printStackTrace();
             return null;
         }
@@ -204,7 +204,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
         try {
             return loadQuizFromString(new String(Files.readAllBytes(q)));
         } catch (IOException e) {
-            System.out.println("Error loading quiz file " + q);
+            log("Error loading quiz file " + q);
             e.printStackTrace();
             return null;
         }

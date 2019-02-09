@@ -93,7 +93,7 @@ public class SongSearchResult {
                     Radio.getInstance().getOrchestrator().addNetworkTrack(e.getMember(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
                     return true;
                 } catch (Exception ex) {
-                    System.out.println("Error handling search reaction event");
+                    log("Error handling search reaction event");
                     ex.printStackTrace();
                 }
             } else if (reaction.equals(CANCEL_EMOJI)) {

@@ -30,13 +30,23 @@ import java.util.List;
 
 public class AdvertisementManager implements RadioService, SongEventListener {
 
-    private static final String AD_LOG_PREFIX = ConsoleColor.CYAN_BACKGROUND + " AD " + ConsoleColor.RESET_SPACE;
+    private static final String AD_LOG_PREFIX = ConsoleColor.CYAN_BACKGROUND + " AD ";
     private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
     private List<Advertisement> adverts = new ArrayList<>();
     private int currentAdIndex;
 
     private TextChannel textChannel;
+
+    @Override
+    public String getLogPrefix() {
+        return AD_LOG_PREFIX;
+    }
+
+    @Override
+    public boolean canRun(RadioConfig config) {
+        return config.useAdverts;
+    }
 
     @Override
     public void onLoad() {
@@ -48,7 +58,7 @@ public class AdvertisementManager implements RadioService, SongEventListener {
                 adverts = db.getCollection("adverts").find().map(d -> GSON.fromJson(d.toJson(), Advertisement.class)).into(new ArrayList<>());
             }
         } catch (Exception e) {
-            System.out.println(AD_LOG_PREFIX + "Error loading adverts");
+            log("Error loading adverts");
             e.printStackTrace();
         }
 
@@ -66,10 +76,6 @@ public class AdvertisementManager implements RadioService, SongEventListener {
         if (currentAdIndex >= adverts.size()) currentAdIndex = 0;
 
         List<Song> awaitingSongs = Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs();
-        System.out.println(awaitingSongs);
-        System.out.println(adverts.get(currentAdIndex));
-        System.out.println(adverts.get(currentAdIndex).getSong());
-        System.out.println(awaitingSongs.stream());
         if (awaitingSongs.stream().noneMatch(s -> s.getType() == SongType.ADVERTISEMENT)) { //only queue one ad at a time
             awaitingSongs.add(adverts.get(currentAdIndex).getSong());
         }
@@ -85,11 +91,11 @@ public class AdvertisementManager implements RadioService, SongEventListener {
             Advertisement ad = adverts.stream().filter(a -> a.getIdentifier().equalsIgnoreCase(song.getFileName())).findAny().orElse(null);
 
             if (ad == null) {
-                System.out.println(AD_LOG_PREFIX + "Error: couldn't find advert for song");
+                log("Error: couldn't find advert for song");
                 return;
             }
 
-            System.out.println(AD_LOG_PREFIX + "Ran advert: " + ad.getTitle());
+            log("Ran advert: " + ad.getTitle());
 
             textChannel.sendMessage(ad.constructAdvertMessage().setTimestamp(OffsetDateTime.now()).build()).queue();
         }

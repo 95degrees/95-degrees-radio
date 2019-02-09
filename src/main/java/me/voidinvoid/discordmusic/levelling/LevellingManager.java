@@ -54,7 +54,7 @@ public class LevellingManager implements RadioService, EventListener {
                         try {
                             extras.add(new AppliedLevelExtra(LevelExtras.valueOf(k), val));
                         } catch (Exception e) {
-                            System.out.println("LEVELLING: unknown extra: " + k);
+                            log("LEVELLING: unknown extra: " + k);
                             e.printStackTrace();
                         }
                     });
@@ -96,14 +96,14 @@ public class LevellingManager implements RadioService, EventListener {
         } else {
             ScheduledFuture s = listeningTracker.remove(user.getId());
             if (s != null) {
-                System.out.println("LEVELLING: CANCELLED TRACKING " + user);
+                log("LEVELLING: CANCELLED TRACKING " + user);
                 s.cancel(false);
             }
         }
     }
 
     private ScheduledFuture track(User user) {
-        System.out.println("LEVELLING: TRACKING " + user);
+        log("LEVELLING: TRACKING " + user);
         String id = user.getId();
         return executor.scheduleAtFixedRate(() -> {
             GuildVoiceState v = voiceChannel.getGuild().getMember(user).getVoiceState();
@@ -152,7 +152,7 @@ public class LevellingManager implements RadioService, EventListener {
         Document doc = databaseManager.getCollection("users").findOneAndUpdate(eq("_id", user.getId()), new Document("$inc", new Document("total_experience", 1)));
 
         if (doc == null) {
-            System.out.println(user + "'s db document is null");
+            log(user + "'s db document is null");
             return;
         }
 

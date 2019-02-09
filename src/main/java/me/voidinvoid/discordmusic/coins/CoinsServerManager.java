@@ -25,7 +25,7 @@ public class CoinsServerManager {
         try {
             UPDATE_URL = new URL(RadioConfig.config.locations.coinUpdates);
         } catch (MalformedURLException e) {
-            System.out.println("ERROR: COINS UPDATE URL IS INVALID");
+            log("ERROR: COINS UPDATE URL IS INVALID");
             e.printStackTrace();
         }
     }
@@ -66,7 +66,7 @@ public class CoinsServerManager {
 
             int status = conn.getResponseCode();
             if (status != 200) {
-                System.out.println("UPDATING COINS ERROR: response code " + status);
+                log("UPDATING COINS ERROR: response code " + status);
             }
         } catch (Exception e) {
             e.printStackTrace();

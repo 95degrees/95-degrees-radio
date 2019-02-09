@@ -78,7 +78,7 @@ class CommandData {
 
     public void code(String message) {
         if (textChannel == null) {
-            System.out.println(message);
+            log(message);
             return;
         }
 
@@ -87,7 +87,7 @@ class CommandData {
 
     public void success(String message) {
         if (member == null) {
-            System.out.println(ConsoleColor.GREEN_BACKGROUND + " SUCCESS " + ConsoleColor.RESET_SPACE + message.replaceAll("`", ""));
+            log(ConsoleColor.GREEN_BACKGROUND + " SUCCESS " + ConsoleColor.RESET_SPACE + message.replaceAll("`", ""));
             return;
         }
 
@@ -103,7 +103,7 @@ class CommandData {
 
     public void error(String message) {
         if (member == null) {
-            System.out.println(ConsoleColor.RED_BACKGROUND + " ERROR " + ConsoleColor.RESET_SPACE + message.replaceAll("`", ""));
+            log(ConsoleColor.RED_BACKGROUND + " ERROR " + ConsoleColor.RESET_SPACE + message.replaceAll("`", ""));
             return;
         }
 

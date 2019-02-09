@@ -22,7 +22,7 @@ public class LyricsFetcher {
             int status = conn.getResponseCode();
 
             if (status != 200) {
-                System.out.println("Error fetching lyrics, response code " + status);
+                log("Error fetching lyrics, response code " + status);
                 return null;
             }
 
