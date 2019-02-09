@@ -45,7 +45,7 @@ public class DatabaseSong extends Song {
         albumArtId = document.getString("albumArt");
 
         if (albumArtId != null) {
-            albumArt = Paths.get("/projects/radio/AlbumArt/Songs/" + albumArtId + ".png");
+            albumArt = Paths.get("/home/discord/radio_old/AlbumArt/Songs/" + albumArtId + ".png"); //todo
         }
 
         if (document.containsKey("triggerActions")) {

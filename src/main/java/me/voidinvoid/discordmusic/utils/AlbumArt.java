@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.requests.restaction.MessageAction;
 import javax.annotation.CheckReturnValue;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -32,6 +33,10 @@ public final class AlbumArt {
     public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel, boolean forceLocal) {
         if (forceLocal || song.getAlbumArtType() == AlbumArtType.FILE) {
             Path albumArt = song.getAlbumArtFile();
+            if (!Files.exists(albumArt)) {
+                System.out.println("Warning: invalid album art file: " + albumArt);
+                return channel.sendFile(FALLBACK_ALBUM_ART.toFile()).embed(embed.build());
+            }
             embed.setThumbnail("attachment://" + albumArt.getFileName().toString());
             return channel.sendFile(albumArt.toFile()).embed(embed.build());
 

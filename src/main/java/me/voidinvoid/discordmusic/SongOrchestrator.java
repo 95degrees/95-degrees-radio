@@ -73,7 +73,7 @@ public class SongOrchestrator extends AudioEventAdapter {
         this.radio = radio;
         jda = radio.getJda();
 
-        this.playlistsRoot = Paths.get(config.locations.playlists);
+        this.playlistsRoot = config.locations.playlists ==  null ? null : Paths.get(config.locations.playlists);
 
         loadPlaylists();
 
@@ -169,26 +169,27 @@ public class SongOrchestrator extends AudioEventAdapter {
 
         playlists = new ArrayList<>();
 
-        System.out.println("Loading local playlists...");
-
         Playlist prevActive = activePlaylist;
 
-        try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
-            playlists = playlistFolder
-                    .filter(Files::isDirectory)
-                    .map(LocalRadioPlaylist::new)
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            System.out.println(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
-            e.printStackTrace();
-            return;
+        if (playlistsRoot != null) {
+            System.out.println("Loading local playlists...");
+
+            try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
+                playlists = playlistFolder
+                        .filter(Files::isDirectory)
+                        .map(LocalRadioPlaylist::new)
+                        .collect(Collectors.toList());
+            } catch (IOException e) {
+                System.out.println(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
+                e.printStackTrace();
+                return;
+            }
         }
 
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
         if (db != null) {
             System.out.println("Loading database playlists...");
-            //TODO debug
-            ((Iterable<Document>) db.getCollection("playlists_debug").find()).forEach(d -> playlists.add(new DatabaseRadioPlaylist(d)));
+            ((Iterable<Document>) db.getCollection("playlists").find()).forEach(d -> playlists.add(new DatabaseRadioPlaylist(d)));
         }
 
         playlists.forEach(p -> {

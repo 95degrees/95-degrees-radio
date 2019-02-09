@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.rpc;
 
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketConfig;
+import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -22,7 +23,10 @@ import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.core.hooks.EventListener;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class RPCSocketManager implements RadioService, SongEventListener, EventListener { //todo adapt this for db songs
@@ -31,6 +35,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private SongInfo currentSongInfo;
 
     private List<MemberInfo> listeners;
+    private Map<SocketIOClient, String> pendingPairCodes;
     private VoiceChannel voiceChannel;
     private Guild guild;
 
@@ -38,6 +43,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public void onLoad() {
         this.voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
         this.guild = voiceChannel.getGuild();
+
+        pendingPairCodes = new HashMap<>();
 
         listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList());
 
@@ -57,6 +64,13 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 RadioInfo info = new RadioInfo(listeners, guild.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList()), currentSongInfo);
 
                 c.sendEvent("status", info);
+            });
+
+            server.addEventListener("pair_rpc", String.class, (c, o, ack) -> {
+                String code = UUID.randomUUID().toString().substring(0, 8);
+
+                pendingPairCodes.put(c, code);
+                ack.sendAckData(code);
             });
 
             server.startAsync();

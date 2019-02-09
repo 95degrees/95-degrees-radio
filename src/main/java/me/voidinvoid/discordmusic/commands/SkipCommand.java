@@ -11,7 +11,7 @@ public class SkipCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        if (ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
+        if (data.getTextChannel() == null || ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
             Radio.getInstance().getOrchestrator().playNextSong();
 
             data.success("Skipped to the next track");

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class ServicesCommand extends Command {
 
     ServicesCommand() {
-        super("services", "List or reload radio services", "<list|reload ...>", ChannelScope.DJ_CHAT);
+        super("radio-services", "List or reload radio services", "<list|reload ...>", ChannelScope.DJ_CHAT, "rs");
     }
 
     @Override
@@ -24,14 +24,14 @@ public class ServicesCommand extends Command {
 
         } else if (args[0].equals("reload")) {
             if (args.length < 2) {
-                data.error("Service name required. List using `!services list`");
+                data.error("Service name required. List using `!rs list`");
                 return;
             }
 
             Optional<RadioService> rs = Radio.getInstance().getServices().stream().filter(r -> r.getClass().getTypeName().equalsIgnoreCase(args[1])).findAny();
 
             if (!rs.isPresent()) {
-                data.error("Invalid service name. List using `!services list`");
+                data.error("Invalid service name. List using `!rs list`");
             } else {
                 rs.get().onLoad();
                 data.success("Reloaded " + rs.get().getClass().getTypeName());

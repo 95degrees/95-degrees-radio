@@ -18,7 +18,7 @@ public class DatabaseManager implements RadioService {
 
     public DatabaseManager() {
         client = MongoClients.create();
-        db = client.getDatabase("discord-radio");
+        db = client.getDatabase("95degrees-radio");
     }
 
     public MongoClient getClient() {
