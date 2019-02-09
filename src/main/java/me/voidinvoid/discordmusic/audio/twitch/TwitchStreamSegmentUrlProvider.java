@@ -43,6 +43,11 @@ public class TwitchStreamSegmentUrlProvider extends M3uStreamSegmentUrlProvider 
     }
 
     @Override
+    protected HttpUriRequest createSegmentGetRequest(String s) {
+        return null;
+    }
+
+    @Override
     protected String fetchSegmentPlaylistUrl(HttpInterface httpInterface) throws IOException {
         if (System.currentTimeMillis() < tokenExpirationTime) {
             return streamSegmentPlaylistUrl;

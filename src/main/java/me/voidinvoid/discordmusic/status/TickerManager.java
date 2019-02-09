@@ -128,6 +128,7 @@ public class TickerManager implements RadioService, SongEventListener {
                 if (!activeTrack.getInfo().isStream) {
                     sb.append(" - ");
                     sb.append(FormattingUtils.getFormattedMsTime(activeTrack.getPosition()));
+                    log("SONG POSITION: " + activeTrack.getPosition());
                     sb.append("/");
                     sb.append(FormattingUtils.getFormattedMsTime(activeTrack.getDuration()));
                 }

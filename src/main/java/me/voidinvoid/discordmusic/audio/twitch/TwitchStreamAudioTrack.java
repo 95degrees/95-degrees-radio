@@ -36,7 +36,7 @@ public class TwitchStreamAudioTrack extends M3uStreamAudioTrack {
     }
 
     @Override
-    protected M3uStreamSegmentUrlProvider createSegmentProvider() {
+    protected M3uStreamSegmentUrlProvider getSegmentUrlProvider() {
         return new TwitchStreamSegmentUrlProvider(getChannelName());
     }
 

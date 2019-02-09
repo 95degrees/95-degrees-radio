@@ -44,7 +44,7 @@ public class LocalRadioPlaylist extends RadioPlaylist {
         /*
         awaitLoad();
 
-        System.out.println("**Migrating " + path);
+        log("**Migrating " + path);
 
         dbman.getCollection("playlists").insertOne(
                 new Document("_id", this.internal)

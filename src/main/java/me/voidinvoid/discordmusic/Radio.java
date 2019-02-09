@@ -134,17 +134,17 @@ public class Radio implements EventListener {
         registerService(new CommandManager());
         registerService(new SongSuggestionManager());
         registerService(new PlaylistTesterListener());
-        if (RadioConfig.config.useSocketServer) registerService(new RPCSocketManager());
+        registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
         registerService(new KaraokeManager());
         registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener());
-        registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole)));
-        if (RadioConfig.config.useCoinGain) registerService(new CoinCreditorManager());
-        if (RadioConfig.config.useStatus) registerService(new StatusManager());
-        if (RadioConfig.config.useAdverts) registerService(new AdvertisementManager());
-        if (RadioConfig.config.useSocketServer && !RadioConfig.config.debug) registerService(new LaMetricMemberStatsHook()); //todo
+        registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole))); //TODO
+        registerService(new CoinCreditorManager());
+        registerService(new StatusManager());
+        registerService(new AdvertisementManager());
+        registerService(new LaMetricMemberStatsHook()); //todo
         registerService(new LevellingManager());
         registerService(new AchievementManager());
         registerService(new TaskManager());
@@ -166,13 +166,23 @@ public class Radio implements EventListener {
     }
 
     private void registerService(RadioService service) {
+        if (!service.canRun(config)) {
+            System.out.println("Skipping service '" + service.getClass().getSimpleName() + "' since it can't run with the current config");
+            return;
+        }
+
         radioServices.put(service.getClass(), service);
 
         if (service instanceof SongEventListener)
             orchestrator.registerSongEventListener(((SongEventListener) service));
         if (service instanceof EventListener) jda.addEventListener(service);
 
-        service.onLoad();
+        try {
+            service.onLoad();
+        } catch (Exception e) {
+            System.out.println("Warning: Error loading service '" + service.getClass().getSimpleName() + "':");
+            e.printStackTrace();
+        }
     }
 
     public <T> T getService(Class<T> service) {
@@ -192,7 +202,14 @@ public class Radio implements EventListener {
 
     public void shutdown(boolean restart) {
         if (orchestrator.getActivePlaylist() != null) orchestrator.getActivePlaylist().onDeactivate();
-        getServices().forEach(RadioService::onShutdown);
+        for (RadioService radioService : getServices()) {
+            try {
+                radioService.onShutdown();
+            } catch (Exception e) {
+                System.out.println("Warning: Error shutting down service '" + radioService.getClass().getSimpleName() + "':");
+                e.printStackTrace();
+            }
+        }
         System.exit(restart ? 1 : 0);
     }
 
