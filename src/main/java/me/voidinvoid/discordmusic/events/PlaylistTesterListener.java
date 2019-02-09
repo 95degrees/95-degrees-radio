@@ -8,10 +8,9 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.songs.database.DatabaseSongQueue;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
-import me.voidinvoid.discordmusic.utils.AlbumArt;
+import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.events.Event;
@@ -54,7 +53,7 @@ public class PlaylistTesterListener implements RadioService, SongEventListener, 
                 .setDescription("Does this song feature music video specific elements?\n" + VALID_REACTION + " - song is valid\n" + INVALID_REACTION + " - song is invalid")
                 .setTimestamp(new Date().toInstant());
 
-        AlbumArt.attachAlbumArt(embed, song, textChannel).queue(m -> {
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
             reactionMessages.put(m.getId(), song);
 
             m.addReaction(VALID_REACTION).queue();

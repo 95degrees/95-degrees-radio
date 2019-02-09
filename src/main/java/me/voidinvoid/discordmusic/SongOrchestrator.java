@@ -5,19 +5,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.source.bandcamp.BandcampAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.beam.BeamAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.http.HttpAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioTrack;
-import com.sedmelluq.discord.lavaplayer.source.soundcloud.SoundCloudAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.vimeo.VimeoAudioSourceManager;
-import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import me.voidinvoid.discordmusic.audio.AudioPlayerSendHandler;
-import me.voidinvoid.discordmusic.audio.twitch.TwitchKrakenStreamAudioSourceManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.SongEventListener;
@@ -73,7 +66,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         this.radio = radio;
         jda = radio.getJda();
 
-        this.playlistsRoot = config.locations.playlists ==  null ? null : Paths.get(config.locations.playlists);
+        this.playlistsRoot = config.locations.playlists == null ? null : Paths.get(config.locations.playlists);
 
         loadPlaylists();
 
@@ -174,7 +167,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         Playlist prevActive = activePlaylist;
 
         if (playlistsRoot != null) {
-            System.out.println("Loading local playlists...");
+            log("Loading local playlists...");
 
             try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
                 playlists = playlistFolder

@@ -43,7 +43,7 @@ public class RadioConfig {
     }
 
     public class Images {
-        public String fallbackAlbumArt, jingleAlbumArt, advertAlbumArt, networkAlbumArt;
+        public String fallbackAlbumArt, jingleAlbumArt, advertAlbumArt, networkAlbumArt, specialAlbumArt, levellingUpLogo;
     }
 
     public class Orchestration {

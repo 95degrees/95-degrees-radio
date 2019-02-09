@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 
 import java.nio.file.Path;
 
@@ -22,15 +23,9 @@ public abstract class Song {
 
     public abstract String getFullLocation();
 
-    public abstract AlbumArtType getAlbumArtType();
-
-    public abstract Path getAlbumArtFile();
+    public abstract AlbumArt getAlbumArt();
 
     public abstract String getFriendlyName();
-
-    public String getAlbumArtURL() {
-        return null;
-    }
 
     public abstract boolean isPersistent();
 

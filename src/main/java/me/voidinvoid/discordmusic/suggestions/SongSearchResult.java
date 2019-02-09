@@ -5,6 +5,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.levelling.LevelExtras;
+import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -34,8 +36,11 @@ public class SongSearchResult {
         this.user = user;
 
         if (!bypassLengthLimit) {
+            var lm = Radio.getInstance().getService(LevellingManager.class);
+            var limit = (long) lm.getLatestExtra(user, LevelExtras.MAX_SUGGESTION_LENGTH).getValue();
+
             int prev = playlist.size();
-            playlist = playlist.stream().filter(t -> t.getDuration() <= RadioConfig.config.orchestration.maxSongLength).collect(Collectors.toList());
+            playlist = playlist.stream().filter(t -> t.getDuration() <= limit).collect(Collectors.toList());
             if (playlist.size() < prev) songsOverLengthLimit = true;
         }
 
@@ -50,9 +55,9 @@ public class SongSearchResult {
         int amount = playlist.size();
 
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("Song Search")
+                .setTitle("🔎 Song Search")
                 .setColor(Colors.ACCENT_SEARCH) //todo masked links for all matches so theyre clickable [display text](url)
-                .setDescription((amount == 1 ? "Here is the top match" : "Here are the top " + amount + " matches") + " from your search\n" + "React with the corresponding number to add to the queue\n\n" + (songsOverLengthLimit ? "⚠ Some results were omitted for being over the length limit\n\n" : ""))
+                .setDescription((amount == 1 ? "Here is the top match" : "Here are the top " + amount + " matches") + " from your search\n" + "React with the corresponding number to add to the queue\n\n" + (songsOverLengthLimit ? "⚠ Some results were hidden for being over the length limit\n\n" : ""))
                 .setTimestamp(OffsetDateTime.now());
 
         if (user != null) embed.setFooter(user.getName(), user.getAvatarUrl());

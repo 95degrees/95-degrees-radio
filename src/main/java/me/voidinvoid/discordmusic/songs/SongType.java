@@ -1,24 +1,28 @@
 package me.voidinvoid.discordmusic.songs;
 
-import me.voidinvoid.discordmusic.utils.AlbumArt;
+import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
+import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 
 import java.nio.file.Path;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public enum SongType {
 
-    SONG("Song", true, true, s -> null),
-    JINGLE("Jingle", false, false, s -> AlbumArt.JINGLE_ALBUM_ART),
-    SPECIAL("Special", false, false, s -> AlbumArt.JINGLE_ALBUM_ART), //todo
-    ADVERTISEMENT("Advert", false, false, s -> AlbumArt.ADVERT_ALBUM_ART),
-    QUIZ("Quiz Question", false, false, s -> AlbumArt.ADVERT_ALBUM_ART); //todo
+    SONG("Song", true, true, (s, a) -> null),
+    JINGLE("Jingle", false, false, (s, a) -> a.getJingleAlbumArt()),
+    SPECIAL("Special", false, false, (s, a) -> a.getSpecialAlbumArt()), //todo
+    ADVERTISEMENT("Advert", false, false, (s, a) -> a.getAdvertAlbumArt()),
+    QUIZ("Quiz Question", false, false, (s, a) -> a.getSpecialAlbumArt()); //todo
 
     private final String displayName;
     private final boolean announce;
     private final boolean useStatus;
-    private final Function<Song, Path> getAlbumArt;
+    private final BiFunction<Song, AlbumArtManager, AlbumArt> getAlbumArt;
 
-    SongType(String displayName, boolean announce, boolean useStatus, Function<Song, Path> getAlbumArt) {
+    SongType(String displayName, boolean announce, boolean useStatus, BiFunction<Song, AlbumArtManager, AlbumArt> getAlbumArt) {
 
         this.displayName = displayName;
         this.announce = announce;
@@ -38,7 +42,7 @@ public enum SongType {
         return useStatus;
     }
 
-    public Path getAlbumArt(Song song) {
-        return getAlbumArt.apply(song);
+    public AlbumArt getAlbumArt(Song song) {
+        return getAlbumArt.apply(song, Radio.getInstance().getService(AlbumArtManager.class));
     }
 }

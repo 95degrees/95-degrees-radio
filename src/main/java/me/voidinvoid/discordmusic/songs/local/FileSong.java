@@ -2,11 +2,12 @@ package me.voidinvoid.discordmusic.songs.local;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
-import me.voidinvoid.discordmusic.songs.AlbumArtType;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongQueue;
 import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.utils.AlbumArt;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
+import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
+import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -18,7 +19,7 @@ import java.nio.file.Path;
 public class FileSong extends Song {
 
     private Path file;
-    private Path albumArtFile;
+    private AlbumArt albumArt;
 
     private String mp3Title, mp3Artist;
 
@@ -44,11 +45,13 @@ public class FileSong extends Song {
                 if (art == null) return;
 
                 String mime = tag.getAlbumImageMimeType().replace("image/", "");
-                BufferedImage artImg = AlbumArt.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
+                BufferedImage artImg = AlbumArtUtils.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
 
-                albumArtFile = Files.createTempFile("albumart-", "." + mime);
+                var ap = Files.createTempFile("albumart-", "." + mime);
 
-                File af = albumArtFile.toFile();
+                albumArt = new LocalAlbumArt(ap);
+
+                File af = ap.toFile();
                 af.deleteOnExit();
 
                 ImageIO.write(artImg, mime, af);
@@ -73,18 +76,11 @@ public class FileSong extends Song {
     }
 
     @Override
-    public AlbumArtType getAlbumArtType() {
-        return AlbumArtType.FILE;
-    }
+    public AlbumArt getAlbumArt() {
+        var p = getType().getAlbumArt(this);
 
-    @Override
-    public Path getAlbumArtFile() {
-        Path p = getType().getAlbumArt(this);
-
-        //does the song type have a specific album art? if so return that
-        //otherwise does it have its own album art? if so return that
-        //otherwise return the 'not found' fallback album art
-        return p == null ? albumArtFile == null ? AlbumArt.FALLBACK_ALBUM_ART : albumArtFile : p;
+        //if this song type overrides album art, use that. otherwise, use our own album art
+        return p == null ? albumArt : p;
     }
 
     @Override

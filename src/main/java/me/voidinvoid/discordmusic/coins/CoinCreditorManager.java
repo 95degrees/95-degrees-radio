@@ -158,11 +158,6 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             if (srv != null) {
                 srv.sendCoinNotification(user.getId(), amount, coins.getTotalTime());
             }
-
-            LevellingManager levelling = Radio.getInstance().getService(LevellingManager.class);
-            if (levelling != null) {
-                //todo?
-            }
         } else {
             pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);
         }

@@ -11,7 +11,7 @@ import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
-import me.voidinvoid.discordmusic.utils.AlbumArt;
+import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
@@ -54,7 +54,7 @@ public class RadioMessageListener implements RadioService, SongEventListener {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
         }
 
-        AlbumArt.attachAlbumArt(embed, song, textChannel).queue(m -> {
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
             RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
 
             if (srv != null) {
@@ -104,7 +104,7 @@ public class RadioMessageListener implements RadioService, SongEventListener {
             embed.setFooter(user.getName(), user.getAvatarUrl());
         }
 
-        AlbumArt.attachAlbumArt(embed, song, textChannel).queue();
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
     }
 
     @Override
@@ -121,6 +121,6 @@ public class RadioMessageListener implements RadioService, SongEventListener {
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(user.getName(), user.getAvatarUrl());
 
-        AlbumArt.attachAlbumArt(embed, song, textChannel).queue();
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
     }
 }

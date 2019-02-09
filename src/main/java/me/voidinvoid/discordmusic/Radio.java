@@ -15,6 +15,7 @@ import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
 import me.voidinvoid.discordmusic.status.TickerManager;
@@ -36,7 +37,6 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import javax.security.auth.login.LoginException;
-import java.io.File;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -129,6 +129,7 @@ public class Radio implements EventListener {
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
+        registerService(new AlbumArtManager());
         registerService(new MessageReactionCallbackManager());
         registerService(new SongRatingManager());
         registerService(new CommandManager());
@@ -146,7 +147,7 @@ public class Radio implements EventListener {
         registerService(new AdvertisementManager());
         registerService(new LaMetricMemberStatsHook()); //todo
         registerService(new LevellingManager());
-        registerService(new AchievementManager());
+        //registerService(new AchievementManager());
         registerService(new TaskManager());
 
         if (djChannel != null)

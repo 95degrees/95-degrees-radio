@@ -1,14 +1,14 @@
 package me.voidinvoid.discordmusic.songs.database;
 
-import me.voidinvoid.discordmusic.songs.AlbumArtType;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
+import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.triggers.SongTrigger;
 import me.voidinvoid.discordmusic.songs.database.triggers.TriggerActivation;
 import me.voidinvoid.discordmusic.songs.database.triggers.TriggerType;
 import me.voidinvoid.discordmusic.tasks.Parameter;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
-import me.voidinvoid.discordmusic.utils.AlbumArt;
 import org.bson.Document;
 
 import java.nio.file.Path;
@@ -25,7 +25,7 @@ public class DatabaseSong extends Song {
     private String mbId;
     private String source;
     private String albumArtId;
-    private Path albumArt;
+    private AlbumArt albumArt;
     private List<SongTrigger> triggers = new ArrayList<>();
     private String sourceName;
 
@@ -45,7 +45,7 @@ public class DatabaseSong extends Song {
         albumArtId = document.getString("albumArt");
 
         if (albumArtId != null) {
-            albumArt = Paths.get("/home/discord/radio_old/AlbumArt/Songs/" + albumArtId + ".png"); //todo
+            albumArt = new LocalAlbumArt(Paths.get("/home/discord/radio_old/AlbumArt/Songs/" + albumArtId + ".png")); //todo
         }
 
         if (document.containsKey("triggerActions")) {
@@ -110,18 +110,11 @@ public class DatabaseSong extends Song {
     }
 
     @Override
-    public AlbumArtType getAlbumArtType() {
-        return AlbumArtType.FILE;
-    }
+    public AlbumArt getAlbumArt() {
+        var p = getType().getAlbumArt(this);
 
-    @Override
-    public Path getAlbumArtFile() {
-        Path p = getType().getAlbumArt(this);
-
-        //does the song type have a specific album art? if so return that
-        //otherwise does it have its own album art? if so return that
-        //otherwise return the 'not found' fallback album art
-        return p == null ? albumArt == null ? AlbumArt.FALLBACK_ALBUM_ART : albumArt : p;
+        //if this song type overrides album art, use that. otherwise, use our own album art
+        return p == null ? albumArt : p;
     }
 
     @Override

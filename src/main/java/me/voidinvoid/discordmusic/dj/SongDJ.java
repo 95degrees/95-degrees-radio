@@ -15,7 +15,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
-import me.voidinvoid.discordmusic.utils.AlbumArt;
+import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
@@ -82,10 +82,10 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
             embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
         }
 
-        AlbumArt.attachAlbumArt(embed, song, djChannel).queue(); //TODO split into another event? and remove via orchestrator
+        AlbumArtUtils.attachAlbumArt(embed, song, djChannel).queue(); //TODO split into another event? and remove via orchestrator
 
         if (Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) {
-            AlbumArt.attachAlbumArt(embed, song, radioChannel).queue();
+            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
         }
     }
 
@@ -148,7 +148,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     @Override
     public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
         if (currentMessage != null) {
-            AlbumArt.attachAlbumArtToEdit(new EmbedBuilder(currentMessage.getEmbeds().get(0)).setColor(paused ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN), song, currentMessage).queue(m -> currentMessage = m);
+            AlbumArtUtils.attachAlbumArtToEdit(new EmbedBuilder(currentMessage.getEmbeds().get(0)).setColor(paused ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN), song, currentMessage).queue(m -> currentMessage = m);
         }
     }
 
@@ -192,7 +192,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
         embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
 
-        return AlbumArt.attachAlbumArt(embed, song, djChannel, false);
+        return AlbumArtUtils.attachAlbumArt(embed, song, djChannel);
     }
 
     @Override
@@ -245,7 +245,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
 
         MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 
-        AlbumArt.attachAlbumArt(embed, song, djChannel).queue(m -> {
+        AlbumArtUtils.attachAlbumArt(embed, song, djChannel).queue(m -> {
             m.addReaction("❌").queue();
             queueDeletionMessages.put(m.getId(), song);
             mr.registerCallback(m.getId(), e -> removeSongFromQueue(m, song));

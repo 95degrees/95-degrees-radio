@@ -3,6 +3,8 @@ package me.voidinvoid.discordmusic.levelling;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
+import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
@@ -171,14 +173,16 @@ public class LevellingManager implements RadioService, EventListener {
                 unlockedExtras.addAll(l.getExtras());
             }
 
-            //todo actually give the degreecoin reward, but make sure that its only done once if the config is changed
+            if (reward >= 0) CoinsServerManager.addCredit(user, reward);
+
+            //todo make sure that its only given once if the config is changed
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
             c.sendMessage(new EmbedBuilder()
                     .setTitle("Level Up")
                     .setColor(Colors.ACCENT_LEVEL_UP)
-                    .setThumbnail("https://cdn.discordapp.com/attachments/505174503752728597/537703976032796712/todo.png")
+                    .setThumbnail(RadioConfig.config.images.levellingUpLogo)
                     .setDescription(user.getAsMention() + " has levelled up!\n" + prevLevel.getLevel() + " ➠ **" + currentLevel.getLevel() + "**")
                     .addField("Reward", "<:degreecoin:431982714212843521> " + reward
                             + (unlockedExtras.isEmpty() ? "" : "\n" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " ? ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)

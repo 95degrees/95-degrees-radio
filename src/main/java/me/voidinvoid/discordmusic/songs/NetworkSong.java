@@ -2,7 +2,11 @@ package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
+import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
+import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import net.dv8tion.jda.core.entities.User;
 
 import java.nio.file.Path;
@@ -20,7 +24,7 @@ public class NetworkSong extends Song {
     private User suggestedBy;
     private AudioTrack track;
 
-    private String albumArtUrl;
+    private AlbumArt albumArt;
 
     public NetworkSong(SongType type, AudioTrack track, User suggestedBy) {
         super(type);
@@ -31,7 +35,7 @@ public class NetworkSong extends Song {
         track.setUserData(this);
 
         if (track instanceof YoutubeAudioTrack) { //fetch youtube album art
-            albumArtUrl = "https://img.youtube.com/vi/" + track.getIdentifier().split("\\?v=")[0] + "/mqdefault.jpg";
+            albumArt = new RemoteAlbumArt("https://img.youtube.com/vi/" + track.getIdentifier().split("\\?v=")[0] + "/mqdefault.jpg");
         }
     }
 
@@ -58,18 +62,8 @@ public class NetworkSong extends Song {
     }
 
     @Override
-    public AlbumArtType getAlbumArtType() {
-        return albumArtUrl == null ? AlbumArtType.FILE : AlbumArtType.NETWORK;
-    }
-
-    @Override
-    public Path getAlbumArtFile() {
-        return NETWORK_ALBUM_ART;
-    }
-
-    @Override
-    public String getAlbumArtURL() {
-        return albumArtUrl;
+    public AlbumArt getAlbumArt() {
+        return albumArt == null ? Radio.getInstance().getService(AlbumArtManager.class).getNetworkAlbumArt() : albumArt;
     }
 
     @Override

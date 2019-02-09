@@ -10,11 +10,11 @@ public interface RadioService {
     }
 
     default String getLogPrefix() {
-        return ConsoleColor.WHITE_BACKGROUND_BRIGHT + " ? ";
+        return ConsoleColor.BLACK_BACKGROUND_BRIGHT + " " + getClass().getSimpleName() + " ";
     }
 
     default void log(Object msg) {
-        log(getLogPrefix() + ConsoleColor.RESET_SPACE + msg);
+        System.out.println(getLogPrefix() + ConsoleColor.RESET_SPACE + msg);
     }
 
     default void onLoad() {
