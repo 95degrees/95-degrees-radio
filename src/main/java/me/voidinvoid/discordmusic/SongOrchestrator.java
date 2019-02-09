@@ -80,13 +80,15 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         manager = new DefaultAudioPlayerManager();
 
         AudioSourceManagers.registerLocalSource(manager);
-        manager.registerSourceManager(new YoutubeAudioSourceManager(true));
-        manager.registerSourceManager(new SoundCloudAudioSourceManager());
-        manager.registerSourceManager(new BandcampAudioSourceManager());
-        manager.registerSourceManager(new VimeoAudioSourceManager());
-        manager.registerSourceManager(new TwitchKrakenStreamAudioSourceManager());
-        manager.registerSourceManager(new BeamAudioSourceManager());
-        manager.registerSourceManager(new HttpAudioSourceManager());
+        AudioSourceManagers.registerRemoteSources(manager);
+
+        //manager.registerSourceManager(new YoutubeAudioSourceManager(true));
+        //manager.registerSourceManager(new SoundCloudAudioSourceManager());
+        //manager.registerSourceManager(new BandcampAudioSourceManager());
+        //manager.registerSourceManager(new VimeoAudioSourceManager());
+        //manager.registerSourceManager(new TwitchKrakenStreamAudioSourceManager());
+        //manager.registerSourceManager(new BeamAudioSourceManager());
+        //manager.registerSourceManager(new HttpAudioSourceManager());
 
         player = manager.createPlayer();
         player.addListener(this);
