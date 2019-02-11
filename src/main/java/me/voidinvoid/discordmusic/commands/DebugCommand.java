@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class DebugCommand extends Command {
 
     DebugCommand() {
-        super("debug", "Runs debug actions", null, RadioConfig.config.debug ? ChannelScope.RADIO_AND_DJ_CHAT : ChannelScope.DJ_CHAT);
+        super("radio-debug", "Runs debug actions", null, RadioConfig.config.debug ? ChannelScope.RADIO_AND_DJ_CHAT : ChannelScope.DJ_CHAT);
     }
 
     @Override

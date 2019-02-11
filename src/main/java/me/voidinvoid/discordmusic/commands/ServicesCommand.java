@@ -17,10 +17,10 @@ public class ServicesCommand extends Command {
     public void invoke(CommandData data) {
         String[] args = data.getArgs();
         if (args.length < 1) {
-            data.error("`list` or `reload` required");
+            data.error("`list`, `reload` or `stop` required");
 
         } else if (args[0].equals("list")) {
-            data.success("Active services: \n" + Radio.getInstance().getServices().stream().map(r -> r.getClass().getTypeName()).collect(Collectors.joining("\n")));
+            data.success("Services: \n" + Radio.getInstance().getServices().stream().map(r -> r.getClass().getSimpleName()).collect(Collectors.joining("\n")));
 
         } else if (args[0].equals("reload")) {
             if (args.length < 2) {
@@ -28,17 +28,33 @@ public class ServicesCommand extends Command {
                 return;
             }
 
-            Optional<RadioService> rs = Radio.getInstance().getServices().stream().filter(r -> r.getClass().getTypeName().equalsIgnoreCase(args[1])).findAny();
+            Optional<RadioService> rs = Radio.getInstance().getServices().stream().filter(r -> r.getClass().getSimpleName().equalsIgnoreCase(args[1])).findAny();
 
             if (!rs.isPresent()) {
                 data.error("Invalid service name. List using `!rs list`");
             } else {
+                rs.get().onShutdown();
                 rs.get().onLoad();
-                data.success("Reloaded " + rs.get().getClass().getTypeName());
+                data.success("Reloaded " + rs.get().getClass().getSimpleName());
+            }
+
+        } else if (args[0].equalsIgnoreCase("stop")) {
+            if (args.length < 2) {
+                data.error("Service name required. List using `!rs list`");
+                return;
+            }
+
+            Optional<RadioService> rs = Radio.getInstance().getServices().stream().filter(r -> r.getClass().getSimpleName().equalsIgnoreCase(args[1])).findAny();
+
+            if (!rs.isPresent()) {
+                data.error("Invalid service name. List using `!rs list`");
+            } else {
+                rs.get().onShutdown();
+                data.success("Shutdown " + rs.get().getClass().getSimpleName() + ". This may cause some stability issues");
             }
 
         } else {
-            data.error("`list` or `reload` required");
+            data.error("`list`, `reload` or `stop` required");
         }
     }
 }

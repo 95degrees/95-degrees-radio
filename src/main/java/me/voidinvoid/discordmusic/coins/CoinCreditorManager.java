@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
@@ -149,7 +150,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             textChannel.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))
-                    .setDescription(user.getName() + " has earned <:degreecoin:431982714212843521> " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))
+                    .setDescription(user.getName() + " has earned " + CurrencyManager.DEGREECOIN_EMOTE + " " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl()).build())
                     .queue();

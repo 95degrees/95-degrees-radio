@@ -3,13 +3,16 @@ package me.voidinvoid.discordmusic.levelling;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.GuildVoiceState;
+import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.*;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -118,20 +121,39 @@ public class LevellingManager implements RadioService, EventListener {
         }, 1, 1, TimeUnit.MINUTES);
     }
 
-    public AppliedLevelExtra getLatestExtra(User u, LevelExtras extra) {
-        Document d = databaseManager.findOrCreateUser(u, true);
-
-        int xp = d.getInteger("total_experience", 0);
-
-        int lvl = calculateLevel(xp).getLevel();
-
+    public AppliedLevelExtra getLatestExtra(int experience, LevelExtras extra) {
+        int lvl = calculateLevel(experience).getLevel();
+        log("lvl: " + lvl + ", xp: " + experience);
         for (int i = lvl; i >= 1; i--) { //loop backwards through levels to find first instance of the extra
+            log("lvl: " + lvl + ", i: " + i);
             for (AppliedLevelExtra a : levels.get(i).getExtras()) {
+                log("latest " + a.getExtra() + " extra for user is " + a.getValue());
                 if (a.getExtra().equals(extra)) return a;
             }
         }
 
-        return null;
+        log("!!");
+
+        return new AppliedLevelExtra(extra, extra.getOriginalValue());
+    }
+
+    public AppliedLevelExtra getLatestExtra(User u, LevelExtras extra) {
+        Document d = databaseManager.findOrCreateUser(u, true);
+
+        int xp = d.getInteger("total_experience", 0);
+        log("!!!!!! " + xp);
+
+        return getLatestExtra(xp, extra);
+    }
+
+    public Level getLevel(User user) {
+        return calculateLevel(getExperience(user));
+    }
+
+    public Level getNextLevel(Level level) {
+        int lvl = level.getLevel();
+
+        return levels.get(lvl + 1);
     }
 
     public Level calculateLevel(int experience) {
@@ -150,8 +172,32 @@ public class LevellingManager implements RadioService, EventListener {
         return cl;
     }
 
+    public int getExperienceRequired(int experience) { //gets the xp required to level up
+        int ct = 0;
+        int lvl = 0;
+        Level cl;
+
+        while (experience > ct) {
+            Level l = levels.get(++lvl);
+            if (ct + l.getRequiredXp() > experience) return ct + l.getRequiredXp() - experience;
+
+            cl = l;
+            ct += cl.getRequiredXp();
+        }
+
+        return levels.get(1).getRequiredXp();
+    }
+
+    public int getExperience(User user) {
+        var doc = databaseManager.getCollection("users").find(eq(user.getId())).first();
+
+        if (doc == null) return 0;
+
+        return doc.getInteger("total_experience", 0);
+    }
+
     public void rewardExperience(User user, int amount) {
-        Document doc = databaseManager.getCollection("users").findOneAndUpdate(eq("_id", user.getId()), new Document("$inc", new Document("total_experience", 1)));
+        Document doc = databaseManager.getCollection("users").findOneAndUpdate(eq("_id", user.getId()), new Document("$inc", new Document("total_experience", amount)));
 
         if (doc == null) {
             log(user + "'s db document is null");
@@ -174,18 +220,18 @@ public class LevellingManager implements RadioService, EventListener {
             }
 
             if (reward >= 0) CoinsServerManager.addCredit(user, reward);
-
             //todo make sure that its only given once if the config is changed
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
+            c.sendMessage("🎉 " + user.getAsMention()).queue();
             c.sendMessage(new EmbedBuilder()
                     .setTitle("Level Up")
                     .setColor(Colors.ACCENT_LEVEL_UP)
                     .setThumbnail(RadioConfig.config.images.levellingUpLogo)
-                    .setDescription(user.getAsMention() + " has levelled up!\n" + prevLevel.getLevel() + " ➠ **" + currentLevel.getLevel() + "**")
-                    .addField("Reward", "<:degreecoin:431982714212843521> " + reward
-                            + (unlockedExtras.isEmpty() ? "" : "\n" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " ? ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)
+                    .setDescription(user.getAsMention() + " has levelled up for listening to the radio!\nLevel " + prevLevel.getLevel() + " ➠ **" + currentLevel.getLevel() + "**")
+                    .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + reward
+                            + (unlockedExtras.isEmpty() ? "" : "\n" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " " + a.getExtra().formatParameter(getLatestExtra(xp, a.getExtra()).getValue()) + " ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl())
                     .build()

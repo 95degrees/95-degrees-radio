@@ -189,7 +189,6 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
         playlists.forEach(p -> {
             log(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " PLAYLIST " + ConsoleColor.RESET_SPACE + p.getName());
-            log(p.getInternal() + ", " + p.getCoinMultiplier() + ", " + p.getStatusOverrideMessage());
             if (p.isDefault()) activePlaylist = p;
         });
 
@@ -423,9 +422,9 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             LevellingManager lm = Radio.getInstance().getService(LevellingManager.class);
             if (lm != null && suggestedBy != null) {
                 AppliedLevelExtra a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
-                if (a != null) maxLength = (long) (int) a.getValue();
+                if (a != null) maxLength = (long) a.getValue();
 
-                a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
+                a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTIONS_IN_QUEUE);
                 if (a != null) maxSuggestions = (int) a.getValue();
             }
 

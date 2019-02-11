@@ -10,11 +10,12 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
-import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
@@ -34,8 +35,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private SocketIOServer server;
     private SongInfo currentSongInfo;
 
-    private List<MemberInfo> listeners;
-    private Map<SocketIOClient, String> pendingPairCodes;
+    private List<UserInfo> listeners;
+    private Map<String, SocketIOClient> pendingPairCodes;
     private VoiceChannel voiceChannel;
     private Guild guild;
 
@@ -51,7 +52,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
         pendingPairCodes = new HashMap<>();
 
-        listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList());
+        listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList());
 
         if (server == null) {
             Configuration config = new Configuration();
@@ -66,7 +67,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
             server = new SocketIOServer(config);
 
             server.addEventListener("request_status", Object.class, (c, o, ack) -> {
-                RadioInfo info = new RadioInfo(listeners, guild.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList()), currentSongInfo);
+                RadioInfo info = new RadioInfo(listeners, guild.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList()), currentSongInfo);
 
                 c.sendEvent("status", info);
             });
@@ -74,14 +75,26 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
             server.addEventListener("pair_rpc", String.class, (c, o, ack) -> {
                 String code = UUID.randomUUID().toString().substring(0, 8);
 
-                pendingPairCodes.put(c, code);
-                ack.sendAckData(code);
+                pendingPairCodes.put(code, c);
+                c.sendEvent("rpc_link_code", code);
             });
 
             server.startAsync();
         }
 
-        // TODO CHECK Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+        //Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+    }
+
+    public boolean linkAccount(User user, String linkCode) {
+        if (!pendingPairCodes.containsKey(linkCode)) return false;
+
+        pendingPairCodes.remove(linkCode).sendEvent("linked_account", new UserInfo(user));
+
+        var am = Radio.getInstance().getService(AchievementManager.class);
+
+        am.rewardAchievement(user, Achievement.USE_RDP);
+
+        return true;
     }
 
     @Override
@@ -114,34 +127,12 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     @Override
     public void onEvent(Event ev) {
         if (ev instanceof GuildVoiceJoinEvent || ev instanceof GuildVoiceMoveEvent || ev instanceof GuildVoiceLeaveEvent) {
+            var e = (GenericGuildVoiceEvent) ev;
 
-            Member leftMember = null;
-
-            if (ev instanceof GuildVoiceJoinEvent) { // -> JOINED
-                if (!ChannelScope.RADIO_VOICE.check(((GuildVoiceJoinEvent) ev).getChannelJoined())) return;
-
-            } else if (ev instanceof GuildVoiceMoveEvent) { // <- LEFT or -> JOINED
-                GuildVoiceMoveEvent e = (GuildVoiceMoveEvent) ev;
-
-                if (ChannelScope.RADIO_VOICE.check(e.getChannelLeft())) {
-                    leftMember = e.getMember();
-                } else if (!ChannelScope.RADIO_VOICE.check(e.getChannelJoined())) {
-                    return;
-                }
-
-            } else { // <- LEFT
-                GuildVoiceLeaveEvent e = (GuildVoiceLeaveEvent) ev;
-
-                if (ChannelScope.RADIO_VOICE.check(e.getChannelLeft())) {
-                    leftMember = e.getMember();
-                } else {
-                    return;
-                }
-            }
-
+            if (!e.getGuild().equals(guild)) return;
             if (((GenericGuildVoiceEvent) ev).getMember().getUser().isBot()) return;
 
-            listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(MemberInfo::new).collect(Collectors.toList());
+            listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList());
 
             server.getAllClients().forEach(c -> c.sendEvent("listeners", listeners));
         }

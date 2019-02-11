@@ -14,12 +14,6 @@ import java.nio.file.Paths;
 
 public class NetworkSong extends Song {
 
-    public static final Path NETWORK_ALBUM_ART;
-
-    static {
-        NETWORK_ALBUM_ART = Paths.get(RadioConfig.config.images.networkAlbumArt);
-    }
-
     private String url;
     private User suggestedBy;
     private AudioTrack track;
@@ -63,7 +57,10 @@ public class NetworkSong extends Song {
 
     @Override
     public AlbumArt getAlbumArt() {
-        return albumArt == null ? Radio.getInstance().getService(AlbumArtManager.class).getNetworkAlbumArt() : albumArt;
+        var p = getType().getAlbumArt(this);
+
+        //if this song type overrides album art, use that. otherwise, use our own album art
+        return p == null ? albumArt : p;
     }
 
     @Override

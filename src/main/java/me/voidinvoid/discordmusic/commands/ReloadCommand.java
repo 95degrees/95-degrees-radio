@@ -9,47 +9,13 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 public class ReloadCommand extends Command {
 
     ReloadCommand() {
-        super("reload", "Reloads playlists, tasks and adverts", "[playlists|tasks|adverts]", ChannelScope.DJ_CHAT);
+        super("reload", "Reloads playlists. Use !rs to reload other services", null, ChannelScope.DJ_CHAT);
     }
 
     @Override
     public void invoke(CommandData data) {
-        String[] args = data.getArgs(); //TODO this should dynamically change, classes can inherit 'ReloadableRadioService' and these can auto be populated into this cmd
-
-        if (args.length > 0) {
-            if (args[0].equalsIgnoreCase("playlists")) {
-                Radio.getInstance().getOrchestrator().loadPlaylists();
-                data.success("Reloaded playlists");
-
-            } else if (args[0].equalsIgnoreCase("tasks")) {
-                Radio.getInstance().getService(TaskManager.class).onLoad();
-                data.success("Reloaded tasks");
-
-            } else if (args[0].equalsIgnoreCase("adverts") || args[0].equalsIgnoreCase("ads")) {
-                AdvertisementManager adman = Radio.getInstance().getService(AdvertisementManager.class);
-                if (adman != null) {
-                    adman.onLoad();
-                    data.success("Reloaded adverts");
-                } else {
-                    data.error("The advertisement service is currently disabled");
-                }
-
-            } else if (args[0].equalsIgnoreCase("config")) {
-                //Radio.getInstance().reloadConfig();
-            } else {
-                data.error("Unknown parameter. Use `playlists`, `tasks`, `adverts` or `config`");
-            }
-
-            return;
-        }
-
         Radio.getInstance().getOrchestrator().loadPlaylists();
-        Radio.getInstance().getService(TaskManager.class).onLoad();
-        AdvertisementManager adman = Radio.getInstance().getService(AdvertisementManager.class);
-        if (adman != null) {
-            adman.onLoad();
-        }
 
-        data.success("Reloaded playlists, tasks and adverts");
+        data.success("Reloaded playlists.\nUse `!rs` to reload other services");
     }
 }

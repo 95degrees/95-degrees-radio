@@ -79,8 +79,21 @@ public class Radio implements EventListener {
         return instance;
     }
 
-    private static void reloadConfig() {
-        //TODO
+    public boolean reloadServices() {
+        if (!RadioConfig.load(databaseManager.getCollection("config").find(eq("_id", configName)).first()))
+            return false;
+
+        radioServices.values().forEach(s -> {
+            try {
+                s.onShutdown();
+                s.onLoad();
+            } catch (Exception e) {
+                System.out.println("Warning: error reloading service '" + s.getClass().getSimpleName() + "':");
+                e.printStackTrace();
+            }
+        });
+
+        return true;
     }
 
     private Map<Class, RadioService> radioServices = new HashMap<>();
@@ -147,7 +160,7 @@ public class Radio implements EventListener {
         registerService(new AdvertisementManager());
         registerService(new LaMetricMemberStatsHook()); //todo
         registerService(new LevellingManager());
-        //registerService(new AchievementManager());
+        registerService(new AchievementManager());
         registerService(new TaskManager());
 
         if (djChannel != null)
@@ -202,9 +215,16 @@ public class Radio implements EventListener {
     }
 
     public void shutdown(boolean restart) {
+        System.out.println("Deactivating playlist...");
         if (orchestrator.getActivePlaylist() != null) orchestrator.getActivePlaylist().onDeactivate();
-        for (RadioService radioService : getServices()) {
+        var sv = getServices();
+        var size = sv.size();
+
+        int i = 0;
+        for (RadioService radioService : sv) {
             try {
+                i++;
+                System.out.println("(" + i + "/" + size + ") Shutting down service '" + radioService.getClass().getSimpleName() + "'...");
                 radioService.onShutdown();
             } catch (Exception e) {
                 System.out.println("Warning: Error shutting down service '" + radioService.getClass().getSimpleName() + "':");

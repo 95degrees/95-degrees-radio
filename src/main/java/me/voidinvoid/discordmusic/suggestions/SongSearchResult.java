@@ -66,7 +66,7 @@ public class SongSearchResult {
 
         int i = 0;
         for (AudioTrack t : playlist) {
-            emojiBuilder.append(FormattingUtils.NUMBER_EMOTES.get(i)).append(" ").append(t.getInfo().title).append(" (").append(t.getInfo().author).append(")\n");
+            emojiBuilder.append(FormattingUtils.NUMBER_EMOTES.get(i)).append(" [").append(t.getInfo().title.replaceAll("]", "\\]")).append("](").append(t.getIdentifier()).append(") (").append(t.getInfo().author).append(")\n");
             i++;
         }
 

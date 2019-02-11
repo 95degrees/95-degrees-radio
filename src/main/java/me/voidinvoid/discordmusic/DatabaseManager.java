@@ -31,7 +31,7 @@ public class DatabaseManager implements RadioService {
 
     public Document findOrCreateUser(User user, boolean insertIfEmpty) {
         MongoCollection<Document> users = getCollection("users");
-        Document d = users.find(eq("_id", user.getId())).limit(1).first();
+        Document d = users.find(eq(user.getId())).limit(1).first();
 
         if (d == null) {
             d = new Document("_id", user.getId())
@@ -42,13 +42,11 @@ public class DatabaseManager implements RadioService {
                     .append("total_earned_coins", 0)
                     .append("total_listen_time", 0)
                     .append("total_experience", 0)
-                    .append("data_version", 3);
+                    .append("data_version", 1);
 
             if (insertIfEmpty) {
                 users.insertOne(d);
             }
-        } else {
-            d = migrateDocument(d);
         }
 
         return d;
@@ -56,26 +54,5 @@ public class DatabaseManager implements RadioService {
 
     public Document findOrCreateUser(User user) {
         return findOrCreateUser(user, false);
-    }
-
-    private Document migrateDocument(Document doc) {
-        int dv = doc.getInteger("data_version");
-        boolean modified = false;
-
-        if (dv < 2) {
-            doc.append("ratings", Collections.emptyList());
-            modified = true;
-        }
-
-        if (dv < 3) {
-            doc.append("total_experience", 0);
-            modified = true;
-        }
-
-        if (modified) {
-            doc.put("data_version", 3);
-        }
-
-        return doc;
     }
 }

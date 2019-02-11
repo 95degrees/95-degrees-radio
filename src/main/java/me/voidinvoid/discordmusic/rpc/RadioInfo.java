@@ -4,11 +4,11 @@ import java.util.List;
 
 public class RadioInfo {
 
-    public List<MemberInfo> listeners;
-    public List<MemberInfo> members;
+    public List<UserInfo> listeners;
+    public List<UserInfo> members;
     public SongInfo song;
 
-    public RadioInfo(List<MemberInfo> listeners, List<MemberInfo> members, SongInfo song) {
+    public RadioInfo(List<UserInfo> listeners, List<UserInfo> members, SongInfo song) {
 
         this.listeners = listeners;
         this.members = members;

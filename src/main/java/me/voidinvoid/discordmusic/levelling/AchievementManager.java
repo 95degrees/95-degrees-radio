@@ -3,7 +3,9 @@ package me.voidinvoid.discordmusic.levelling;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -28,7 +30,7 @@ public class AchievementManager implements RadioService {
         List<String> achievements = (List<String>) doc.get("achievements"); //todo CHECK
         if (!achievements.contains(achievement.name())) {
 
-            db.getCollection("users").updateOne(eq("_id", user.getId()), new Document("$addToSet", new Document("achievements", achievement.name())));
+            db.getCollection("users").updateOne(eq(user.getId()), new Document("$addToSet", new Document("achievements", achievement.name())));
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
@@ -38,9 +40,11 @@ public class AchievementManager implements RadioService {
                     .setThumbnail("https://cdn.discordapp.com/attachments/505174503752728597/537703976032796712/todo.png")
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")
                     .addField(achievement.getDisplay(), achievement.getDescription(), false)
-                    .addField("Reward", "<:degreecoin:431982714212843521> " + achievement.getReward(), false)
+                    .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + achievement.getReward(), false)
                     .build()
             ).queue();
+
+            CoinsServerManager.addCredit(user, achievement.getReward());
         }
     }
 }

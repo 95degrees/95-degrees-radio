@@ -24,6 +24,7 @@ public class CommandManager implements RadioService, EventListener {
         register(new SeekCommand());
         register(new SkipCommand());
         register(new ShuffleCommand());
+        register(new LevelCommand());
         register(new SongsCommand());
         register(new FindSongCommand());
         register(new QueueSongCommand());

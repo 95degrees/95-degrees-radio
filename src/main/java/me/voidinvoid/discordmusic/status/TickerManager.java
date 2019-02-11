@@ -48,6 +48,11 @@ public class TickerManager implements RadioService, SongEventListener {
         }, 0, 500, TimeUnit.MILLISECONDS);
     }
 
+    @Override
+    public void onShutdown() {
+        executor.shutdown();
+    }
+
     public void setLyric(String lyric) {
         this.lyric = lyric;
         update();
