@@ -10,6 +10,7 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
@@ -57,8 +58,8 @@ public class RadioMessageListener implements RadioService, SongEventListener {
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
             RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
 
-            if (srv != null) {
-                srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl());
+            if (srv != null && song.getAlbumArt() instanceof LocalAlbumArt) {
+                srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
             }
 
             if (song instanceof DatabaseSong) {

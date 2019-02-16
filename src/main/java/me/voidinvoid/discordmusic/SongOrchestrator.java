@@ -14,9 +14,7 @@ import me.voidinvoid.discordmusic.audio.AudioPlayerSendHandler;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.SongEventListener;
-import me.voidinvoid.discordmusic.levelling.AppliedLevelExtra;
-import me.voidinvoid.discordmusic.levelling.LevelExtras;
-import me.voidinvoid.discordmusic.levelling.LevellingManager;
+import me.voidinvoid.discordmusic.levelling.*;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
@@ -435,6 +433,9 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             } else if (track.getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
             } else if (track.getDuration() > maxLength) {
+                if (suggestedBy != null && track.getDuration() - maxLength <= 1000) {
+                    Radio.getInstance().getService(AchievementManager.class).rewardAchievement(suggestedBy.getUser(), Achievement.OVER_LENGTH_LIMIT);
+                }
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
             } else if (suggestedBy != null && (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel()))) {
                 error = NetworkSongError.NOT_IN_VOICE_CHANNEL;

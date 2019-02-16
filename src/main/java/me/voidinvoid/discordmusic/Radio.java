@@ -5,10 +5,7 @@ import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
-import me.voidinvoid.discordmusic.events.LaMetricMemberStatsHook;
-import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
-import me.voidinvoid.discordmusic.events.RadioMessageListener;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.*;
 import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
@@ -162,6 +159,7 @@ public class Radio implements EventListener {
         registerService(new LevellingManager());
         registerService(new AchievementManager());
         registerService(new TaskManager());
+        registerService(new SuggestionPrivateMessageManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

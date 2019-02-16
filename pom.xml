@@ -25,7 +25,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>3.8.2_459</version>
+            <version>3.8.3_460</version>
         </dependency>
         <dependency>
             <groupId>com.sedmelluq</groupId>
@@ -89,11 +89,6 @@
             <id>jcenter</id>
             <name>jcenter-bintray</name>
             <url>http://jcenter.bintray.com</url>
-        </repository>
-        <repository>
-            <id>sonatype</id>
-            <name>sonatype-snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
 </project>

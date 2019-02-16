@@ -132,7 +132,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     public String getFormattedMap(int page) {
         int pages = (int) Math.ceil((double) songMap.size() / 10D);
         if (page < 1 || page > pages) return null;
-        StringBuilder output = new StringBuilder("[Song listing] [" + page + "/" + pages + "]\n\n");
+        StringBuilder output = new StringBuilder("[Song Listing] [" + page + "/" + pages + "]\n\n");
 
         int min = (page - 1) * 10;
         int max = Math.min(songMap.size(), min + 10);
@@ -152,7 +152,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     public String getFormattedQueue() {
         if (queueCache != null) return queueCache;
 
-        StringBuilder output = new StringBuilder("[Song queue]\n\n");
+        StringBuilder output = new StringBuilder("[Song Queue]\n\n");
 
         int i = 0;
         for (Song s : queue) {

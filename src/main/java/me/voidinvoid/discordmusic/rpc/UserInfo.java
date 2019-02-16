@@ -23,7 +23,7 @@ public class UserInfo {
         name = member.getEffectiveName();
         identifier = user.getDiscriminator();
         internalId = user.getId();
-        avatarUrl = user.getAvatarUrl();
+        avatarUrl = user.getEffectiveAvatarUrl();
     }
 
     public UserInfo(User user) {
@@ -31,6 +31,6 @@ public class UserInfo {
         name = user.getName();
         identifier = user.getDiscriminator();
         internalId = user.getId();
-        avatarUrl = user.getAvatarUrl();
+        avatarUrl = user.getEffectiveAvatarUrl();
     }
 }

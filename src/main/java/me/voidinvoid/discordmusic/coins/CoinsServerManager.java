@@ -17,7 +17,7 @@ import java.util.Map;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class CoinsServerManager {
+public class CoinsServerManager { //todo convert to radioservice
 
     private static URL UPDATE_URL;
 

@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -22,22 +23,22 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class AchievementManager implements RadioService {
 
+    @SuppressWarnings("unchecked")
     public void rewardAchievement(User user, Achievement achievement) {
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
-
         Document doc = db.findOrCreateUser(user);
 
-        List<String> achievements = (List<String>) doc.get("achievements"); //todo CHECK
+        List<String> achievements = (List<String>) doc.get("achievements");
         if (!achievements.contains(achievement.name())) {
-
             db.getCollection("users").updateOne(eq(user.getId()), new Document("$addToSet", new Document("achievements", achievement.name())));
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
+            c.sendMessage("🎉 " + user.getAsMention()).queue();
             c.sendMessage(new EmbedBuilder()
                     .setTitle("Achievement Unlocked")
                     .setColor(Colors.ACCENT_ACHIEVEMENT)
-                    .setThumbnail("https://cdn.discordapp.com/attachments/505174503752728597/537703976032796712/todo.png")
+                    .setThumbnail(RadioConfig.config.images.achievementLogo)
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")
                     .addField(achievement.getDisplay(), achievement.getDescription(), false)
                     .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + achievement.getReward(), false)
@@ -45,6 +46,11 @@ public class AchievementManager implements RadioService {
             ).queue();
 
             CoinsServerManager.addCredit(user, achievement.getReward());
+
+            var rpc = Radio.getInstance().getService(RPCSocketManager.class);
+            if (rpc != null) {
+                rpc.notifyAchievement(user, achievement);
+            }
         }
     }
 }

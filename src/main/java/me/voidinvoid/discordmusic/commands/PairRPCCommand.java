@@ -16,6 +16,22 @@ public class PairRPCCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
+        if (data.isConsole()) {
+            data.error("A user is required");
+            return;
+        }
+
+        if (data.getArgs().length < 1) {
+            data.error("A code is required! Use the RPC client and click on the user icon in the top right to link your account");
+            return;
+        }
+
         RPCSocketManager m = Radio.getInstance().getService(RPCSocketManager.class);
+        if (!m.linkAccount(data.getMember(), data.getArgs()[0])) {
+            data.error("Couldn't link your account. Check that the link code is correct");
+            return;
+        }
+
+        data.success("Paired account successfully!");
     }
 }

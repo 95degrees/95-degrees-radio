@@ -15,6 +15,10 @@ public class RemoteAlbumArt extends AlbumArt {
         this.url = url;
     }
 
+    public String getUrl() {
+        return url;
+    }
+
     @Override
     public MessageAction attachAlbumArt(EmbedBuilder embed, TextChannel channel) {
         return channel.sendMessage(embed.setThumbnail(url).build());

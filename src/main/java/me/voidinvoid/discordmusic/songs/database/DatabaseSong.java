@@ -4,6 +4,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
+import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.triggers.SongTrigger;
 import me.voidinvoid.discordmusic.songs.database.triggers.TriggerActivation;
 import me.voidinvoid.discordmusic.songs.database.triggers.TriggerType;
@@ -45,7 +46,8 @@ public class DatabaseSong extends Song {
         albumArtId = document.getString("albumArt");
 
         if (albumArtId != null) {
-            albumArt = new LocalAlbumArt(Paths.get("/home/discord/radio_old/AlbumArt/Songs/" + albumArtId + ".png")); //todo
+            albumArt = new RemoteAlbumArt("https://partybox.xyz:9596/radio/albumart/" + albumArtId);
+            //albumArt = new LocalAlbumArt(Paths.get("/home/discord/radio_old/AlbumArt/Songs/" + albumArtId + ".png"));
         }
 
         if (document.containsKey("triggerActions")) {

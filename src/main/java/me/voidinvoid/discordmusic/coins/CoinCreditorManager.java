@@ -7,6 +7,8 @@ import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Playlist;
@@ -138,6 +140,10 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
         UserCoinTracker coins = coinGains.remove(id);
         if (coins == null) return;
+
+        if (coins.getTotalTime() > 18000000) { //5 hours
+            Radio.getInstance().getService(AchievementManager.class).rewardAchievement(member.getUser(), Achievement.LISTEN_FOR_5_HOURS_AT_ONCE);
+        }
 
         int amount = coins.getTotal();
         log(ConsoleColor.YELLOW_BACKGROUND_BRIGHT + " COINS " + ConsoleColor.RESET_SPACE + user.getName() + " has earned " + amount + " coins");

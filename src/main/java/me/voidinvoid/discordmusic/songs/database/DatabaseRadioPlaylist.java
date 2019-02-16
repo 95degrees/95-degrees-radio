@@ -12,6 +12,7 @@ public class DatabaseRadioPlaylist extends RadioPlaylist {
 
     private RadioPlaylistProperties properties = new RadioPlaylistProperties();
 
+    @SuppressWarnings("unchecked")
     public DatabaseRadioPlaylist(Document document) {
         super(document.get("_id").toString()); //playlist _id
 

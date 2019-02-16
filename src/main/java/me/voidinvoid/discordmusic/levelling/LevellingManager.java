@@ -1,5 +1,7 @@
 package me.voidinvoid.discordmusic.levelling;
 
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReturnDocument;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
@@ -116,23 +118,24 @@ public class LevellingManager implements RadioService, EventListener {
                 log("LEVELLING: desync of " + user);
                 return;
             }
-            databaseManager.getCollection("users").updateOne(eq("_id", id), new Document("$inc", new Document("total_listen_time", 1)));
+            var dt = databaseManager.getCollection("users").findOneAndUpdate(eq("_id", id), new Document("$inc", new Document("total_listen_time", 1)), new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+
+            if (dt != null && dt.getInteger("total_listen_time", 0) >= 600) { //10 hours
+                Radio.getInstance().getService(AchievementManager.class).rewardAchievement(user, Achievement.LISTEN_FOR_10_HOURS);
+            }
+
             rewardExperience(user, 1); //TODO
         }, 1, 1, TimeUnit.MINUTES);
     }
 
     public AppliedLevelExtra getLatestExtra(int experience, LevelExtras extra) {
         int lvl = calculateLevel(experience).getLevel();
-        log("lvl: " + lvl + ", xp: " + experience);
+
         for (int i = lvl; i >= 1; i--) { //loop backwards through levels to find first instance of the extra
-            log("lvl: " + lvl + ", i: " + i);
             for (AppliedLevelExtra a : levels.get(i).getExtras()) {
-                log("latest " + a.getExtra() + " extra for user is " + a.getValue());
                 if (a.getExtra().equals(extra)) return a;
             }
         }
-
-        log("!!");
 
         return new AppliedLevelExtra(extra, extra.getOriginalValue());
     }
@@ -141,7 +144,6 @@ public class LevellingManager implements RadioService, EventListener {
         Document d = databaseManager.findOrCreateUser(u, true);
 
         int xp = d.getInteger("total_experience", 0);
-        log("!!!!!! " + xp);
 
         return getLatestExtra(xp, extra);
     }
