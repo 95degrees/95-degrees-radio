@@ -3,11 +3,8 @@ package me.voidinvoid.discordmusic.songs;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
-import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 
-import java.nio.file.Path;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public enum SongType {
 

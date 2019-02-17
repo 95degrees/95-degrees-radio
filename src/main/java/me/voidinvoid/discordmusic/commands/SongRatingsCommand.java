@@ -2,15 +2,12 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.ratings.Rating;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import org.bson.Document;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -51,7 +48,7 @@ public class SongRatingsCommand extends Command {
 
             var ds = (DatabaseSong) song;
 
-            data.code("Ratings for " + song.getFriendlyName() + "\n\n" + ratings.stream().map(e -> e.getKey() + " - " + (double) ((ArrayList<String>) e.getValue()).size() / totalRatings).collect(Collectors.joining("\n")));
+            data.code("Ratings for " + song.getFriendlyName() + "\n\n" + ratings.stream().map(e -> e.getKey() + " - " + (100 * (double) ((ArrayList<String>) e.getValue()).size() / totalRatings) + "%").collect(Collectors.joining("\n")));
             return;
         }
 

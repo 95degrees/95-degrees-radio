@@ -1,7 +1,6 @@
 package me.voidinvoid.discordmusic.coins;
 
 import com.mongodb.client.MongoCollection;
-import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
@@ -9,11 +8,11 @@ import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
-import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.entities.Member;
@@ -130,7 +129,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             giveCoins(m, true);
         }
 
-        CoinsServerManager.addCredit(pendingDatabaseUpdate);
+        Service.of(CoinsServerManager.class).addCredit(pendingDatabaseUpdate);
         pendingDatabaseUpdate.clear();
     }
 
@@ -151,7 +150,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
         if (amount < 1) return;
 
         if (!clump) {
-            CoinsServerManager.addCredit(user, amount);
+            Service.of(CoinsServerManager.class).addCredit(user, amount);
 
             textChannel.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Degreecoins")

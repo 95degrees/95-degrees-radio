@@ -9,16 +9,11 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 public class YouTubeSearchCommand extends Command {
 
     YouTubeSearchCommand() {
-        super("play", "Searches for a specified song on YouTube", "<search ...>", ChannelScope.RADIO_AND_DJ_CHAT, "search");
+        super("play", "Searches for a specified song on YouTube", "<search ...>", ChannelScope.RADIO_AND_DJ_CHAT, false, "search");
     }
 
     @Override
     public void invoke(CommandData data) {
-        if (data.isConsole()) {
-            data.error("This command can't be ran by console"); //todo move into command parameter?
-            return;
-        }
-
         if (!(Radio.getInstance().getOrchestrator().getActivePlaylist() instanceof RadioPlaylist)) {
             data.error("This command can only be used when a song playlist is active");
             return;

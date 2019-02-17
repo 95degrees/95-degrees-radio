@@ -12,7 +12,8 @@ public enum Achievement {
     RATE_SONG("Democracy", "Give a rating to a song", 30),
     MUTE_RADIO(":(", "Deafen yourself whilst in the radio text channel", 30),
     RICKROLL("Rickroller", "Rickroll the radio", 80),
-    QUEUE_SONG_WITH_RRP("It's Magic", "Queue a song using the 95 Degrees Radio app", 80),
+    SKIP_ADVERT("Nope...", "Attempt to skip an advert", 120),
+    QUEUE_SONG_WITH_RPC("It's Magic", "Queue a song using the 95 Degrees Radio app", 80),
     USE_RDP("Very Rich Presence", "Use the 95 Degrees Radio app to show your listening status on Discord", 150);
 
     private final String display;

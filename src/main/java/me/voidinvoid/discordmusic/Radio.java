@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic;
 
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
+import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
@@ -25,6 +26,7 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
+import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.VoiceChannel;
@@ -34,7 +36,6 @@ import net.dv8tion.jda.core.hooks.EventListener;
 import net.dv8tion.jda.core.managers.AudioManager;
 
 import javax.security.auth.login.LoginException;
-import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -71,9 +72,14 @@ public class Radio implements EventListener {
 
     private RadioConfig config;
     private JDA jda;
+    private Guild guild;
 
     public static Radio getInstance() {
         return instance;
+    }
+
+    public Guild getGuild() {
+        return guild;
     }
 
     public boolean reloadServices() {
@@ -128,6 +134,8 @@ public class Radio implements EventListener {
         TextChannel radioChannel = jda.getTextChannelById(config.channels.radioChat);
         TextChannel djChannel = jda.getTextChannelById(config.channels.djChat);
 
+        guild = radioChannel.getGuild();
+
         VoiceChannel radioVoiceChannel = jda.getVoiceChannelById(config.channels.voice);
 
         EmbedBuilder loading = new EmbedBuilder().setTitle("⏱ Loading").setColor(Colors.ACCENT_LOADING).setDescription("`Loading playlists and songs...`").setThumbnail(jda.getSelfUser().getEffectiveAvatarUrl());
@@ -151,7 +159,8 @@ public class Radio implements EventListener {
         registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener());
-        registerService(new QuizManager(Paths.get(RadioConfig.config.locations.quizzes), radioChannel, djChannel, radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole), radioChannel.getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole))); //TODO
+        registerService(new QuizManager());
+        registerService(new CoinsServerManager());
         registerService(new CoinCreditorManager());
         registerService(new StatusManager());
         registerService(new AdvertisementManager());

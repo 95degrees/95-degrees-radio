@@ -5,5 +5,5 @@ import me.voidinvoid.discordmusic.tasks.ParameterList;
 
 public interface TriggerAction {
 
-    public void onTrigger(Song song, ParameterList params);
+    void onTrigger(Song song, ParameterList params);
 }

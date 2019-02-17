@@ -1,11 +1,13 @@
 package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevelExtras;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +46,7 @@ public class SkipCommand extends Command {
                 var s = orch.getCurrentSong();
 
                 if (s != null && s.getType() != SongType.SONG) {
+                    if (s.getType() == SongType.ADVERTISEMENT) Service.of(AchievementManager.class).rewardAchievement(data.getMember().getUser(), Achievement.SKIP_ADVERT);
                     data.error("You can only use this command when a song is playing");
                     return;
                 }

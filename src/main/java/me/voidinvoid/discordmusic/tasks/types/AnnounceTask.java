@@ -29,7 +29,6 @@ public class AnnounceTask extends RadioTaskExecutor {
 
     private static final String EVENT_SUBSCRIBE_REACTION = "🔔";
 
-    private Map<String, String> messageEventIds = new HashMap<>();
     private Map<String, Long> lastSubscriptionAttempt = new HashMap<>();
 
     @Override
@@ -106,7 +105,6 @@ public class AnnounceTask extends RadioTaskExecutor {
 
     private void createSubscribeLink(Message message, String eventId) {
         message.addReaction(EVENT_SUBSCRIBE_REACTION).queue();
-        messageEventIds.put(message.getId(), eventId);
 
         MessageReactionCallbackManager callbacks = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 

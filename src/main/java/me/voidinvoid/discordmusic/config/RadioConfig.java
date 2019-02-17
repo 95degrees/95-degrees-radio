@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.GsonBuilder;
 import org.bson.Document;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,11 +38,28 @@ public class RadioConfig {
     }
 
     public class Locations {
-        public String coinUpdates, playlists, specialPlaylist, advertPlaylist, quizzes, tasks, adverts, recordings;
+        public String coinUpdates;
+        @Deprecated
+        public String playlists;
+        public String specialPlaylist;
+        @Deprecated
+        public String advertPlaylist;
+        public String quizzes;
+        public String tasks;
+        @Deprecated
+        public String adverts;
+        @Deprecated
+        public String recordings;
     }
 
     public class Images {
-        public String fallbackAlbumArt, jingleAlbumArt, advertAlbumArt, networkAlbumArt, specialAlbumArt, levellingUpLogo, achievementLogo;
+        public String fallbackAlbumArt;
+        public String jingleAlbumArt;
+        public String advertAlbumArt;
+        public String networkAlbumArt;
+        public String specialAlbumArt;
+        public String levellingUpLogo;
+        public String achievementLogo;
     }
 
     public class Orchestration {

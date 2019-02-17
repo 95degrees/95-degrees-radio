@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 public class AnnounceCommand extends Command {
 
     AnnounceCommand() {
-        super("radio-announce", "Announces a message to radio and DJ channels", "[hex-colour] <announcement ...>", ChannelScope.DJ_CHAT);
+        super("radio-announce", "Announces a message to radio and DJ channels", "[hex colour] <announcement ...>", ChannelScope.DJ_CHAT);
     }
 
     @Override

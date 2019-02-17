@@ -3,7 +3,6 @@ package me.voidinvoid.discordmusic.songs.database;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
-import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.triggers.SongTrigger;
 import me.voidinvoid.discordmusic.songs.database.triggers.TriggerActivation;
@@ -12,8 +11,6 @@ import me.voidinvoid.discordmusic.tasks.Parameter;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
 import org.bson.Document;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

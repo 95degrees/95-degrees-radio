@@ -28,7 +28,7 @@ public class SwitchPlaylistCommand extends Command {
 
         Optional<Playlist> playlist = playlists.stream().filter(p -> p.getInternal().equalsIgnoreCase(data.getArgsString())).findAny();
 
-        if (!playlist.isPresent()) {
+        if (playlist.isEmpty()) {
             data.error("Couldn't find that playlist");
             return;
         }

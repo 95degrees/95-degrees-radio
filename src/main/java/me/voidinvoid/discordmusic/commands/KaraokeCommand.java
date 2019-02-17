@@ -9,7 +9,7 @@ import net.dv8tion.jda.core.entities.TextChannel;
 public class KaraokeCommand extends Command {
 
     KaraokeCommand() {
-        super("karaoke", "Starts or stops karaoke mode (shows song lyrics)", "[lyrics-channel#]", ChannelScope.DJ_CHAT);
+        super("karaoke", "Starts or stops karaoke mode (shows song lyrics)", "[lyrics channel#]", ChannelScope.DJ_CHAT);
     }
 
     @Override

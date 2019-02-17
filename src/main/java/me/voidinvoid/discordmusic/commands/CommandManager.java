@@ -28,6 +28,7 @@ public class CommandManager implements RadioService, EventListener {
         register(new SongsCommand());
         register(new FindSongCommand());
         register(new QueueSongCommand());
+        register(new AddSongCommand());
         register(new SwitchPlaylistCommand());
         register(new AnnounceCommand());
         register(new KaraokeCommand());
@@ -62,6 +63,8 @@ public class CommandManager implements RadioService, EventListener {
 
                     if (match == null) {
                         log("Unknown command. Use 'radio-commands' to list commands");
+                    } else if (!match.isAllowConsole()) {
+                        log("This command doesn't support being ran from the console");
                     } else {
                         match.invoke(new CommandData(msg, match, cmdName));
                     }

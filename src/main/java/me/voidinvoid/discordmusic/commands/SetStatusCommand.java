@@ -1,13 +1,8 @@
 package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
-import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.core.entities.Game;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class SetStatusCommand extends Command {
 

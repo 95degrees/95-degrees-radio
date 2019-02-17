@@ -10,6 +10,7 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.GuildVoiceState;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -96,8 +97,10 @@ public class LevellingManager implements RadioService, EventListener {
 
         if (user.isBot()) return;
 
-        if (channel != null && ChannelScope.RADIO_VOICE.check(channel) && !deafened) {
-            if (!listeningTracker.containsKey(user.getId())) {
+        if (channel != null && ChannelScope.RADIO_VOICE.check(channel)) {
+            if (deafened) {
+                Service.of(AchievementManager.class).rewardAchievement(user, Achievement.MUTE_RADIO);
+            } else if (!listeningTracker.containsKey(user.getId())) {
                 listeningTracker.put(user.getId(), track(user));
             }
         } else {
@@ -124,7 +127,7 @@ public class LevellingManager implements RadioService, EventListener {
                 Radio.getInstance().getService(AchievementManager.class).rewardAchievement(user, Achievement.LISTEN_FOR_10_HOURS);
             }
 
-            rewardExperience(user, 1); //TODO
+            rewardExperience(user, 1);
         }, 1, 1, TimeUnit.MINUTES);
     }
 
@@ -221,7 +224,7 @@ public class LevellingManager implements RadioService, EventListener {
                 unlockedExtras.addAll(l.getExtras());
             }
 
-            if (reward >= 0) CoinsServerManager.addCredit(user, reward);
+            if (reward >= 0) Service.of(CoinsServerManager.class).addCredit(user, reward);
             //todo make sure that its only given once if the config is changed
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);

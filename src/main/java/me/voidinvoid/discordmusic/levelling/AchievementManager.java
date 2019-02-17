@@ -1,14 +1,19 @@
 package me.voidinvoid.discordmusic.levelling;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
+import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
@@ -21,7 +26,7 @@ import static com.mongodb.client.model.Filters.eq;
  * This code was developed by VoidInVoid / Exfusion
  * 2019
  */
-public class AchievementManager implements RadioService {
+public class AchievementManager implements RadioService, SongEventListener {
 
     @SuppressWarnings("unchecked")
     public void rewardAchievement(User user, Achievement achievement) {
@@ -45,12 +50,19 @@ public class AchievementManager implements RadioService {
                     .build()
             ).queue();
 
-            CoinsServerManager.addCredit(user, achievement.getReward());
+            Service.of(CoinsServerManager.class).addCredit(user, achievement.getReward());
 
             var rpc = Radio.getInstance().getService(RPCSocketManager.class);
             if (rpc != null) {
                 rpc.notifyAchievement(user, achievement);
             }
+        }
+    }
+
+    @Override
+    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+        if (track.getIdentifier().endsWith("dQw4w9WgXcQ") && member != null) {
+            rewardAchievement(member.getUser(), Achievement.RICKROLL);
         }
     }
 }

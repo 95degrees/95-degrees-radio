@@ -4,7 +4,6 @@ import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.corundumstudio.socketio.listener.DisconnectListener;
 import com.mongodb.client.MongoCollection;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -23,10 +22,8 @@ import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import me.voidinvoid.discordmusic.utils.Service;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.GenericGuildVoiceEvent;
 import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
@@ -40,7 +37,7 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class RPCSocketManager implements RadioService, SongEventListener, EventListener { //todo adapt this for db songs
+public class RPCSocketManager implements RadioService, SongEventListener, EventListener {
 
     private static final int RPC_VERSION = 2;
 
@@ -67,6 +64,13 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private static final String SERVER_RATING_SAVED = "rating_saved";
     private static final String SERVER_ACHIEVEMENT = "achievement";
 
+    //DJ
+    private static final String CLIENT_GET_PLAYLISTS = "dj_get_playlists";
+    private static final String CLIENT_GET_PLAYLIST_SONGS = "dj_get_songs";
+
+    private static final String SERVER_LIST_PLAYLISTS = "dj_playlists";
+    private static final String SERVER_LIST_PLAYLIST_SONGS = "dj_songs";
+
     private SocketIOServer server;
 
     private SongInfo currentSongInfo;
@@ -77,6 +81,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private Map<SocketIOClient, Member> identities;
 
     private VoiceChannel voiceChannel;
+    private TextChannel djChannel;
     private Guild guild;
 
     private MongoCollection<Document> linkedAccounts;
@@ -89,6 +94,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     @Override
     public void onLoad() {
         voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
+        djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
         guild = voiceChannel.getGuild();
 
         linkedAccounts = Radio.getInstance().getService(DatabaseManager.class).getCollection("rpcusers");
@@ -182,7 +188,28 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 var id = identities.get(c);
                 if (id == null) return;
 
-                Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion(url, null, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), id, true, SuggestionQueueMode.NORMAL);
+                Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
+                Service.of(SongSuggestionManager.class).addSuggestion(url, null, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), id, true, SuggestionQueueMode.NORMAL);
+            });
+
+            server.addEventListener(CLIENT_GET_PLAYLISTS, Object.class, (c, o, ack) -> {
+                var mb = identities.get(c);
+
+                if (mb == null || !djChannel.canTalk(mb)) return;
+
+                c.sendEvent(SERVER_LIST_PLAYLISTS, Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist).map(p -> new PlaylistInfo((RadioPlaylist) p)).collect(Collectors.toList()));
+            });
+
+            server.addEventListener(CLIENT_GET_PLAYLIST_SONGS, String.class, (c, id, ack) -> {
+                var mb = identities.get(c);
+
+                if (id == null || mb == null || !djChannel.canTalk(mb)) return;
+
+                var playlist = (RadioPlaylist) Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist && p.getInternal().equals(id)).findFirst().orElse(null);
+
+                if (playlist == null) return;
+
+                c.sendEvent(SERVER_LIST_PLAYLIST_SONGS, playlist.getSongs().getSongMap().stream().map(SongInfo::new).collect(Collectors.toList()));
             });
 
             server.addDisconnectListener(c -> {

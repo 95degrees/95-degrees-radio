@@ -42,7 +42,7 @@ public class SongLyrics {
     public String getMessage(String songName, double elapsed) {
         LyricLine active = getActiveLyric(elapsed);
 
-        StringBuilder builder = new StringBuilder("[").append(FormattingUtils.escapeMarkup(songName)).append(" SongLyrics]\n\n");
+        StringBuilder builder = new StringBuilder("[").append(FormattingUtils.escapeMarkup(songName)).append(" Song Lyrics]\n\n");
 
         for (LyricLine l : lyrics) {
             builder.append(l.equals(active) ? "➡" : "◼").append(FormattingUtils.escapeMarkup(l.getText())).append("\n");

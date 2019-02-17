@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.rpc;
 
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.LevelExtras;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import net.dv8tion.jda.core.entities.User;
@@ -35,5 +36,10 @@ public class IdentityInfo {
         this.maxSuggestions = (int) lm.getLatestExtra(user, LevelExtras.MAX_SUGGESTIONS_IN_QUEUE).getValue();
         this.maxQueueLength = (long) lm.getLatestExtra(user, LevelExtras.MAX_SUGGESTION_LENGTH).getValue();
         this.canSkipSongs = (boolean) lm.getLatestExtra(user, LevelExtras.SKIP_SONGS_WHEN_ALONE).getValue();
+
+        var guild = Radio.getInstance().getGuild();
+        var djChannel = guild.getTextChannelById(RadioConfig.config.channels.djChat);
+
+        this.isDj = djChannel.canTalk(guild.getMember(user));
     }
 }

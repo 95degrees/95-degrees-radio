@@ -27,6 +27,7 @@ import net.dv8tion.jda.core.managers.GuildController;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -59,23 +60,47 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
 
     private QuizPlaylist activeQuiz;
 
-    public QuizManager(Path quizRoot, TextChannel textChannel, TextChannel quizManagerChannel, Role quizInGameRole, Role quizEliminatedRole) {
+    @Override
+    public void onLoad() {
 
-        this.quizRoot = quizRoot;
-        this.textChannel = textChannel;
-        this.quizManagerChannel = quizManagerChannel;
+        this.quizRoot = Paths.get(RadioConfig.config.locations.quizzes);
 
-        this.quizInGameRole = quizInGameRole;
-        this.quizEliminatedRole = quizEliminatedRole;
+        this.textChannel = Radio.getInstance().getGuild().getTextChannelById(RadioConfig.config.channels.radioChat);
+        this.quizManagerChannel = Radio.getInstance().getGuild().getTextChannelById(RadioConfig.config.channels.djChat);
 
-        reload();
+        this.quizInGameRole = Radio.getInstance().getGuild().getRoleById(RadioConfig.config.roles.quizInGameRole);
+        this.quizEliminatedRole = Radio.getInstance().getGuild().getRoleById(RadioConfig.config.roles.quizEliminatedRole);
 
+        quizzes = new HashMap<>();
+
+        try {
+            Path soundsRoot = quizRoot.resolve("Sounds");
+            questionCountdownSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("countdown.mp3"));
+            answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3"));
+            answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3"));
+            answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3"));
+            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3"));
+            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3"));
+            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3"));
+
+            Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
+                QuizPlaylist playlist = loadQuiz(q);
+                if (playlist != null) {
+                    quizzes.put(playlist.getQuiz(), playlist);
+                    Radio.getInstance().getOrchestrator().getPlaylists().add(playlist);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (server != null) server.stop();
         if (RadioConfig.config.useQuizSocketServer) runServer();
     }
 
     @Override
-    public void onLoad() {
-        //TODO move constructor code here and remove parameters
+    public void onShutdown() {
+        if (server != null) server.stop();
     }
 
     public boolean checkAuth(SocketIOClient c) {
@@ -92,7 +117,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
         config.setHostname(RadioConfig.config.debug ? "127.0.0.1" : "0.0.0.0");
         config.setPort(RadioConfig.config.debug ? 9301 : 9501);
 
-        log("Started quiz rpc on " + config.getPort());
+        log("Started quiz socket server on " + config.getPort());
 
         SocketConfig sockets = new SocketConfig();
         sockets.setReuseAddress(true);
@@ -208,33 +233,6 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
             e.printStackTrace();
             return null;
         }
-    }
-
-    public void reload() {
-        quizzes = new HashMap<>();
-
-        try {
-            Path soundsRoot = quizRoot.resolve("Sounds");
-            questionCountdownSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("countdown.mp3"));
-            answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3"));
-            answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3"));
-            answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3"));
-            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3"));
-            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3"));
-            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3"));
-
-            Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
-                QuizPlaylist playlist = loadQuiz(q);
-                if (playlist != null) {
-                    quizzes.put(playlist.getQuiz(), playlist);
-                    Radio.getInstance().getOrchestrator().getPlaylists().add(playlist);
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //Radio.getInstance().getOrchestrator().getPlaylists().addAll(quizzes.stream().map(q -> new QuizPlaylist(q, this)).collect(Collectors.toList()));
     }
 
     public boolean startQuiz(QuizPlaylist quiz) {

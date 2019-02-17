@@ -4,7 +4,10 @@ import com.mongodb.client.MongoCollection;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 
@@ -21,6 +24,9 @@ public class SongRatingManager implements RadioService {
     public void rateSong(User user, DatabaseSong song, Rating rating) {
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
         MongoCollection<Document> ratings = db.getCollection("ratings");
+
+        var am = Service.of(AchievementManager.class);
+        am.rewardAchievement(user, Achievement.RATE_SONG);
 
         if (ratings.find(eq("song", song.getFileName())).first() == null) {
             Document d = new Document();

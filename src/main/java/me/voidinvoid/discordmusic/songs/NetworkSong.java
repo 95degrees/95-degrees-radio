@@ -2,15 +2,9 @@ package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
-import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import net.dv8tion.jda.core.entities.User;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class NetworkSong extends Song {
 

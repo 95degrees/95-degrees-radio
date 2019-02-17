@@ -3,7 +3,6 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.advertisements.Advertisement;
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
-import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 
 import java.util.List;
@@ -12,7 +11,7 @@ import java.util.stream.Collectors;
 public class AdvertisementCommand extends Command {
 
     AdvertisementCommand() {
-        super("ad", "Runs an advertisement in the text channel", "[advert file name ...]", ChannelScope.DJ_CHAT, "advert", "advertisement");
+        super("ad", "Runs an advertisement in the text channel", "[advert name ...]", ChannelScope.DJ_CHAT, "advert", "advertisement");
     }
 
     @Override

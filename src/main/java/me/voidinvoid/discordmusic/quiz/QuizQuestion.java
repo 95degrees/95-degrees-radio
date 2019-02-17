@@ -1,9 +1,5 @@
 package me.voidinvoid.discordmusic.quiz;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * This code was developed by VoidInVoid / Exfusion
  * 2018

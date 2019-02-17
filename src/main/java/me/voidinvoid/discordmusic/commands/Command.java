@@ -10,14 +10,21 @@ abstract class Command {
     private final String description;
     private final String usageMessage;
     private final ChannelScope scope;
+    private final boolean allowConsole;
     private final String[] aliases;
 
     Command(String name, String description, String usageMessage, ChannelScope scope, String... aliases) {
+
+        this(name, description, usageMessage, scope, true, aliases);
+    }
+
+    Command(String name, String description, String usageMessage, ChannelScope scope, boolean allowConsole, String... aliases) {
 
         this.name = name;
         this.description = description;
         this.usageMessage = usageMessage;
         this.scope = scope;
+        this.allowConsole = allowConsole;
         this.aliases = aliases;
     }
 
@@ -35,6 +42,10 @@ abstract class Command {
 
     public ChannelScope getScope() {
         return scope;
+    }
+
+    public boolean isAllowConsole() {
+        return allowConsole;
     }
 
     public String[] getAliases() {

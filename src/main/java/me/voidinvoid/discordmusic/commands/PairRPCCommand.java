@@ -11,16 +11,11 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 public class PairRPCCommand extends Command {
 
     PairRPCCommand() {
-        super("pair-rpc", "Pairs your Discord account with the RPC client", "<code>", ChannelScope.RADIO_AND_DJ_CHAT);
+        super("pair-rpc", "Pairs your Discord account with the RPC client", "<code>", ChannelScope.RADIO_AND_DJ_CHAT, false);
     }
 
     @Override
     public void invoke(CommandData data) {
-        if (data.isConsole()) {
-            data.error("A user is required");
-            return;
-        }
-
         if (data.getArgs().length < 1) {
             data.error("A code is required! Use the RPC client and click on the user icon in the top right to link your account");
             return;

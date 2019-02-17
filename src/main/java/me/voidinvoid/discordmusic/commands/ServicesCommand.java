@@ -30,7 +30,7 @@ public class ServicesCommand extends Command {
 
             Optional<RadioService> rs = Radio.getInstance().getServices().stream().filter(r -> r.getClass().getSimpleName().equalsIgnoreCase(args[1])).findAny();
 
-            if (!rs.isPresent()) {
+            if (rs.isEmpty()) {
                 data.error("Invalid service name. List using `!rs list`");
             } else {
                 rs.get().onShutdown();
@@ -46,7 +46,7 @@ public class ServicesCommand extends Command {
 
             Optional<RadioService> rs = Radio.getInstance().getServices().stream().filter(r -> r.getClass().getSimpleName().equalsIgnoreCase(args[1])).findAny();
 
-            if (!rs.isPresent()) {
+            if (rs.isEmpty()) {
                 data.error("Invalid service name. List using `!rs list`");
             } else {
                 rs.get().onShutdown();

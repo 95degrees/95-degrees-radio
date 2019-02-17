@@ -1,9 +1,6 @@
 package me.voidinvoid.discordmusic.songs;
 
-import com.mpatric.mp3agic.ID3v2;
-import com.mpatric.mp3agic.Mp3File;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import net.dv8tion.jda.core.entities.User;

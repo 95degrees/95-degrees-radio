@@ -1,7 +1,6 @@
 package me.voidinvoid.discordmusic.songs.database.triggers;
 
 import me.voidinvoid.discordmusic.tasks.ParameterList;
-import org.bson.Document;
 
 public class SongTrigger {
 

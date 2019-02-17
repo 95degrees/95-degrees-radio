@@ -17,7 +17,7 @@ public class SwitchPlaylistTask extends RadioTaskExecutor {
 
         Optional<Playlist> first = orch.getPlaylists().stream().filter(RadioPlaylist.class::isInstance).filter(p -> p.getInternal().equalsIgnoreCase(playlist)).findAny();
 
-        if (!first.isPresent()) {
+        if (first.isEmpty()) {
             System.out.println("TASK: no playlist (internal name) found matching playlist_name: " + playlist);
             return;
         }

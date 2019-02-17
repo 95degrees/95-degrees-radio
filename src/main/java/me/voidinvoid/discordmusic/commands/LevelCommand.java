@@ -7,16 +7,11 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 public class LevelCommand extends Command {
 
     LevelCommand() {
-        super("level", "Displays your current level", null, ChannelScope.RADIO_AND_DJ_CHAT);
+        super("level", "Displays your current level", null, ChannelScope.RADIO_AND_DJ_CHAT, false);
     }
 
     @Override
     public void invoke(CommandData data) {
-        if (data.isConsole()) {
-            data.error("Must be a user");
-            return;
-        }
-
         var lm = Radio.getInstance().getService(LevellingManager.class);
 
         var xp = lm.getExperience(data.getMember().getUser());

@@ -3,8 +3,6 @@ package me.voidinvoid.discordmusic.songs;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 
-import java.nio.file.Path;
-
 public abstract class Song {
 
     private SongType songType;

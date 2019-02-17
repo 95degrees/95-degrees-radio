@@ -6,8 +6,6 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongQueue;
 import me.voidinvoid.discordmusic.songs.SongType;
-import org.bson.BsonArray;
-import org.bson.BsonDocument;
 import org.bson.Document;
 
 import java.util.ArrayList;

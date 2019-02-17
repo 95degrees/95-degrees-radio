@@ -37,7 +37,7 @@ public class FindSongCommand extends Command {
             return;
         }
 
-        String result = "[Song search]\n" + matches.size() + " match" + (matches.size() == 1 ? "" : "es") + "\n\n" + matches.stream().map(s -> "#" + (map.indexOf(s) + 1) + " [Queue " + (queue.indexOf(s) + 1) + "/" + queue.size() + "] " + s.getFriendlyName()).collect(Collectors.joining("\n"));
+        String result = "[Song Search]\n" + matches.size() + " match" + (matches.size() == 1 ? "" : "es") + "\n\n" + matches.stream().map(s -> "#" + (map.indexOf(s) + 1) + " [Queue " + (queue.indexOf(s) + 1) + "/" + queue.size() + "] " + s.getFriendlyName()).collect(Collectors.joining("\n"));
 
         data.code(result);
     }

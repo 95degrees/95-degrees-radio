@@ -101,7 +101,7 @@ public class TickerManager implements RadioService, SongEventListener {
 
         Song s;
         if (activeTrack == null) {
-
+            return sb.toString();
         } else if ((s = activeTrack.getUserData(Song.class)).getType() == SongType.JINGLE) {
             sb.append("🎹 **95 Degrees Radio**");
         } else if (s.getType() == SongType.ADVERTISEMENT) {
