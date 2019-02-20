@@ -3,8 +3,8 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 
@@ -30,11 +30,11 @@ public class PollCommand extends Command {
         String question = args.split(",")[0];
         String[] answers = args.substring(question.length() + 1).split("\\|");
 
-        MessageEmbed embed = new EmbedBuilder().setTitle("Poll").setDescription("**" + question.trim() + "**\nReact with the corresponding number to cast your vote!\n\n" + IntStream.range(0, answers.length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + answers[i].trim()).collect(Collectors.joining("\n"))).setTimestamp(OffsetDateTime.now()).setColor(Colors.ACCENT_POLL).build();
+        MessageEmbed embed = new EmbedBuilder().setTitle("Poll").setDescription("**" + question.trim() + "**\nReact with the corresponding number to cast your vote!\n\n" + IntStream.range(0, answers.length).mapToObj(i -> Formatting.NUMBER_EMOTES.get(i) + " " + answers[i].trim()).collect(Collectors.joining("\n"))).setTimestamp(OffsetDateTime.now()).setColor(Colors.ACCENT_POLL).build();
 
         Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat).sendMessage(embed).queue(m -> {
             for (int i = 0; i < answers.length; i++) {
-                m.addReaction(FormattingUtils.NUMBER_EMOTES.get(i)).queue();
+                m.addReaction(Formatting.NUMBER_EMOTES.get(i)).queue();
             }
         });
 

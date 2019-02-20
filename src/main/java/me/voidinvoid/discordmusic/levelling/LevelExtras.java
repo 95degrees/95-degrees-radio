@@ -1,13 +1,13 @@
 package me.voidinvoid.discordmusic.levelling;
 
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 
 import java.util.function.Function;
 
 public enum LevelExtras {
 
-    MAX_SUGGESTION_LENGTH(RadioConfig.config.orchestration.maxSongLength, "Max suggested song length", o -> FormattingUtils.getFormattedMsTimeLabelled((long) (int) o)),
+    MAX_SUGGESTION_LENGTH(RadioConfig.config.orchestration.maxSongLength, "Max suggested song length", o -> Formatting.getFormattedMsTimeLabelled((long) (int) o)),
     MAX_SUGGESTIONS_IN_QUEUE(RadioConfig.config.orchestration.userQueueLimit, "Suggestion queue limit", Object::toString),
     SKIP_SONGS_WHEN_ALONE(false, "Skipping songs when alone in the radio", o -> (boolean) o ? "Enabled" : "Disabled");
 

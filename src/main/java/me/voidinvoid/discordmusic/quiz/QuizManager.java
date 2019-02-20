@@ -14,7 +14,7 @@ import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -336,7 +336,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
                 String emote = e.getReaction().getReactionEmote().getName();
 
                 int ix = 0;
-                for (String em : FormattingUtils.NUMBER_EMOTES) {
+                for (String em : Formatting.NUMBER_EMOTES) {
                     if (em.equals(emote)) {
                         activeQuiz.addParticipantAnswer(e.getMember(), ix);
                         e.getReaction().removeReaction(e.getUser()).queue();

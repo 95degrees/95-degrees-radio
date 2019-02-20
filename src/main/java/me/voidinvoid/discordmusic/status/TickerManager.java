@@ -9,7 +9,7 @@ import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.managers.ChannelManager;
 
@@ -112,7 +112,7 @@ public class TickerManager implements RadioService, SongEventListener {
         } else if (s.getType() == SongType.SONG) {
             if (lyric != null) {
                 sb.append("📜 ");
-                sb.append(FormattingUtils.escapeMarkup(lyric));
+                sb.append(Formatting.escape(lyric));
 
                 if (dj) {
                     sb.append(" | ");
@@ -132,9 +132,9 @@ public class TickerManager implements RadioService, SongEventListener {
 
                 if (!activeTrack.getInfo().isStream) {
                     sb.append(" - ");
-                    sb.append(FormattingUtils.getFormattedMsTime(activeTrack.getPosition()));
+                    sb.append(Formatting.getFormattedMsTime(activeTrack.getPosition()));
                     sb.append("/");
-                    sb.append(FormattingUtils.getFormattedMsTime(activeTrack.getDuration()));
+                    sb.append(Formatting.getFormattedMsTime(activeTrack.getDuration()));
                 }
             }
         }

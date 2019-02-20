@@ -2,14 +2,14 @@ package me.voidinvoid.discordmusic.currency;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.entities.Member;
 
 public enum TransactionType {
     RADIO("listening to 95 Degrees Radio", new TransactionParameter("duration") {
         @Override
         public String formatValue(Transaction transaction, Object value) {
-            return "for " + FormattingUtils.getFormattedMsTime((long) value);
+            return "for " + Formatting.getFormattedMsTime((long) value);
         }
     });
 

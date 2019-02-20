@@ -14,7 +14,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.status.TickerManager;
 import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageEmbed;
@@ -88,7 +88,7 @@ public class KaraokeManager implements RadioService, SongEventListener {
                         .build()).queue();
 
                 activeMessage = textChannel.sendMessage(new EmbedBuilder()
-                        .setTitle("📜 Live song lyrics for **" + FormattingUtils.escapeMarkup(track.getInfo().title) + "**")
+                        .setTitle("📜 Live song lyrics for **" + Formatting.escape(track.getInfo().title) + "**")
                         .setColor(Colors.ACCENT_KARAOKE_LYRICS)
                         .setDescription("...")
                         .build()).complete();

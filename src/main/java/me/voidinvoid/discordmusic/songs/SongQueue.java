@@ -2,7 +2,7 @@ package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.entities.User;
 
 import java.util.*;
@@ -142,7 +142,7 @@ public abstract class SongQueue extends AudioEventAdapter {
             output.append(i).append(i < 10 ? "  " : i < 100 ? " " : "").append(": ").append(loc, 0, Math.min(loc.length(), 150)).append("\n");
         }
 
-        String res = FormattingUtils.escapeMarkup(output.toString());
+        String res = Formatting.escape(output.toString());
         return res.substring(0, Math.min(res.length(), 1980));
     }
 

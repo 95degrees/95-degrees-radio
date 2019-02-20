@@ -1,6 +1,6 @@
 package me.voidinvoid.discordmusic.karaoke.lyrics;
 
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -42,10 +42,10 @@ public class SongLyrics {
     public String getMessage(String songName, double elapsed) {
         LyricLine active = getActiveLyric(elapsed);
 
-        StringBuilder builder = new StringBuilder("[").append(FormattingUtils.escapeMarkup(songName)).append(" Song Lyrics]\n\n");
+        StringBuilder builder = new StringBuilder("[").append(Formatting.escape(songName)).append(" Song Lyrics]\n\n");
 
         for (LyricLine l : lyrics) {
-            builder.append(l.equals(active) ? "➡" : "◼").append(FormattingUtils.escapeMarkup(l.getText())).append("\n");
+            builder.append(l.equals(active) ? "➡" : "◼").append(Formatting.escape(l.getText())).append("\n");
         }
 
         System.out.println(builder.toString());

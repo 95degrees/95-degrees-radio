@@ -13,7 +13,7 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.stats.Statistic;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.JDA;
@@ -153,10 +153,10 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
         if (!clump) {
             Service.of(CoinsServerManager.class).addCredit(user, amount);
-            
-            var lb = Service.of(UserStatisticsManager.class).getLeaderboard(Statistic.LISTEN_TIME, true);
+
+            var lb = Service.of(UserStatisticsManager.class).getLeaderboard(Statistic.LISTEN_TIME, true, false);
             int pos = 0;
-            
+
             for (var le : lb) {
                 pos++;
                 log(pos);
@@ -171,8 +171,8 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             textChannel.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))
-                    .setDescription(user.getName() + " has earned " + CurrencyManager.DEGREECOIN_EMOTE + " " + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()))
-                    .appendDescription("\n\n#" + pos + " weekly listening time!")
+                    .setDescription(user.getName() + " has earned " + CurrencyManager.DEGREECOIN_EMOTE + " " + amount + " for listening to the 95 Degrees Radio for " + Formatting.getFormattedMsTimeLabelled(coins.getTotalTime()))
+                    .appendDescription("\n\n" + (pos == 1 ? "👑" : "") + "#" + pos + " listener this week!")
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl()).build())
                     .queue();
@@ -190,7 +190,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
                     .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))
                     .setThumbnail("https://cdn.discordapp.com/attachments/476557027431284769/479733204224311296/dc.png")
-                    .setDescription("You have earned Đ" + amount + " for listening to the 95 Degrees Radio for " + FormattingUtils.getFormattedMsTimeLabelled(coins.getTotalTime()) + "!")
+                    .setDescription("You have earned Đ" + amount + " for listening to the 95 Degrees Radio for " + Formatting.getFormattedMsTimeLabelled(coins.getTotalTime()) + "!")
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter("95 Degrees Radio", user.getJDA().getSelfUser().getAvatarUrl()).build()).queue());
         }

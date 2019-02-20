@@ -17,7 +17,7 @@ import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
@@ -155,14 +155,14 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     private MessageAction createMessage(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
 
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("Playing " + FormattingUtils.getSongType(track))
+                .setTitle("Playing " + Formatting.getSongType(track))
                 .setColor(player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN)
                 .setTimestamp(OffsetDateTime.now());
 
         if (song instanceof NetworkSong) {
-            embed.addField("Title", FormattingUtils.escapeMarkup(track.getInfo().title), true);
-            embed.addField("Uploader", FormattingUtils.escapeMarkup(track.getInfo().author), true);
-            embed.addField("URL", FormattingUtils.escapeMarkup(song.getFileName()), true);
+            embed.addField("Title", Formatting.escape(track.getInfo().title), true);
+            embed.addField("Uploader", Formatting.escape(track.getInfo().author), true);
+            embed.addField("URL", Formatting.escape(song.getFileName()), true);
 
             NetworkSong ns = (NetworkSong) song;
             if (ns.getSuggestedBy() != null) {
@@ -172,24 +172,24 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         } else if (song instanceof DatabaseSong) {
             DatabaseSong ds = (DatabaseSong) song;
 
-            embed.addField("Title", FormattingUtils.escapeMarkup(ds.getTitle()), true);
-            embed.addField("Artist", FormattingUtils.escapeMarkup(ds.getArtist()), true);
-            embed.addField("Album Art ID", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + FormattingUtils.escapeMarkup(ds.getFileName()), true);
-            embed.addField("MBID", ds.getMbId() == null ? "Unknown" : FormattingUtils.escapeMarkup(ds.getMbId()), true);
+            embed.addField("Title", Formatting.escape(ds.getTitle()), true);
+            embed.addField("Artist", Formatting.escape(ds.getArtist()), true);
+            embed.addField("Album Art ID", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + Formatting.escape(ds.getFileName()), true);
+            embed.addField("MBID", ds.getMbId() == null ? "Unknown" : Formatting.escape(ds.getMbId()), true);
 
         } else if (song instanceof FileSong) {
 
             if (song.getType() == SongType.SONG) {
-                embed.addField("Title", FormattingUtils.escapeMarkup(track.getInfo().title), true);
-                embed.addField("Artist", FormattingUtils.escapeMarkup(track.getInfo().author), true);
-                embed.addField("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + FormattingUtils.escapeMarkup(song.getFileName()), true);
+                embed.addField("Title", Formatting.escape(track.getInfo().title), true);
+                embed.addField("Artist", Formatting.escape(track.getInfo().author), true);
+                embed.addField("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + Formatting.escape(song.getFileName()), true);
             }
 
         } else {
             embed.addField("Unknown Track Details", "😢", false);
         }
 
-        embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + FormattingUtils.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
+        embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + Formatting.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
         embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
 
         return AlbumArtUtils.attachAlbumArt(embed, song, djChannel);

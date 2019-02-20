@@ -3,19 +3,20 @@ package me.voidinvoid.discordmusic.stats;
 import com.mongodb.client.MongoCollection;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
+import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -27,10 +28,35 @@ import static com.mongodb.client.model.Filters.eq;
 public class UserStatisticsManager implements RadioService, SongEventListener {
 
     private MongoCollection<Document> users;
+    private TextChannel leaderboardChannel;
+
+    private Map<Statistic, List<LeaderboardEntry>> cachedLeaderboards = new HashMap<>();
 
     @Override
     public void onLoad() {
         users = Service.of(DatabaseManager.class).getCollection("users");
+        leaderboardChannel = Radio.getInstance().getJda().getTextChannelById("547854805037482034"); //TODO
+    }
+
+    private void updateLeaderboard(Statistic stat) {
+        var lb = cachedLeaderboards.get(stat);
+
+        if (lb == null || !stat.isCreateLeaderboard()) return;
+
+        StringBuilder msg = new StringBuilder("```[Radio ").append(stat.getDisplayName()).append( " Leaderboard]\n");
+        msg.append("📅 Weekly\n\n");
+
+        int ix = 0;
+        for (var record : lb) {
+            var user = Radio.getInstance().getGuild().getMemberById(record.getUser());
+            if (user == null) continue;
+
+            ix++;
+
+            msg.append("#").append(ix).append(" - ").append(Formatting.padString(user.getUser().getAsTag(), 30)).append(stat.format(record.getValue())).append("\n");
+        }
+
+        leaderboardChannel.sendMessage(msg.append("```").toString()).queue(); //todo
     }
 
     public int getStatisticFromWeekStart(User user, Statistic stat) {
@@ -92,9 +118,15 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
         return amount;
     }
 
-    public List<LeaderboardEntry> getLeaderboard(Statistic stat, boolean weekly) { //todo make sure this isnt called too often, may be fairly intensive
-        var day = 7 - LocalDateTime.now().getDayOfWeek().getValue() - 1; //TODO check 7
-        return users.find().into(new ArrayList<>()).stream().map(d -> new LeaderboardEntry(d.getString("_id"), weekly ? getStatistic(d, stat, day, 7) : getTotal(d, stat))).sorted().collect(Collectors.toList());
+    public List<LeaderboardEntry> getLeaderboard(Statistic stat, boolean weekly, boolean force) {
+        if (!weekly && !force && cachedLeaderboards.containsKey(stat)) return cachedLeaderboards.get(stat);
+
+        var day = LocalDateTime.now().getDayOfWeek().getValue(); //TODO check 7
+        var res = users.find().into(new ArrayList<>()).stream().map(d -> new LeaderboardEntry(d.getString("_id"), weekly ? getStatistic(d, stat, 0, day) : getTotal(d, stat))).sorted().collect(Collectors.toList());
+
+        cachedLeaderboards.put(stat, res);
+        updateLeaderboard(stat);
+        return res;
     }
 
     private String getDate(int dayOffset) {
@@ -103,6 +135,8 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
 
     public void addStatistic(User user, Statistic stat, int amount) {
         users.updateOne(eq(user.getId()), new Document("$inc", new Document("stats." + getDate(0) + "." + stat.name().toLowerCase(), amount)));
+
+        cachedLeaderboards.put(stat, getLeaderboard(stat, true, true));
     }
 
     @Override

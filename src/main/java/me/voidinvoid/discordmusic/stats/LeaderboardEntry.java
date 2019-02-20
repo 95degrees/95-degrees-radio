@@ -27,6 +27,6 @@ public class LeaderboardEntry implements Comparable {
 
     @Override
     public int compareTo(@NotNull Object o) {
-        return value - ((LeaderboardEntry) o).value;
+        return ((LeaderboardEntry) o).value - value;
     }
 }

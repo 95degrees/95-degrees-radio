@@ -7,7 +7,7 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.LevelExtras;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.TextChannel;
@@ -65,7 +65,7 @@ public class SongSearchResult {
 
         int i = 0;
         for (AudioTrack t : playlist) {
-            emojiBuilder.append(FormattingUtils.NUMBER_EMOTES.get(i)).append(" [").append(t.getInfo().title.replaceAll("]", "\\]")).append("](").append(t.getIdentifier()).append(") (").append(t.getInfo().author).append(")\n");
+            emojiBuilder.append(Formatting.NUMBER_EMOTES.get(i)).append(" [").append(t.getInfo().title.replaceAll("]", "\\]")).append("](").append(t.getIdentifier()).append(") (").append(t.getInfo().author).append(")\n");
             i++;
         }
 
@@ -75,7 +75,7 @@ public class SongSearchResult {
 
         future.whenComplete((m, e) -> {
             for (int ix = 0; ix < amount; ix++) {
-                m.addReaction(FormattingUtils.NUMBER_EMOTES.get(ix)).queue();
+                m.addReaction(Formatting.NUMBER_EMOTES.get(ix)).queue();
             }
 
             m.addReaction(CANCEL_EMOJI).queue();
@@ -87,8 +87,8 @@ public class SongSearchResult {
     public boolean handleReaction(GuildMessageReactionAddEvent e) {
         if (e.getUser().getIdLong() == user.getIdLong()) {
             String reaction = e.getReaction().getReactionEmote().getName();
-            if (FormattingUtils.NUMBER_EMOTES.contains(reaction)) {
-                int index = FormattingUtils.NUMBER_EMOTES.indexOf(reaction);
+            if (Formatting.NUMBER_EMOTES.contains(reaction)) {
+                int index = Formatting.NUMBER_EMOTES.indexOf(reaction);
 
                 try {
                     AudioTrack track = playlist.get(index);

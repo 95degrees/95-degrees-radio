@@ -7,7 +7,7 @@ import me.voidinvoid.discordmusic.songs.PlaylistProperties;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Member;
@@ -310,13 +310,13 @@ public class QuizPlaylist extends Playlist {
                 QuizQuestion qc = quiz.getQuestions().get(currentQuestion);
 
                 activeQuestionMessage = manager.getTextChannel().sendMessage(getBaseEmbed(true)
-                        .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> FormattingUtils.NUMBER_EMOTES.get(i) + " " + qc.getAnswers()[i].getAnswer()).collect(Collectors.joining("\n")))
+                        .setDescription(IntStream.range(0, qc.getAnswers().length).mapToObj(i -> Formatting.NUMBER_EMOTES.get(i) + " " + qc.getAnswers()[i].getAnswer()).collect(Collectors.joining("\n")))
                         .setFooter("React with the corresponding number to select your answer", null)
                         .setImage(qc.getImageUrl())
                         .build())
                         .complete();
 
-                IntStream.range(0, qc.getAnswers().length).forEach(i -> activeQuestionMessage.addReaction(FormattingUtils.NUMBER_EMOTES.get(i)).queue());
+                IntStream.range(0, qc.getAnswers().length).forEach(i -> activeQuestionMessage.addReaction(Formatting.NUMBER_EMOTES.get(i)).queue());
 
                 manager.emitToAuthenticated("set_question", remainingParticipants); //todo
 

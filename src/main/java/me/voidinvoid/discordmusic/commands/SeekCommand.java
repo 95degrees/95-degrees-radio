@@ -3,7 +3,7 @@ package me.voidinvoid.discordmusic.commands;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 
 public class SeekCommand extends Command {
 
@@ -46,6 +46,6 @@ public class SeekCommand extends Command {
         }
 
         Radio.getInstance().getOrchestrator().seekTrack(time);
-        data.success("Seeked track to " + FormattingUtils.getFormattedMsTime(time));
+        data.success("Seeked track to " + Formatting.getFormattedMsTime(time));
     }
 }

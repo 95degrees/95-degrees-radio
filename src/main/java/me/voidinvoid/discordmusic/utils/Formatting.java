@@ -3,13 +3,15 @@ package me.voidinvoid.discordmusic.utils;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
+import net.dv8tion.jda.core.entities.Message;
 
 import java.util.Arrays;
 import java.util.List;
 
-public final class FormattingUtils {
+public final class Formatting {
 
     public static final List<String> NUMBER_EMOTES = Arrays.asList(new String(new char[]{49, 8419}), new String(new char[]{50, 8419}), new String(new char[]{51, 8419}), new String(new char[]{52, 8419}), new String(new char[]{53, 8419}), new String(new char[]{54, 8419}), new String(new char[]{55, 8419}), new String(new char[]{56, 8419}), new String(new char[]{57, 8419}), "🔟");
+    private static final String MESSAGE_DIRECT_LINK_URL = "https://discordapp.com/channels/"; // /guild/channel/message/
 
     public static String getFormattedMsTime(long time) {
         long second = (time / 1000) % 60;
@@ -41,10 +43,50 @@ public final class FormattingUtils {
         return format.trim();
     }
 
-    public static String escapeMarkup(String text) {
+    public static String getFormattedMinsTimeLabelled(int time) {
+        long minutes = (time * 1000 / (1000 * 60)) % 60;
+        long hours = (time * 1000 / (1000 * 60 * 60)) % 60;
+
+        String format = "";
+
+        if (hours > 0) {
+            format += hours + "h ";
+        }
+
+        if (hours == 0 || minutes > 0) {
+            format += minutes + "m ";
+        }
+
+        return format.trim();
+    }
+
+    public static String escape(String text) {
         if (text == null) return "";
         if (text.startsWith("http://") || text.startsWith("https://")) return text; //todo HACK
-        return text.replace("_", "\\_").replace("*", "\\*").replace("~", "\\~").replace("`", "\\`");
+        return text.replace("_", "\\_").replace("*", "\\*").replace("||", "\\||").replace("~", "\\~").replace("`", "\\`");
+    }
+
+    public static String padString(String text, int amount) {
+        if (text.length() > amount) return text.substring(0, amount);
+
+        String padding = new String(new char[amount]).replace("\0", " ");
+        return text + padding.substring(text.length());
+    }
+
+    public static String getDirectMessageLink(Message m) {
+        if (m.getTextChannel() != null) {
+            return MESSAGE_DIRECT_LINK_URL + m.getGuild().getId() + "/" + m.getChannel().getId() + "/" + m.getId();
+        }
+
+        return null;
+    }
+
+    public static String maskLink(String link, String mask) {
+        return "[" + mask + "](" + link + ")";
+    }
+
+    public static String maskLink(Message msg, String mask) {
+        return maskLink(getDirectMessageLink(msg), mask);
     }
 
     public static String getSongType(AudioTrack track) {

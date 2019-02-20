@@ -1,6 +1,6 @@
 package me.voidinvoid.discordmusic.karaoke.lyrics;
 
-import me.voidinvoid.discordmusic.utils.FormattingUtils;
+import me.voidinvoid.discordmusic.utils.Formatting;
 
 public class LyricLine {
 
@@ -8,7 +8,7 @@ public class LyricLine {
     private double entryTime, length;
 
     LyricLine(String text, double entryTime, double length) {
-        this.text = FormattingUtils.escapeMarkup(text
+        this.text = Formatting.escape(text
                 .replace("&apos;", "'")
                 .replace("&amp;", "&")
                 .replace("&lt;", "<")
