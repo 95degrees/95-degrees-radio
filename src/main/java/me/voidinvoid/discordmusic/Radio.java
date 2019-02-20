@@ -15,6 +15,7 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
+import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
 import me.voidinvoid.discordmusic.status.TickerManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
@@ -168,6 +169,7 @@ public class Radio implements EventListener {
         registerService(new LevellingManager());
         registerService(new AchievementManager());
         registerService(new TaskManager());
+        registerService(new UserStatisticsManager());
         registerService(new SuggestionPrivateMessageManager());
 
         if (djChannel != null)

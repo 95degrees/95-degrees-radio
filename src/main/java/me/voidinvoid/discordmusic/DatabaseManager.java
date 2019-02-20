@@ -40,7 +40,6 @@ public class DatabaseManager implements RadioService {
                     .append("achievements", Collections.emptyList())
                     .append("created", System.currentTimeMillis())
                     .append("total_earned_coins", 0)
-                    .append("total_listen_time", 0)
                     .append("total_experience", 0)
                     .append("data_version", 1);
 

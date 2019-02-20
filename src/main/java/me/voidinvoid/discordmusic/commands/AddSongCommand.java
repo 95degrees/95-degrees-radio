@@ -23,38 +23,49 @@ import static com.mongodb.client.model.Filters.eq;
 public class AddSongCommand extends Command {
 
     AddSongCommand() {
-        super("add-song", "Adds a song to a radio playlist", "<playlist> <url> <title>;<artist>;<album art>[;<mbid>]", ChannelScope.DJ_CHAT);
+        super("add-song", "Adds a song to a radio playlist", "<playlist|source> <playlist/source name> <url> <title>;<artist>;<album art>[;<mbid>]", ChannelScope.DJ_CHAT);
     }
 
     @Override
     public void invoke(CommandData data) {
         if (data.getArgs().length < 1) {
+            data.error("'playlist' or 'source' required");
+            return;
+        }
+
+        var mode = data.getArgs()[0].toLowerCase();
+
+        if (!mode.equals("playlist") && !mode.equals("source")) {
+            data.error("'playlist' or 'source' required");
+            return;
+        }
+
+
+        if (data.getArgs().length < 2) {
             data.error("Playlist ID required");
             return;
         }
 
-        var playlistName = data.getArgs()[0];
+        var playlistName = data.getArgs()[1];
 
-        var playlist = Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist && p.getInternal().equals(playlistName)).findFirst().orElse(null);
-
-        if (playlist == null) {
+        if (mode.equals("playlist") && Radio.getInstance().getOrchestrator().getPlaylists().stream().noneMatch(p -> p instanceof RadioPlaylist && p.getInternal().equals(playlistName))) {
             data.error("Unknown playlist specified");
             return;
         }
 
-        if (data.getArgs().length < 2) {
+        if (data.getArgs().length < 3) {
             data.error("Song URL required");
             return;
         }
 
-        var url = data.getArgs()[1];
+        var url = data.getArgs()[2];
 
-        if (data.getArgs().length < 3) {
+        if (data.getArgs().length < 4) {
             data.error("Song title required");
             return;
         }
 
-        var meta = data.getArgsString().split(" ", 3)[2].split(";");
+        var meta = data.getArgsString().split(" ", 4)[3].split(";");
 
         var title = meta[0];
 
@@ -99,7 +110,7 @@ public class AddSongCommand extends Command {
 
         var db = Radio.getInstance().getService(DatabaseManager.class);
 
-        db.getCollection("playlists").updateOne(eq(playlistName), new Document("$addToSet", new Document("listing.songs", doc)));
+        db.getCollection(mode + "s").updateOne(eq(playlistName), new Document("$addToSet", new Document(mode.equals("source") ? "listing" : "listing.songs", doc)));
 
         Radio.getInstance().getOrchestrator().loadPlaylists();
 

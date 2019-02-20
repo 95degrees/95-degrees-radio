@@ -12,6 +12,8 @@ import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -21,7 +23,15 @@ import static com.mongodb.client.model.Filters.eq;
  */
 public class SongRatingManager implements RadioService {
 
-    public void rateSong(User user, DatabaseSong song, Rating rating) {
+    private Map<String, Long> lastRatingAttempt = new HashMap<>();
+
+    public boolean rateSong(User user, DatabaseSong song, Rating rating, boolean force) {
+        if (!force && (System.currentTimeMillis() - lastRatingAttempt.getOrDefault(user.getId(), 0L)) < 10000L) {
+            return false;
+        }
+
+        lastRatingAttempt.put(user.getId(), System.currentTimeMillis());
+
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
         MongoCollection<Document> ratings = db.getCollection("ratings");
 
@@ -37,7 +47,7 @@ public class SongRatingManager implements RadioService {
             }
             d.put("ratings", rt);
             ratings.insertOne(d);
-            return;
+            return true;
         }
 
         Document rt = new Document();
@@ -47,5 +57,7 @@ public class SongRatingManager implements RadioService {
 
         ratings.updateOne(eq("song", song.getFileName()), new Document("$pull", rt));
         ratings.updateOne(eq("song", song.getFileName()), new Document("$addToSet", new Document("ratings." + rating, user.getId()))).getModifiedCount();
+
+        return true;
     }
 }

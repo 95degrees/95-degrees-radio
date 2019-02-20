@@ -1,13 +1,13 @@
 package me.voidinvoid.discordmusic.levelling;
 
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReturnDocument;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.stats.Statistic;
+import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Service;
@@ -121,9 +121,19 @@ public class LevellingManager implements RadioService, EventListener {
                 log("LEVELLING: desync of " + user);
                 return;
             }
-            var dt = databaseManager.getCollection("users").findOneAndUpdate(eq("_id", id), new Document("$inc", new Document("total_listen_time", 1)), new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+            /*
+            TODO
+                stats.DATE.listen_time
+                stats.DATE.coins_earned
+                stats.DATE.songs_suggested
 
-            if (dt != null && dt.getInteger("total_listen_time", 0) >= 600) { //10 hours
+             */
+
+            var stats = Service.of(UserStatisticsManager.class);
+
+            stats.addStatistic(user, Statistic.LISTEN_TIME, 1);
+
+            if (stats.getTotal(user, Statistic.LISTEN_TIME) >= 600) { //10 hours TODO
                 Radio.getInstance().getService(AchievementManager.class).rewardAchievement(user, Achievement.LISTEN_FOR_10_HOURS);
             }
 

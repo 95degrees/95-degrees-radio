@@ -100,7 +100,7 @@ public class DatabaseSong extends Song {
 
     @Override
     public String getFileName() {
-        return "DB/" + albumArtId; //todo?
+        return albumArtId; //todo?
     }
 
     @Override

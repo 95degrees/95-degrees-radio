@@ -32,8 +32,6 @@ public class RadioMessageListener implements RadioService, SongEventListener {
 
     private TextChannel textChannel;
 
-    private Map<String, Long> lastRatingAttempt = new HashMap<>();
-
     @Override
     public void onLoad() {
         textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
@@ -73,14 +71,8 @@ public class RadioMessageListener implements RadioService, SongEventListener {
                     String re = e.getReaction().getReactionEmote().getName();
                     for (Rating r : Rating.values()) {
                         if (r.getEmote().equals(re)) {
-                            if ((System.currentTimeMillis() - lastRatingAttempt.getOrDefault(e.getUser().getId(), 0L)) < 10000L) {
-                                return;
-                            }
-
-                            lastRatingAttempt.put(e.getUser().getId(), System.currentTimeMillis());
-
                             SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
-                            rm.rateSong(e.getUser(), (DatabaseSong) song, r);
+                            rm.rateSong(e.getUser(), (DatabaseSong) song, r, false);
                             m.getChannel().sendMessage(new EmbedBuilder().setTitle("Song Rating").setColor(Colors.ACCENT_SONG_RATING).setDescription(e.getMember().getAsMention() + ", your rating of **" + FormattingUtils.escapeMarkup(((DatabaseSong) song).getTitle()) + "** has been saved").setTimestamp(OffsetDateTime.now()).setFooter(e.getMember().getUser().getName(), e.getMember().getUser().getAvatarUrl()).build()).queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
                             return;
                         }

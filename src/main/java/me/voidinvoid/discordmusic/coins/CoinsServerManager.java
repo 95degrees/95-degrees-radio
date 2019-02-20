@@ -6,6 +6,9 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.stats.Statistic;
+import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 
@@ -40,7 +43,8 @@ public class CoinsServerManager implements RadioService {
         try {
             long timestamp = System.currentTimeMillis();
             JsonArray creditArray = new JsonArray();
-            DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
+
+            var stats = Service.of(UserStatisticsManager.class);
 
             users.forEach((u, c) -> {
                 JsonObject obj = new JsonObject();
@@ -50,9 +54,8 @@ public class CoinsServerManager implements RadioService {
                 obj.addProperty("timestamp", timestamp);
                 creditArray.add(obj);
 
-                if (db != null) {
-                    db.findOrCreateUser(u, true);
-                    db.getCollection("users").updateOne(eq("_id", u.getId()), new Document("$inc", new Document("total_earned_coins", c))); //todo more efficient?
+                if (stats != null) {
+                    stats.addStatistic(u, Statistic.COINS_EARNED, c);
                 }
             });
 
