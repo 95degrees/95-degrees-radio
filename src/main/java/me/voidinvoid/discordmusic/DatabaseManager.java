@@ -4,8 +4,11 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.Collections;
 
@@ -13,12 +16,23 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class DatabaseManager implements RadioService {
 
+    private final String configName;
     private MongoClient client;
     private MongoDatabase db;
 
-    public DatabaseManager() {
+    public DatabaseManager(String configName) {
+        this.configName = configName;
         client = MongoClients.create();
         db = client.getDatabase("95degrees-radio");
+        db.getCollection("internal").updateOne(eq("_id", configName), new Document("$setOnInsert", new Document("creationDate", System.currentTimeMillis())), new UpdateOptions().upsert(true));
+    }
+
+    public Document getInternalDocument() {
+        return db.getCollection("internal").find(eq("_id", configName)).first();
+    }
+
+    public UpdateResult updateInternalDocument(Bson query) {
+        return db.getCollection("internal").updateOne(eq("_id", configName), query);
     }
 
     public MongoClient getClient() {

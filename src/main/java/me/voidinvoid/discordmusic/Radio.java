@@ -56,9 +56,9 @@ public class Radio implements EventListener {
             return;
         }
 
-        DatabaseManager db = new DatabaseManager();
-
         configName = args[0];
+
+        DatabaseManager db = new DatabaseManager(configName);
 
         if (!RadioConfig.load(db.getCollection("config").find(eq("_id", configName)).first())) {
             System.out.println(ConsoleColor.RED + "Failed to load config!" + ConsoleColor.RESET);

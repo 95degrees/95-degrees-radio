@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.tasks.types;
 
+import me.voidinvoid.discordmusic.stats.Statistic;
 import me.voidinvoid.discordmusic.tasks.Parameter;
 import me.voidinvoid.discordmusic.tasks.RadioTaskExecutor;
 
@@ -23,7 +24,8 @@ public enum TaskType {
     STOP_KARAOKE(new KaraokeTask(false)),
     RUN_ADVERT(new AdvertisementTask()),
     ENABLE_QUEUE_COMMAND(new ToggleQueueTask(true)),
-    DISABLE_QUEUE_COMMAND(new ToggleQueueTask(false));
+    DISABLE_QUEUE_COMMAND(new ToggleQueueTask(false)),
+    LEADERBOARD_REWARD(new LeaderboardRewardTask(), of("type", Statistic.LISTEN_TIME.name()), of("reward", 100));
 
     private RadioTaskExecutor executor;
     private Parameter[] params;

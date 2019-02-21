@@ -7,6 +7,7 @@ import net.dv8tion.jda.core.entities.Message;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public final class Formatting {
 
@@ -43,9 +44,10 @@ public final class Formatting {
         return format.trim();
     }
 
-    public static String getFormattedMinsTimeLabelled(int time) {
-        long minutes = (time * 1000 / (1000 * 60)) % 60;
-        long hours = (time * 1000 / (1000 * 60 * 60)) % 60;
+    public static String getFormattedMinsTimeLabelled(int mins) {
+
+        int minutes = mins % 60;
+        int hours = mins / 60;
 
         String format = "";
 
@@ -54,7 +56,7 @@ public final class Formatting {
         }
 
         if (hours == 0 || minutes > 0) {
-            format += minutes + "m ";
+            format += minutes + "m";
         }
 
         return format.trim();

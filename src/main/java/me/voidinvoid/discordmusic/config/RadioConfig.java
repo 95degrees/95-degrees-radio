@@ -34,7 +34,7 @@ public class RadioConfig {
     }
 
     public class Channels {
-        public String voice, radioChat, djChat, lyricsChat;
+        public String voice, radioChat, djChat, lyricsChat, leaderboards;
     }
 
     public class Locations {
