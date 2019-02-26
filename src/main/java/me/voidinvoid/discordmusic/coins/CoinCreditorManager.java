@@ -78,6 +78,11 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
     }
 
     @Override
+    public void onShutdown() {
+        giveAllCoins();
+    }
+
+    @Override
     public void onEvent(Event ev) {
         if (ev instanceof GuildVoiceJoinEvent) { //joined radio vc
             GuildVoiceJoinEvent e = (GuildVoiceJoinEvent) ev;
@@ -118,8 +123,6 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             } else if (voiceChannel.equals(e.getChannelLeft())) {
                 giveCoins(e.getMember(), false);
             }
-        } else if (ev instanceof ShutdownEvent) {
-            giveAllCoins();
         }
     }
 
@@ -133,6 +136,8 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
         Service.of(CoinsServerManager.class).addCredit(pendingDatabaseUpdate);
         pendingDatabaseUpdate.clear();
+
+        coinGains.clear();
     }
 
     private void giveCoins(Member member, boolean clump) {
@@ -159,10 +164,6 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
             for (var le : lb) {
                 pos++;
-                log(pos);
-                log(le.getUser());
-                log(le.getValue());
-                log("-----------");
                 if (le.getUser().equals(id)) {
                     break;
                 }

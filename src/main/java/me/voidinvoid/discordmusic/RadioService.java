@@ -17,6 +17,10 @@ public interface RadioService {
         System.out.println(getLogPrefix() + ConsoleColor.RESET_SPACE + msg);
     }
 
+    default void warn(Object msg) {
+        System.out.println(getLogPrefix() + ConsoleColor.RESET_SPACE + ConsoleColor.YELLOW_BRIGHT + msg + ConsoleColor.RESET);
+    }
+
     default void onLoad() {
     }
 

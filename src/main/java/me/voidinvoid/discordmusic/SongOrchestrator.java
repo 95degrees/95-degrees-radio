@@ -137,7 +137,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             try {
                 l.onPlaylistChange(this.activePlaylist, activePlaylist);
             } catch (Exception ex) {
-                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                warn(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();
             }
         });
@@ -191,13 +191,13 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         });
 
         if (playlists.size() == 0) {
-            log(ConsoleColor.RED + "No playlists found!" + ConsoleColor.RESET);
+            warn(ConsoleColor.RED + "No playlists found!" + ConsoleColor.RESET);
             return;
         }
 
         if (activePlaylist == null) {
             activePlaylist = playlists.get(0);
-            log(ConsoleColor.YELLOW + "Warning: no default song directory found. Defaulted to " + activePlaylist.getName() + ConsoleColor.RESET);
+            warn("No default song directory found. Defaulted to " + activePlaylist.getName());
         }
 
         if (prevActive != null) { //keep using the same playlist we had previously

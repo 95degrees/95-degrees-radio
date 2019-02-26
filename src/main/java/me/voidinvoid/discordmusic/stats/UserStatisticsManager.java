@@ -63,7 +63,7 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
             ix++;
 
             if (ix < 10) msg.append("0");
-            msg.append(ix).append(". ").append(Formatting.padString(user.getUser().getAsTag(), 50)).append(stat.format(record.getValue())).append("\n");
+            msg.append(ix).append(". ").append(Formatting.padString(user.getUser().getAsTag(), 50)).append(" ").append(stat.format(record.getValue())).append("\n");
 
             if (ix >= 10) break;
         }

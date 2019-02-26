@@ -13,12 +13,15 @@ import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import org.bson.Document;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -39,16 +42,14 @@ public class AchievementManager implements RadioService, SongEventListener {
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
-            c.sendMessage("🎉 " + user.getAsMention()).queue();
-            c.sendMessage(new EmbedBuilder()
+            c.sendMessage(new MessageBuilder("🎉 " + user.getAsMention()).setEmbed(new EmbedBuilder()
                     .setTitle("Achievement Unlocked")
                     .setColor(Colors.ACCENT_ACHIEVEMENT)
                     .setThumbnail(RadioConfig.config.images.achievementLogo)
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")
                     .addField(achievement.getDisplay(), achievement.getDescription(), false)
                     .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + achievement.getReward(), false)
-                    .build()
-            ).queue();
+                    .build()).build()).queue();
 
             Service.of(CoinsServerManager.class).addCredit(user, achievement.getReward());
 

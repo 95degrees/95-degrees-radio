@@ -36,6 +36,11 @@ public class TaskManager implements RadioService {
     private List<RadioTaskComposition> tasks;
 
     @Override
+    public String getLogPrefix() {
+        return TASK_LOG_PREFIX;
+    }
+
+    @Override
     public void onLoad() {
         try {
             tasks = new ArrayList<>();
@@ -48,7 +53,7 @@ public class TaskManager implements RadioService {
             DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
             if (db != null) {
                 db.getCollection("tasks").find().forEach((Consumer<? super Document>) comp -> {
-                    log(TASK_LOG_PREFIX + "Found database task composition");
+                    log("Found database task composition");
                     tasks.add(new RadioTaskComposition(comp));
                 });
             }
@@ -58,7 +63,7 @@ public class TaskManager implements RadioService {
                 JsonArray arr = new JsonParser().parse(new String(Files.readAllBytes(Paths.get(RadioConfig.config.locations.tasks)))).getAsJsonObject().get("task_compositions").getAsJsonArray();
 
                 for (JsonElement e : arr) {
-                    log(TASK_LOG_PREFIX + "Found task composition");
+                    log("Found task composition");
                     tasks.add(new RadioTaskComposition(gson, e.getAsJsonObject()));
                 }
             }
@@ -71,7 +76,7 @@ public class TaskManager implements RadioService {
                     Map<String, Object> data = new HashMap<>();
                     data.put("comp", t);
 
-                    log(TASK_LOG_PREFIX + "Scheduling task for " + t.getExecutionCron());
+                    log("Scheduling task for " + t.getExecutionCron());
 
                     scheduler.scheduleJob(
                             JobBuilder.newJob(JobExecutor.class)
@@ -99,16 +104,16 @@ public class TaskManager implements RadioService {
 
         try {
             if (comp.isCancelled() && !ignoreCancellation) {
-                log(TASK_LOG_PREFIX + "Ignoring task invocation due to being cancelled");
+                log("Ignoring task invocation due to being cancelled");
                 comp.setCancelled(false);
                 return;
             }
-            log(TASK_LOG_PREFIX + "Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
+            log("Invoking task " + (comp.getName() == null ? "<unnamed>" : comp.getName()));
             comp.getTasks().forEach(r -> r.invoke(Radio.getInstance().getOrchestrator()));
 
             djChannel.sendMessage(new EmbedBuilder().setTitle("➡ Executed task " + comp.getName()).setColor(Colors.ACCENT_TASK_SUCCESS).build()).queue(m -> m.delete().queueAfter(10, TimeUnit.SECONDS));
         } catch (Exception e) {
-            log(TASK_LOG_PREFIX + "Error invoking task");
+            warn("Error invoking task");
             e.printStackTrace();
             djChannel.sendMessage(new EmbedBuilder().setTitle("⚠ Error executing task " + comp.getName()).setColor(Colors.ACCENT_TASK_ERROR).build()).queue();
         }

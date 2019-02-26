@@ -53,6 +53,7 @@ public class DatabaseManager implements RadioService {
                     .append("ratings", Collections.emptyList())
                     .append("achievements", Collections.emptyList())
                     .append("created", System.currentTimeMillis())
+                    .append("stats", new Document())
                     .append("total_earned_coins", 0)
                     .append("total_experience", 0)
                     .append("data_version", 1);
@@ -66,6 +67,6 @@ public class DatabaseManager implements RadioService {
     }
 
     public Document findOrCreateUser(User user) {
-        return findOrCreateUser(user, false);
+        return findOrCreateUser(user, true);
     }
 }

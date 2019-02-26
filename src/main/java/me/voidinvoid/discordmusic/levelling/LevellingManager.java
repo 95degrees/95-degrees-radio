@@ -12,10 +12,8 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.MessageBuilder;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.guild.voice.*;
 import net.dv8tion.jda.core.hooks.EventListener;
@@ -62,7 +60,7 @@ public class LevellingManager implements RadioService, EventListener {
                         try {
                             extras.add(new AppliedLevelExtra(LevelExtras.valueOf(k), val));
                         } catch (Exception e) {
-                            log("LEVELLING: unknown extra: " + k);
+                            warn("Unknown extra: " + k);
                             e.printStackTrace();
                         }
                     });
@@ -106,19 +104,20 @@ public class LevellingManager implements RadioService, EventListener {
         } else {
             ScheduledFuture s = listeningTracker.remove(user.getId());
             if (s != null) {
-                log("LEVELLING: CANCELLED TRACKING " + user);
+                warn("Cancelled tracking " + user);
                 s.cancel(false);
             }
         }
     }
 
     private ScheduledFuture track(User user) {
-        log("LEVELLING: TRACKING " + user);
-        String id = user.getId();
+        log("Tracking " + user);
+        Service.of(DatabaseManager.class).findOrCreateUser(user, true); //ensure it's created
+
         return executor.scheduleAtFixedRate(() -> {
             GuildVoiceState v = voiceChannel.getGuild().getMember(user).getVoiceState();
             if (v == null || !v.inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(v.getChannel()) || v.isDeafened()) {
-                log("LEVELLING: desync of " + user);
+                warn("Desync of " + user);
                 return;
             }
             /*
@@ -187,20 +186,39 @@ public class LevellingManager implements RadioService, EventListener {
         return cl;
     }
 
+    public int getCumulativeExperienceRequired(Level level) { //gets the total xp required to get this level
+
+        int lvl = level.getLevel();
+        int total = 0;
+
+        for (int i = 1; i <= lvl; i++) {
+            total += levels.get(i).getRequiredXp();
+        }
+
+        return total;
+    }
+
     public int getExperienceRequired(int experience) { //gets the xp required to level up
-        int ct = 0;
+
+        var currentLevel = calculateLevel(experience);
+
+        int req = getCumulativeExperienceRequired(getNextLevel(currentLevel));
+
+        return req - experience;
+
+        /*int ct = 0;
         int lvl = 0;
         Level cl;
 
         while (experience > ct) {
             Level l = levels.get(++lvl);
-            if (ct + l.getRequiredXp() > experience) return ct + l.getRequiredXp() - experience;
+            if (ct + l.getRequiredXp() > experience) return ct + 1 + l.getRequiredXp() - experience;
 
             cl = l;
             ct += cl.getRequiredXp();
         }
 
-        return levels.get(1).getRequiredXp();
+        return levels.get(1).getRequiredXp();*/
     }
 
     public int getExperience(User user) {
@@ -215,7 +233,7 @@ public class LevellingManager implements RadioService, EventListener {
         Document doc = databaseManager.getCollection("users").findOneAndUpdate(eq("_id", user.getId()), new Document("$inc", new Document("total_experience", amount)));
 
         if (doc == null) {
-            log(user + "'s db document is null");
+            warn(user + "'s db document is null");
             return;
         }
 
@@ -238,9 +256,7 @@ public class LevellingManager implements RadioService, EventListener {
             //todo make sure that its only given once if the config is changed
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-
-            c.sendMessage("🎉 " + user.getAsMention()).queue();
-            c.sendMessage(new EmbedBuilder()
+            c.sendMessage(new MessageBuilder("🎉 " + user.getAsMention()).setEmbed(new EmbedBuilder()
                     .setTitle("Level Up")
                     .setColor(Colors.ACCENT_LEVEL_UP)
                     .setThumbnail(RadioConfig.config.images.levellingUpLogo)
@@ -249,8 +265,7 @@ public class LevellingManager implements RadioService, EventListener {
                             + (unlockedExtras.isEmpty() ? "" : "\n" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " " + a.getExtra().formatParameter(getLatestExtra(xp, a.getExtra()).getValue()) + " ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl())
-                    .build()
-            ).queue();
+                    .build()).build()).queue();
         }
     }
 }

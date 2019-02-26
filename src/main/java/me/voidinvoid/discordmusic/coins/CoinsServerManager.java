@@ -14,8 +14,13 @@ import org.bson.Document;
 
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 
@@ -23,23 +28,26 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class CoinsServerManager implements RadioService {
 
-    private URL UPDATE_URL;
+    private URI UPDATE_URL;
+    private HttpClient client;
 
     @Override
     public void onLoad() {
         try {
-            UPDATE_URL = new URL(RadioConfig.config.locations.coinUpdates);
-        } catch (MalformedURLException e) {
-            log("Error: Coins update URL is invalid!");
+            UPDATE_URL = new URI(RadioConfig.config.locations.coinUpdates);
+        } catch (Exception e) {
+            warn("Coins update URL is invalid!");
             e.printStackTrace();
         }
+
+        client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
     }
 
-    public boolean addCredit(User user, int coins) {
-        return addCredit(Collections.singletonMap(user, coins));
+    public void addCredit(User user, int coins) {
+        addCredit(Collections.singletonMap(user, coins));
     }
 
-    public boolean addCredit(Map<User, Integer> users) {
+    public void addCredit(Map<User, Integer> users) {
         try {
             long timestamp = System.currentTimeMillis();
             JsonArray creditArray = new JsonArray();
@@ -62,10 +70,21 @@ public class CoinsServerManager implements RadioService {
             JsonObject root = new JsonObject();
             root.add("updates", creditArray);
 
-            URL url = UPDATE_URL;
+            HttpRequest req = HttpRequest.newBuilder(UPDATE_URL)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(root.toString())).build();
+
+            client.sendAsync(req, HttpResponse.BodyHandlers.ofString()).thenAccept(r -> {
+               if (r.statusCode() != 200) {
+                   warn("Error updating coins error: status code " + r.statusCode());
+               }
+            });
+
+            /*URL url = UPDATE_URL;
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
+            conn.setConnectTimeout(4000);
             conn.addRequestProperty("Content-Type", "application/json");
             conn.getOutputStream().write(root.toString().getBytes(StandardCharsets.UTF_8));
 
@@ -73,10 +92,10 @@ public class CoinsServerManager implements RadioService {
             if (status != 200) {
                 log("UPDATING COINS ERROR: response code " + status);
                 return false;
-            }
+            }*/
         } catch (Exception e) {
+            log("ERROR UPDATING COINS");
             e.printStackTrace();
         }
-        return true;
     }
 }

@@ -44,6 +44,8 @@ public class LeaderboardRewardTask extends RadioTaskExecutor {
                     .setTimestamp(OffsetDateTime.now())
                     .setColor(Colors.ACCENT_LEVEL_UP)
                     .build()).queue());
+
+            return;
         }
     }
 }

@@ -55,7 +55,7 @@ public class SongSearchResult {
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("🔎 Song Search")
-                .setColor(Colors.ACCENT_SEARCH) //todo masked links for all matches so theyre clickable [display text](url)
+                .setColor(Colors.ACCENT_SEARCH)
                 .setDescription((amount == 1 ? "Here is the top match" : "Here are the top " + amount + " matches") + " from your search\n" + "React with the corresponding number to add to the queue\n\n" + (songsOverLengthLimit ? "⚠ Some results were hidden for being over the length limit\n\n" : ""))
                 .setTimestamp(OffsetDateTime.now());
 
@@ -65,7 +65,8 @@ public class SongSearchResult {
 
         int i = 0;
         for (AudioTrack t : playlist) {
-            emojiBuilder.append(Formatting.NUMBER_EMOTES.get(i)).append(" [").append(t.getInfo().title.replaceAll("]", "\\]")).append("](").append(t.getIdentifier()).append(") (").append(t.getInfo().author).append(")\n");
+            System.out.println(t.getIdentifier());
+            emojiBuilder.append(Formatting.NUMBER_EMOTES.get(i)).append(" [").append(t.getInfo().title.replaceAll("]", "\\]")).append("](").append("https://youtu.be/").append(t.getIdentifier()).append(") (").append(t.getInfo().author).append(")\n");
             i++;
         }
 
