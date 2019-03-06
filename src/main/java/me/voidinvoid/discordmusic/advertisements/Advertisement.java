@@ -58,7 +58,7 @@ public class Advertisement {
         EmbedBuilder embed = new EmbedBuilder()
                 .setAuthor(title, url, authorIconUrl)
                 .setDescription(description)
-                .setFooter(partnerAd ? "95 Degrees Partner Advertisement" : "95 Degrees Advertisement", "https://cdn.discordapp.com/icons/202600401281744896/40d9b8c72e0a288f8f3f5c99ce1691ca.webp");
+                .setFooter(partnerAd ? "95 Degrees Partner Advertisement" : "95 Degrees Advertisement", "https://cdn.discordapp.com/icons/202600401281744896/06cd2f1e234f8b757c00a20f9a58e345.webp");
 
         if (imageUrl != null) embed.setImage(imageUrl);
         if (iconUrl != null) embed.setThumbnail(iconUrl);

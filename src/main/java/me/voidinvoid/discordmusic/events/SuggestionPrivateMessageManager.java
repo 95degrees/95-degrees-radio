@@ -5,9 +5,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.VoiceChannel;
@@ -34,6 +37,10 @@ public class SuggestionPrivateMessageManager implements RadioService, SongEventL
 
             if (ns.getSuggestedBy() != null) {
                 if (voiceChannel.getMembers().stream().noneMatch(m -> m.getUser().getId().equals(ns.getSuggestedBy().getId()))) { //user not in vc
+                    var am = Service.of(AchievementManager.class);
+
+                    if (am != null) am.rewardAchievement(ns.getSuggestedBy(), Achievement.LEAVE_AFTER_SUGGESTION);
+
                     MessageEmbed pm = new EmbedBuilder()
                             .setTitle("Song Suggestion Reminder")
                             .setDescription(ns.getFriendlyName() + " is now playing on 95 Degrees Radio!")

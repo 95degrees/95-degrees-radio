@@ -4,6 +4,8 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.coins.CoinsServerManager;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.stats.Statistic;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.tasks.ParameterList;
@@ -35,6 +37,9 @@ public class LeaderboardRewardTask extends RadioTaskExecutor {
 
             var cm = Service.of(CoinsServerManager.class);
             cm.addCredit(mb.getUser(), reward);
+
+            var am = Service.of(AchievementManager.class);
+            am.rewardAchievement(mb.getUser(), Achievement.TOP_WEEKLY_LISTENER);
 
             mb.getUser().openPrivateChannel().queue(c -> c.sendMessage(new EmbedBuilder()
                     .setTitle("Most Active Listener")

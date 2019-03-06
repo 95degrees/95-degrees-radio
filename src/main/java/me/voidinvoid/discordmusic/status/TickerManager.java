@@ -45,7 +45,7 @@ public class TickerManager implements RadioService, SongEventListener {
         executor.scheduleAtFixedRate(() -> {
             animator++;
             update();
-        }, 0, 500, TimeUnit.MILLISECONDS);
+        }, 0, 10000, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -122,8 +122,8 @@ public class TickerManager implements RadioService, SongEventListener {
             if (lyric == null || dj) {
                 NetworkSong ns;
                 sb.append("🎵 ");
-                //round to nearest 20 and check if higher
-                if ((((animator + 10) / 20) * 20 > animator) && s instanceof NetworkSong && (ns = (NetworkSong) s).getSuggestedBy() != null) {
+                //round to nearest 2 and check if higher
+                if (/*((animator + 1) / 2) * 2 > animator)*/ animator % 2 == 0 && s instanceof NetworkSong && (ns = (NetworkSong) s).getSuggestedBy() != null) {
                     sb.append("Suggested by: ");
                     sb.append(ns.getSuggestedBy().getName());
                 } else {

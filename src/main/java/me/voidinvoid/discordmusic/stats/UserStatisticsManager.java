@@ -58,7 +58,7 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
         int ix = 0;
         for (var record : lb) {
             var user = Radio.getInstance().getGuild().getMemberById(record.getUser());
-            if (user == null) continue;
+            if (user == null || record.getValue() == 0) continue;
 
             ix++;
 

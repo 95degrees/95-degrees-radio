@@ -14,7 +14,9 @@ public enum Achievement {
     RICKROLL("Rickroller", "Rickroll the radio", 80),
     SKIP_ADVERT("Nope...", "Attempt to skip an advert", 120),
     QUEUE_SONG_WITH_RPC("It's Magic", "Queue a song using the 95 Degrees Radio app", 80),
-    USE_RDP("Very Rich Presence", "Use the 95 Degrees Radio app to show your listening status on Discord", 150);
+    USE_RDP("Very Rich Presence", "Use the 95 Degrees Radio app to show your listening status on Discord", 150),
+    LEAVE_AFTER_SUGGESTION("Come Back!", "Make a song suggestion but leave the radio before it starts", 30),
+    TOP_WEEKLY_LISTENER("#1 Listener", "Be the top radio listener for the week!", 250);
 
     private final String display;
     private final String description;

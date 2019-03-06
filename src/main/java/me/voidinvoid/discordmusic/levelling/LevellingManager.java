@@ -104,7 +104,7 @@ public class LevellingManager implements RadioService, EventListener {
         } else {
             ScheduledFuture s = listeningTracker.remove(user.getId());
             if (s != null) {
-                warn("Cancelled tracking " + user);
+                log("Cancelled tracking " + user);
                 s.cancel(false);
             }
         }
