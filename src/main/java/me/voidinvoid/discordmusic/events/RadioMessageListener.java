@@ -14,6 +14,7 @@ import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.core.EmbedBuilder;
@@ -39,7 +40,7 @@ public class RadioMessageListener implements RadioService, SongEventListener {
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!song.getType().useAnnouncement()) return;
 
-        EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
+        EmbedBuilder embed = new EmbedBuilder().setTitle(Emoji.RADIO + " Now Playing")
                 .setColor(new Color(230, 230, 230))
                 .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, true)
                 .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, true)

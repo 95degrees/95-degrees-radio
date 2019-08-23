@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
@@ -43,7 +44,7 @@ public class AchievementManager implements RadioService, SongEventListener {
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
             c.sendMessage(new MessageBuilder("🎉 " + user.getAsMention()).setEmbed(new EmbedBuilder()
-                    .setTitle("Achievement Unlocked")
+                    .setTitle(Emoji.RADIO + " Achievement Unlocked")
                     .setColor(Colors.ACCENT_ACHIEVEMENT)
                     .setThumbnail(RadioConfig.config.images.achievementLogo)
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")

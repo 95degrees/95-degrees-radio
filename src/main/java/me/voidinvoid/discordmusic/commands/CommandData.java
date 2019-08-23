@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Message;
@@ -94,7 +95,7 @@ class CommandData {
         User user = member.getUser();
 
         textChannel.sendMessage(new EmbedBuilder()
-                .setTitle("Command Successful")
+                .setTitle(Emoji.TICK + " Command Successful")
                 .setColor(Color.GREEN)
                 .setDescription(message)
                 .setFooter(user.getName(), user.getAvatarUrl())
@@ -110,7 +111,7 @@ class CommandData {
         User user = member.getUser();
 
         textChannel.sendMessage(new EmbedBuilder()
-                .setTitle("Command Error")
+                .setTitle(Emoji.CROSS + " Command Error")
                 .setColor(Color.RED)
                 .setDescription(message)
                 .appendDescription(command.getUsageMessage() == null ? "" : "\n\n`Usage: " + Command.COMMAND_PREFIX + usedAlias + " " + command.getUsageMessage() + "`")

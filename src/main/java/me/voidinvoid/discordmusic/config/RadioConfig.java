@@ -13,6 +13,7 @@ public class RadioConfig {
     public static RadioConfig config;
 
     public String botToken;
+    public String voiceInviteLink;
     public boolean useCoinGain;
     public boolean debug;
     public boolean useStatus;
