@@ -7,12 +7,17 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 public class LevelCommand extends Command {
 
     LevelCommand() {
-        super("level", "Displays your current level", null, ChannelScope.RADIO_AND_DJ_CHAT, false);
+        super("level", "Displays your current level", "[user]", ChannelScope.RADIO_AND_DJ_CHAT, false);
     }
 
     @Override
     public void invoke(CommandData data) {
         var lm = Radio.getInstance().getService(LevellingManager.class);
+
+        var member = data.getArgs().length > 0 ? data.memberFromArgument(0, true) : data.getMember();
+        if (member == null) return;
+
+        var self = member.equals(data.getMember());
 
         var xp = lm.getExperience(data.getMember().getUser());
 
@@ -21,6 +26,6 @@ public class LevelCommand extends Command {
 
         var req = lm.getExperienceRequired(xp);
 
-        data.success("You are currently level **" + lvl.getLevel() + "**!\n\n" + (next == null ? "This is the max level! Thanks for listening! <:radioislit:489942546903203851>" : "You are **" + req + "** xp away from levelling up to level **" + next.getLevel() + "**! You earn **1** xp for listening to the radio every minute!"));
+        data.mention("\n" + (self ? "you are" : member.getUser().getAsMention() + " is") + " currently level **" + lvl.getLevel() + "**!\n\n" + (next == null ? "This is the max level! " + (self ? "Thanks for listening! " : "") + "<:radioislit:489942546903203851>" : (self ? "You" : "They") + " are **" + req + "** xp away from levelling up to level **" + next.getLevel() + "**! **1** xp is earned for every minute listening to the radio!"));
     }
 }

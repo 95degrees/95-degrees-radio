@@ -10,8 +10,8 @@ import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Formatting;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.managers.ChannelManager;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.managers.ChannelManager;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

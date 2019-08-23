@@ -10,20 +10,21 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
-import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.utils.Formatting;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.managers.GuildController;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -311,7 +312,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
     }
 
     @Override
-    public void onEvent(Event ev) {
+    public void onEvent(@Nonnull GenericEvent ev) {
         if (ev instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent e = ((GuildMessageReactionAddEvent) ev);
             if (e.getUser().isBot()) return;
@@ -357,7 +358,7 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
             if (!att.isImage() && att.getFileName().endsWith(".quiz")) {
                 try {
                     Path file = Files.createTempDirectory("quiz-attachment-").resolve("quiz");
-                    att.download(file.toFile());
+                    att.downloadToFile(file.toFile());
 
                     loadDynamicQuiz(file);
                 } catch (IOException ex) {
@@ -375,11 +376,11 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
         return quizEliminatedRole;
     }
 
-    public GuildController getController() {
-        return textChannel.getGuild().getController();
-    }
-
     public TextChannel getQuizManagerChannel() {
         return quizManagerChannel;
+    }
+
+    public Guild getGuild() {
+        return textChannel == null ? Radio.getInstance().getGuild() : textChannel.getGuild();
     }
 }

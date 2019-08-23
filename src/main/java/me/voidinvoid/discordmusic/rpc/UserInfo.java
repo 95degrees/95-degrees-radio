@@ -1,7 +1,7 @@
 package me.voidinvoid.discordmusic.rpc;
 
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 
 public class UserInfo {
 

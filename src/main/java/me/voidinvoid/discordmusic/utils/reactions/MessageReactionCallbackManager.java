@@ -1,10 +1,11 @@
 package me.voidinvoid.discordmusic.utils.reactions;
 
 import me.voidinvoid.discordmusic.RadioService;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -22,7 +23,7 @@ public class MessageReactionCallbackManager implements RadioService, EventListen
     }
 
     @Override
-    public void onEvent(Event ev) {
+    public void onEvent(@Nonnull GenericEvent ev) {
         if (ev instanceof MessageReactionAddEvent) {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
 

@@ -3,7 +3,7 @@ package me.voidinvoid.discordmusic.songs;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Formatting;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

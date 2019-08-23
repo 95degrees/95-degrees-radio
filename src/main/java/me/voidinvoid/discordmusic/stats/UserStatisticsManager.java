@@ -10,10 +10,10 @@ import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.Service;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
 import java.time.LocalDateTime;
@@ -43,7 +43,7 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
 
         var msgId = db.getInternalDocument().getString("leaderboardMessageId");
         if (msgId != null) {
-            leaderboardMessage = leaderboardChannel.getMessageById(msgId).complete();
+            leaderboardChannel.retrieveMessageById(msgId).queue(m -> leaderboardMessage = m);
         }
     }
 

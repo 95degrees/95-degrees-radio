@@ -3,9 +3,9 @@ package me.voidinvoid.discordmusic.dj.actions;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.utils.Colors;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 
 import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;

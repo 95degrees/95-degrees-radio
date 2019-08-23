@@ -2,10 +2,11 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +32,7 @@ public class CommandManager implements RadioService, EventListener {
         register(new AddSongCommand());
         register(new SwitchPlaylistCommand());
         register(new AnnounceCommand());
-        register(new KaraokeCommand());
+        //register(new KaraokeCommand());
         register(new TasksCommand());
         register(new AdvertisementCommand());
         register(new PollCommand());
@@ -46,7 +47,7 @@ public class CommandManager implements RadioService, EventListener {
         register(new ServicesCommand());
         register(new PairRPCCommand());
         if (RadioConfig.config.useQuizSocketServer) register(new QuizSocketServerKeyCommand());
-        register(new HelpCommand(commands));
+        register(new CommandListCommand(commands));
 
         Executors.newSingleThreadExecutor().submit(() -> {
             Scanner s = new Scanner(System.in);
@@ -80,7 +81,7 @@ public class CommandManager implements RadioService, EventListener {
     }
 
     @Override
-    public void onEvent(Event ev) {
+    public void onEvent(@Nonnull GenericEvent ev) {
         if (ev instanceof GuildMessageReceivedEvent) {
             GuildMessageReceivedEvent e = ((GuildMessageReceivedEvent) ev);
 

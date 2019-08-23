@@ -8,13 +8,12 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Formatting;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.managers.GuildController;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -111,8 +110,8 @@ public class QuizPlaylist extends Playlist {
         quizManagerMessage.addReaction(ADVANCE_QUIZ_EMOTE).complete();
 
         try {
-            GuildController controller = manager.getController(); //TODO \/ config-ify
-            controller.getGuild().getCategoryById("514598617575850013").putPermissionOverride(controller.getGuild().getPublicRole()).setAllow(Permission.VIEW_CHANNEL).queue();
+            var guild = manager.getGuild(); //TODO \/ config-ify
+            guild.getCategoryById("514598617575850013").putPermissionOverride(guild.getPublicRole()).setAllow(Permission.VIEW_CHANNEL).queue();
 
             manager.getTextChannel().sendMessage(getBaseEmbed(false).setTitle("The quiz is starting soon! 🎲").build()).queue();
         } catch (Exception e) {
@@ -124,13 +123,13 @@ public class QuizPlaylist extends Playlist {
     public void onDeactivate() {
         if (quizManagerMessage != null) quizManagerMessage.delete().reason("End of quiz").queue();
 
-        GuildController controller = manager.getController();
+        var guild = manager.getGuild();
         try {
-            allMembers.forEach(m -> controller.removeRolesFromMember(m, manager.getQuizInGameRole(), manager.getQuizEliminatedRole()).reason("Quiz has ended - removing roles").queue());
+            allMembers.forEach(m -> guild.modifyMemberRoles(m, Collections.emptyList(), Arrays.asList(manager.getQuizInGameRole(), manager.getQuizEliminatedRole())).reason("Quiz has ended - removing roles").queue());
             //TODO config-ify
-            controller.getGuild().getCategoryById("514598617575850013").putPermissionOverride(controller.getGuild().getPublicRole()).setDeny(Permission.VIEW_CHANNEL).queue();
+            guild.getCategoryById("514598617575850013").putPermissionOverride(guild.getPublicRole()).setDeny(Permission.VIEW_CHANNEL).queue();
 
-            if (RadioConfig.config.useStatus) controller.getJDA().getPresence().setGame(null);
+            if (RadioConfig.config.useStatus) guild.getJDA().getPresence().setActivity(null);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -194,7 +193,7 @@ public class QuizPlaylist extends Playlist {
             allMembers.add(member);
             addAnswer(part, quiz.getQuestions().get(currentQuestion).getAnswers()[answerIndex]);
 
-            manager.getTextChannel().getGuild().getController().addSingleRoleToMember(member, manager.getQuizInGameRole()).queue();
+            manager.getTextChannel().getGuild().modifyMemberRoles(member, Collections.singletonList(manager.getQuizInGameRole()), Collections.emptyList()).queue();
 
         } else {
             //only accept their answer if they're a remaining participant
@@ -357,10 +356,10 @@ public class QuizPlaylist extends Playlist {
 
             List<QuizParticipant> correctParticipants = currentAnswers.entrySet().stream().filter(e -> e.getValue().isCorrect()).map(Map.Entry::getKey).collect(Collectors.toList());
 
-            GuildController controller = manager.getController();
+            var guild = manager.getGuild();
             remainingParticipants.stream().filter(p -> !correctParticipants.contains(p)).forEach(p -> {
                 try {
-                    controller.addSingleRoleToMember(manager.getController().getGuild().getMemberById(p.getId()), manager.getQuizEliminatedRole()).queue();
+                    guild.modifyMemberRoles(guild.getMemberById(p.getId()), Collections.singletonList(manager.getQuizEliminatedRole()), Collections.emptyList()).queue();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

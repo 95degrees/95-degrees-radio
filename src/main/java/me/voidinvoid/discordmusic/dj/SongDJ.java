@@ -19,16 +19,18 @@ import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -90,7 +92,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     }
 
     @Override
-    public void onEvent(Event ev) { //todo use MessageReactionCallbackManager
+    public void onEvent(@Nonnull GenericEvent ev) { //todo use MessageReactionCallbackManager
         if (ev instanceof MessageReactionAddEvent) {
             MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
 
@@ -122,7 +124,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
                 if (queueDeletionMessages.get(id).equals(song)) {
                     MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
                     mr.removeCallback(id);
-                    djChannel.getMessageById(id).queue(m -> m.clearReactions().queue());
+                    djChannel.retrieveMessageById(id).queue(m -> m.clearReactions().queue());
                     queueDeletionMessages.remove(id); //remove the ability to cancel this song since it's already playing by now
                     break;
                 }

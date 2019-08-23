@@ -15,11 +15,11 @@ import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.status.TickerManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Formatting;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -29,6 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+@Deprecated
 public class KaraokeManager implements RadioService, SongEventListener {
 
     private static final long LYRIC_LAG_COMPENSATION_MS = 400L; //always be 0.4s ahead to compensate for lag

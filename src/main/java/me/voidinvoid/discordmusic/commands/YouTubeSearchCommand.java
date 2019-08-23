@@ -5,6 +5,8 @@ import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 public class YouTubeSearchCommand extends Command {
 
@@ -26,6 +28,6 @@ public class YouTubeSearchCommand extends Command {
             return;
         }
 
-        Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion("ytsearch:" + data.getArgsString(), data.getRawMessage(), data.getTextChannel(), data.getMember(), true, SuggestionQueueMode.NORMAL);
+        Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion("ytsearch:" + data.getArgsString(), data.getRawMessage(), (TextChannel) data.getTextChannel(), data.getMember(), true, SuggestionQueueMode.NORMAL);
     }
 }

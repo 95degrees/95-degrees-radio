@@ -6,15 +6,18 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
+import me.voidinvoid.discordmusic.utils.Colors;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,7 +26,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
     private Map<String, SongSearchResult> searches = new HashMap<>();
 
     @Override
-    public void onEvent(Event ev) {
+    public void onEvent(@Nonnull GenericEvent ev) {
         if (ev instanceof GuildMessageReceivedEvent) {
             GuildMessageReceivedEvent e = (GuildMessageReceivedEvent) ev;
 
@@ -44,7 +47,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
     }
 
     public void addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
-        Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
+        Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier + " kidzbop", new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 Radio.getInstance().getOrchestrator().addNetworkTrack(member, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
@@ -61,7 +64,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
                         channel.sendMessage(new EmbedBuilder()
                                 .setTitle("Search Failure")
                                 .setColor(Colors.ACCENT_ERROR)
-                                .setDescription("No song results found for your search. Some songs were found but were too long to be included")
+                                .setDescription("No song results found for your search. Some songs were found but were too long/not child-friendly enough to be included")
                                 .build()).queue();
                     }
                 } else {

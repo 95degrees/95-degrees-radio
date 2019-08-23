@@ -8,6 +8,7 @@ import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Service;
+import net.dv8tion.jda.api.entities.GuildChannel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class SkipCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        if (data.getTextChannel() == null || ChannelScope.DJ_CHAT.check(data.getTextChannel())) {
+        if (data.getTextChannel() == null || ChannelScope.DJ_CHAT.check((GuildChannel) data.getTextChannel())) {
             Radio.getInstance().getOrchestrator().playNextSong();
 
             data.success("Skipped to the next track");
@@ -38,7 +39,13 @@ public class SkipCommand extends Command {
                 return;
             }
 
-            var vc = data.getTextChannel().getGuild().getSelfMember().getVoiceState().getChannel();
+            var vs = Radio.getInstance().getGuild().getSelfMember().getVoiceState();
+            if (vs == null || vs.getChannel() == null) {
+                data.error("Couldn't find the voice channel?");
+                return;
+            }
+
+            var vc = vs.getChannel();
 
             if (vc.getMembers().size() <= 2) { //the radio + the listener
                 var orch = Radio.getInstance().getOrchestrator();

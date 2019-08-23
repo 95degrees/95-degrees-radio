@@ -21,9 +21,9 @@ import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
 import java.io.IOException;

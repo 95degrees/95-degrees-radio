@@ -3,7 +3,7 @@ package me.voidinvoid.discordmusic.currency;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.Formatting;
-import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.api.entities.Member;
 
 public enum TransactionType {
     RADIO("listening to 95 Degrees Radio", new TransactionParameter("duration") {

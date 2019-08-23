@@ -1,7 +1,7 @@
 package me.voidinvoid.discordmusic.coins;
 
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 
 public class UserCoinTracker {
 

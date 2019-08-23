@@ -23,19 +23,20 @@ import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
-import net.dv8tion.jda.core.managers.AudioManager;
+import net.dv8tion.jda.api.AccountType;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.managers.AudioManager;
 
+import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -111,9 +112,9 @@ public class Radio implements EventListener {
         this.databaseManager = databaseManager;
 
         try {
-            jda = new JDABuilder(AccountType.BOT).setToken(config.botToken).addEventListener(this).build();
+            jda = new JDABuilder(AccountType.BOT).setToken(config.botToken).addEventListeners(this).build();
 
-            if (config.useStatus) jda.getPresence().setGame(null);
+            if (config.useStatus) jda.getPresence().setActivity(null);
         } catch (LoginException e) {
             System.out.println(ConsoleColor.RED + "Discord login failure!" + ConsoleColor.RESET);
             e.printStackTrace();
@@ -124,7 +125,7 @@ public class Radio implements EventListener {
     }
 
     @Override
-    public void onEvent(Event e) {
+    public void onEvent(@Nonnull GenericEvent e) {
         if (!loaded && e instanceof ReadyEvent) {
             loaded = true;
             startRadio();
@@ -156,7 +157,7 @@ public class Radio implements EventListener {
         registerService(new PlaylistTesterListener());
         registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
-        registerService(new KaraokeManager());
+        //registerService(new KaraokeManager()); broken, musixmatch chrome extension deleted
         registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener());

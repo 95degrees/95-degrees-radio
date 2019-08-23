@@ -11,12 +11,13 @@ import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.hooks.EventListener;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -67,7 +68,7 @@ public class PlaylistTesterListener implements RadioService, SongEventListener, 
     }
 
     @Override
-    public void onEvent(Event ev) {
+    public void onEvent(@Nonnull GenericEvent ev) {
         if (ev instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent e = (GuildMessageReactionAddEvent) ev;
 

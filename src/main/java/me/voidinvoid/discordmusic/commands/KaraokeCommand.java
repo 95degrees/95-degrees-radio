@@ -4,8 +4,9 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
-import net.dv8tion.jda.core.entities.TextChannel;
+import net.dv8tion.jda.api.entities.TextChannel;
 
+@Deprecated //karaoke system no longer functional
 public class KaraokeCommand extends Command {
 
     KaraokeCommand() {
