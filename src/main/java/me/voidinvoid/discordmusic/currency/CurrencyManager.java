@@ -29,7 +29,7 @@ public class CurrencyManager implements RadioService {
 
     public boolean makeTransaction(Member member, Transaction transaction) {
 
-        if (member.getUser().isBot())
+        if (member == null || member.getUser().isBot())
             return false; //TODO make a DegreeCore.jar containing all this stuff so no duplication
         Document d = databaseManager.findOrCreateUser(member.getUser());
 

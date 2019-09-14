@@ -2,12 +2,11 @@ package me.voidinvoid.discordmusic;
 
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
-import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.currency.CurrencyManager;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.*;
-import me.voidinvoid.discordmusic.karaoke.KaraokeManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
@@ -162,11 +161,10 @@ public class Radio implements EventListener {
         registerService(new SongDJ());
         registerService(new RadioMessageListener());
         registerService(new QuizManager());
-        registerService(new CoinsServerManager());
         registerService(new CoinCreditorManager());
         registerService(new StatusManager());
         registerService(new AdvertisementManager());
-        registerService(new LaMetricMemberStatsHook()); //todo
+        registerService(new CurrencyManager());
         registerService(new LevellingManager());
         registerService(new AchievementManager());
         registerService(new TaskManager());

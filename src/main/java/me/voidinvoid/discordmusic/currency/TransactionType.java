@@ -11,6 +11,20 @@ public enum TransactionType {
         public String formatValue(Transaction transaction, Object value) {
             return "for " + Formatting.getFormattedMsTime((long) value);
         }
+    }),
+
+    RADIO_ACHIEVEMENT("radio achievement reward", new TransactionParameter("achievement") {
+        @Override
+        public String formatValue(Transaction transaction, Object value) {
+            return "for achievement " + value;
+        }
+    }),
+
+    RADIO_LEVELLING_REWARD("radio levelling reward", new TransactionParameter("level") {
+        @Override
+        public String formatValue(Transaction transaction, Object value) {
+            return "for reaching level " + value;
+        }
     });
 
     private final String displayName;

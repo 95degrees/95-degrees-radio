@@ -4,9 +4,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.currency.Transaction;
+import me.voidinvoid.discordmusic.currency.TransactionType;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
@@ -20,9 +21,7 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -52,7 +51,7 @@ public class AchievementManager implements RadioService, SongEventListener {
                     .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + achievement.getReward(), false)
                     .build()).build()).queue();
 
-            Service.of(CoinsServerManager.class).addCredit(user, achievement.getReward());
+            Service.of(CurrencyManager.class).makeTransaction(Radio.getInstance().getGuild().getMember(user), new Transaction(TransactionType.RADIO_ACHIEVEMENT, achievement.getReward()).addParameter("achievement", achievement.name()));
 
             var rpc = Radio.getInstance().getService(RPCSocketManager.class);
             if (rpc != null) {

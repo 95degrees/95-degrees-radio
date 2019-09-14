@@ -1,10 +1,11 @@
 package me.voidinvoid.discordmusic.coins;
 
-import com.mongodb.client.MongoCollection;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.currency.Transaction;
+import me.voidinvoid.discordmusic.currency.TransactionType;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
@@ -21,15 +22,12 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
-import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.ShutdownEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceDeafenEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
-import org.bson.Document;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
@@ -44,10 +42,6 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
     private Map<String, UserCoinTracker> coinGains = new HashMap<>();
 
-    private Map<User, Integer> pendingDatabaseUpdate = new HashMap<>();
-
-    private MongoCollection<Document> users;
-
     @Override
     public boolean canRun(RadioConfig config) {
         return config.useCoinGain;
@@ -59,8 +53,6 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
         JDA jda = Radio.getInstance().getJda();
         voiceChannel = jda.getVoiceChannelById(RadioConfig.config.channels.voice);
         textChannel = jda.getTextChannelById(RadioConfig.config.channels.radioChat);
-
-        //todo when new guardian releases: users = Radio.getInstance().getService(DatabaseManager.class).getClient().getDatabase("95degrees").getCollection("users");
 
         if (!coinGains.isEmpty()) return;
 
@@ -136,13 +128,10 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             giveCoins(m, true);
         }
 
-        Service.of(CoinsServerManager.class).addCredit(pendingDatabaseUpdate);
-        pendingDatabaseUpdate.clear();
-
         coinGains.clear();
     }
 
-    private void giveCoins(Member member, boolean clump) {
+    private void giveCoins(Member member, boolean silent) {
         User user = member.getUser();
         var id = user.getId();
 
@@ -158,9 +147,9 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
         if (amount < 1) return;
 
-        if (!clump) {
-            Service.of(CoinsServerManager.class).addCredit(user, amount);
+        Service.of(CurrencyManager.class).makeTransaction(member, new Transaction(TransactionType.RADIO, amount).addParameter("duration", coins.getTotalTime()));
 
+        if (!silent) {
             var lb = Service.of(UserStatisticsManager.class).getLeaderboard(Statistic.LISTEN_TIME, true, false);
             int pos = 0;
 
@@ -184,8 +173,6 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             if (srv != null) {
                 srv.sendCoinNotification(user.getId(), amount, coins.getTotalTime());
             }
-        } else {
-            pendingDatabaseUpdate.put(user, pendingDatabaseUpdate.getOrDefault(user, 0) + amount);
         }
 
         if (RadioConfig.config.roles.notificationsOptOutRole == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(RadioConfig.config.roles.notificationsOptOutRole))) {

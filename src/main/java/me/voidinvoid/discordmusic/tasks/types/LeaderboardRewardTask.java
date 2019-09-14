@@ -2,8 +2,9 @@ package me.voidinvoid.discordmusic.tasks.types;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
-import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
-import me.voidinvoid.discordmusic.coins.CoinsServerManager;
+import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.currency.Transaction;
+import me.voidinvoid.discordmusic.currency.TransactionType;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.stats.Statistic;
@@ -34,9 +35,7 @@ public class LeaderboardRewardTask extends RadioTaskExecutor {
             var mb = Radio.getInstance().getGuild().getMemberById(winner.getUser());
 
             if (mb == null) continue;
-
-            var cm = Service.of(CoinsServerManager.class);
-            cm.addCredit(mb.getUser(), reward);
+            Service.of(CurrencyManager.class).makeTransaction(mb, new Transaction(TransactionType.RADIO, reward));
 
             var am = Service.of(AchievementManager.class);
             am.rewardAchievement(mb.getUser(), Achievement.TOP_WEEKLY_LISTENER);

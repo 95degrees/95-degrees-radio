@@ -3,9 +3,10 @@ package me.voidinvoid.discordmusic.levelling;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.coins.CoinsServerManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.currency.Transaction;
+import me.voidinvoid.discordmusic.currency.TransactionType;
 import me.voidinvoid.discordmusic.stats.Statistic;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
@@ -256,7 +257,7 @@ public class LevellingManager implements RadioService, EventListener {
                 unlockedExtras.addAll(l.getExtras());
             }
 
-            if (reward >= 0) Service.of(CoinsServerManager.class).addCredit(user, reward);
+            if (reward >= 0) Service.of(CurrencyManager.class).makeTransaction(Radio.getInstance().getGuild().getMember(user), new Transaction(TransactionType.RADIO_LEVELLING_REWARD, reward).addParameter("level", currentLevel.getLevel()));
             //todo make sure that its only given once if the config is changed
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
