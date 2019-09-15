@@ -52,23 +52,34 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
 
         if (lb == null || !stat.isCreateLeaderboard()) return;
 
-        StringBuilder msg = new StringBuilder("```RADIO ").append(stat.getDisplayName().toUpperCase()).append( " LEADERBOARD\n");
-        msg.append("📅 Resets Weekly\n\n");
+        StringBuilder sb = new StringBuilder("```Radio ").append(stat.getDisplayName()).append(" - 📅 Resets Weekly\n\n");
 
-        int ix = 0;
+        sb.append("Rank   Username                        ").append(stat.getStatName()).append("\n\n");
+
+        int pos = 1;
+
         for (var record : lb) {
-            var user = Radio.getInstance().getGuild().getMemberById(record.getUser());
-            if (user == null || record.getValue() == 0) continue;
+            var mb = Radio.getInstance().getGuild().getMemberById(record.getUser());
+            if (mb == null || record.getValue() == 0) continue;
 
-            ix++;
+            sb.append("#");
+            if (pos < 10) sb.append(" ");
+            sb.append(" ");
+            sb.append(pos);
+            sb.append(" ║ ");
+            sb.append(Formatting.padString(mb.getUser().getAsTag(), 30));
+            sb.append("║ ");
+            sb.append(stat.format(record.getValue()));
+            sb.append("\n");
 
-            if (ix < 10) msg.append("0");
-            msg.append(ix).append(". ").append(Formatting.padString(user.getUser().getAsTag(), 50)).append(" ").append(stat.format(record.getValue())).append("\n");
+            pos++;
 
-            if (ix >= 10) break;
+            if (pos > 10) break;
         }
 
-        var code = msg.append("```").toString();
+        sb.append("```");
+
+        var code = sb.toString();
 
         if (leaderboardMessage == null) {
             leaderboardChannel.sendMessage(code).queue(m -> {
