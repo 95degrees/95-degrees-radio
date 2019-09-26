@@ -30,7 +30,7 @@
         <dependency>
             <groupId>com.sedmelluq</groupId>
             <artifactId>lavaplayer</artifactId>
-            <version>1.3.20</version>
+            <version>1.3.22</version>
         </dependency>
         <dependency>
             <groupId>com.mpatric</groupId>
@@ -81,6 +81,11 @@
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
             <version>3.9.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.socket</groupId>
+            <artifactId>socket.io-client</artifactId>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 

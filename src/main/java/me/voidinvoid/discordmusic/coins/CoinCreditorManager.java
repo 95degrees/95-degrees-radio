@@ -9,6 +9,7 @@ import me.voidinvoid.discordmusic.currency.TransactionType;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
+import me.voidinvoid.discordmusic.notifications.Notification;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.stats.Statistic;
@@ -175,7 +176,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             }
         }
 
-        if (RadioConfig.config.roles.notificationsOptOutRole == null || member.getRoles().stream().noneMatch(r -> r.getId().equals(RadioConfig.config.roles.notificationsOptOutRole))) {
+        if (Notification.RADIO_EARNINGS.is(user)) {
             user.openPrivateChannel().queue(c -> c.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))

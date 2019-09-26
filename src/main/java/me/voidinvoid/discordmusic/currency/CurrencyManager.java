@@ -31,10 +31,9 @@ public class CurrencyManager implements RadioService {
 
         if (member == null || member.getUser().isBot())
             return false; //TODO make a DegreeCore.jar containing all this stuff so no duplication
-        Document d = databaseManager.findOrCreateUser(member.getUser());
 
-        if (d.getInteger("coins", 0) + transaction.getAmount() >= 0) {
-            databaseManager.getCollection("users").updateOne(eq(member.getUser().getId()), new Document("$inc", new Document("coins", transaction.getAmount())).append("$push", new Document("transactions", transaction)));
+        if (getCoins(member) + transaction.getAmount() >= 0) {
+            users.updateOne(eq(member.getUser().getId()), new Document("$inc", new Document("coins", transaction.getAmount())).append("$push", new Document("transactions", transaction)));
             return true;
         }
 
@@ -43,11 +42,12 @@ public class CurrencyManager implements RadioService {
     }
 
     public int getCoins(Member member) {
-        return databaseManager.findOrCreateUser(member.getUser()).getInteger("coins", 0);
+        var doc = users.find(eq(member.getUser().getId())).first();
+        return doc == null ? 0 : doc.getInteger("coins", 0);
     }
 
     public List<Document> getLeaderboard(int members) {
-        return databaseManager.getCollection("users").find().sort(new Document("coins", -1)).limit(members).into(new ArrayList<>());
+        return users.find().sort(new Document("coins", -1)).limit(members).into(new ArrayList<>());
     }
 
     public List<Transaction> getTransactions(Member who) {
@@ -88,7 +88,7 @@ public class CurrencyManager implements RadioService {
             coinDiff -= t.getAmount();
         }
 
-        databaseManager.getCollection("users").updateOne(eq(who.getUser().getId()), new Document("$set", new Document("transactions", back)).append("$inc", new Document("coins", coinDiff)));
+        users.updateOne(eq(who.getUser().getId()), new Document("$set", new Document("transactions", back)).append("$inc", new Document("coins", coinDiff)));
 
         return true;
     }

@@ -9,8 +9,10 @@ import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.*;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
+import me.voidinvoid.discordmusic.notifications.NotificationManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
+import me.voidinvoid.discordmusic.remotecontrol.RemoteSocketControlManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
@@ -48,7 +50,7 @@ import static com.mongodb.client.model.Filters.eq;
 public class Radio implements EventListener {
 
     private static Radio instance;
-    private static String configName;
+    public static String configName;
 
     public static void main(String[] args) {
         if (args.length < 1) {
@@ -156,6 +158,7 @@ public class Radio implements EventListener {
         registerService(new PlaylistTesterListener());
         registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
+        registerService(new NotificationManager());
         //registerService(new KaraokeManager()); broken, musixmatch chrome extension deleted
         registerService(new TickerManager());
         registerService(new SongDJ());
@@ -170,6 +173,7 @@ public class Radio implements EventListener {
         registerService(new TaskManager());
         registerService(new UserStatisticsManager());
         registerService(new SuggestionPrivateMessageManager());
+        registerService(new RemoteSocketControlManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

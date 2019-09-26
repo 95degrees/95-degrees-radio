@@ -30,7 +30,7 @@ public class RadioConfig {
     public Orchestration orchestration;
 
     public class Roles {
-        public String notificationsOptOutRole;
+        //public String notificationsOptOutRole;
         public String quizInGameRole, quizEliminatedRole;
     }
 

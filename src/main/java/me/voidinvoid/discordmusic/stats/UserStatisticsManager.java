@@ -52,8 +52,7 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
 
         if (lb == null || !stat.isCreateLeaderboard()) return;
 
-        StringBuilder sb = new StringBuilder("```Radio ").append(stat.getDisplayName()).append(" - 📅 Resets Weekly\n\n");
-
+        StringBuilder sb = new StringBuilder("```Radio ").append(stat.getDisplayName()).append(" - 📅 Resets Weekly\n");
         sb.append("Rank   Username                        ").append(stat.getStatName()).append("\n\n");
 
         int pos = 1;
