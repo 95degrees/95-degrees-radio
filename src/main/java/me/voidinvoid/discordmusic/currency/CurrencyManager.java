@@ -51,7 +51,7 @@ public class CurrencyManager implements RadioService {
     }
 
     public List<Transaction> getTransactions(Member who) {
-        Document d = databaseManager.getCollection("users").find(eq(who.getUser().getId())).first();
+        Document d = users.find(eq(who.getUser().getId())).first();
         if (d == null) return null;
         List<Document> lo = d.get("transactions", new ArrayList<>());
         return lo.stream().map(td -> {

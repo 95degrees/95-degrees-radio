@@ -19,13 +19,13 @@ public class LevelCommand extends Command {
 
         var self = member.equals(data.getMember());
 
-        var xp = lm.getExperience(data.getMember().getUser());
+        var xp = lm.getExperience(member.getUser());
 
-        var lvl = lm.getLevel(data.getMember().getUser());
+        var lvl = lm.getLevel(member.getUser());
         var next = lm.getNextLevel(lvl);
 
         var req = lm.getExperienceRequired(xp);
 
-        data.mention("\n" + (self ? "you are" : member.getUser().getAsMention() + " is") + " currently level **" + lvl.getLevel() + "**!\n\n" + (next == null ? "This is the max level! " + (self ? "Thanks for listening! " : "") + "<:radioislit:489942546903203851>" : (self ? "You" : "They") + " are **" + req + "** xp away from levelling up to level **" + next.getLevel() + "**! **1** xp is earned for every minute listening to the radio!"));
+        data.mention("🎵", (self ? "you are" : "**" + member.getUser().getAsTag() + "** is") + " currently level **" + lvl.getLevel() + "**!\n\n" + (next == null ? "This is the max level! " + (self ? "Thanks for listening! " : "") + "<:radioislit:489942546903203851>" : (self ? "You" : "They") + " are **" + req + "** xp away from levelling up to level **" + next.getLevel() + "**! **1** xp is earned for every minute listening to the radio!"));
     }
 }
