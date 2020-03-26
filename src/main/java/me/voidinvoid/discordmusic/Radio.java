@@ -113,7 +113,7 @@ public class Radio implements EventListener {
         this.databaseManager = databaseManager;
 
         try {
-            jda = new JDABuilder(AccountType.BOT).setToken(config.botToken).addEventListeners(this).build();
+            jda = JDABuilder.createDefault(config.botToken).addEventListeners(this).build();
 
             if (config.useStatus) jda.getPresence().setActivity(null);
         } catch (LoginException e) {

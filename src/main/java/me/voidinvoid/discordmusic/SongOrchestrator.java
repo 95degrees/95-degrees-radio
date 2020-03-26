@@ -48,7 +48,6 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     private boolean pausePending;
 
     private JDA jda;
-    private Path playlistsRoot;
     private boolean suggestionsEnabled = true;
     private boolean queueCommandEnabled = true;
     private SongQueue specialQueue;
@@ -64,8 +63,6 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         this.radio = radio;
         jda = radio.getJda();
 
-        this.playlistsRoot = config.locations.playlists == null ? null : Paths.get(config.locations.playlists);
-
         loadPlaylists();
 
         manager = new DefaultAudioPlayerManager();
@@ -73,18 +70,8 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         AudioSourceManagers.registerLocalSource(manager);
         AudioSourceManagers.registerRemoteSources(manager);
 
-        //manager.registerSourceManager(new YoutubeAudioSourceManager(true));
-        //manager.registerSourceManager(new SoundCloudAudioSourceManager());
-        //manager.registerSourceManager(new BandcampAudioSourceManager());
-        //manager.registerSourceManager(new VimeoAudioSourceManager());
-        //manager.registerSourceManager(new TwitchKrakenStreamAudioSourceManager());
-        //manager.registerSourceManager(new BeamAudioSourceManager());
-        //manager.registerSourceManager(new HttpAudioSourceManager());
-
         player = manager.createPlayer();
         player.addListener(this);
-
-        player.setVolume(50);
 
         audioSendHandler = new AudioPlayerSendHandler(player);
     }
@@ -163,21 +150,6 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         playlists = new ArrayList<>();
 
         Playlist prevActive = activePlaylist;
-
-        if (playlistsRoot != null) {
-            log("Loading local playlists...");
-
-            try (Stream<Path> playlistFolder = Files.list(playlistsRoot)) {
-                playlists = playlistFolder
-                        .filter(Files::isDirectory)
-                        .map(LocalRadioPlaylist::new)
-                        .collect(Collectors.toList());
-            } catch (IOException e) {
-                System.out.println(ConsoleColor.RED + "IO error scanning playlists directory" + ConsoleColor.RESET);
-                e.printStackTrace();
-                return;
-            }
-        }
 
         DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
         if (db != null) {

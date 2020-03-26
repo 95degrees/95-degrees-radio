@@ -82,7 +82,7 @@ public class AdvertisementManager implements RadioService, SongEventListener {
             Advertisement ad = adverts.stream().filter(a -> a.getIdentifier().equalsIgnoreCase(song.getFileName())).findAny().orElse(null);
 
             if (ad == null) {
-                warn("Ccouldn't find advert for song");
+                warn("Couldn't find advert for song");
                 return;
             }
 
