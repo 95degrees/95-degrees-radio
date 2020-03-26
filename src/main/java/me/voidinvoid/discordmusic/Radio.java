@@ -174,6 +174,7 @@ public class Radio implements EventListener {
         registerService(new UserStatisticsManager());
         registerService(new SuggestionPrivateMessageManager());
         registerService(new RemoteSocketControlManager());
+        registerService(new RadioPauseManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();
