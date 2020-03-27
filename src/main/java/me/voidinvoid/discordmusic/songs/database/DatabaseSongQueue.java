@@ -34,7 +34,6 @@ public class DatabaseSongQueue extends SongQueue {
                 if ("SONG".equals(type)) {
                     return Stream.of(new DatabaseSong(getQueueType(), d).setQueue(this));
                 } else if ("SOURCE".equals(type)) {
-                    System.out.println("FOUND SOURCE: " + d.toJson());
                     String sourceName = d.getString("source");
                     DatabaseManager db = Radio.getInstance().getService(DatabaseManager.class);
                     Document source = db.getCollection("sources").find(eq("_id", sourceName)).first();

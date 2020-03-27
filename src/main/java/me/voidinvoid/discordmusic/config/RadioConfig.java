@@ -51,6 +51,7 @@ public class RadioConfig {
         public String adverts;
         @Deprecated
         public String recordings;
+        public String songCache;
     }
 
     public class Images {

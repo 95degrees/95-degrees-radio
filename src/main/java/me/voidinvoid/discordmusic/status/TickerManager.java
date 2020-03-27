@@ -13,6 +13,7 @@ import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.managers.ChannelManager;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +46,7 @@ public class TickerManager implements RadioService, SongEventListener {
         executor.scheduleAtFixedRate(() -> {
             animator++;
             update();
-        }, 0, 10000, TimeUnit.MILLISECONDS);
+        }, 0, 2000, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -142,9 +143,21 @@ public class TickerManager implements RadioService, SongEventListener {
         return sb.toString();
     }
 
+    private CompletableFuture<Void> radioTickerUpdate, djTickerUpdate;
+
     public void updateTicker(String radio, String dj) {
-        if (!lastTickerMessageRadio.equals(dj)) textChannel.setTopic(radio).queue();
-        if (!lastTickerMessageDj.equals(dj)) djChannel.setTopic(dj).queue();
+        if (!lastTickerMessageRadio.equals(dj)) {
+            if (radioTickerUpdate != null && !radioTickerUpdate.isDone()) {
+                radioTickerUpdate.cancel(false);
+            }
+            radioTickerUpdate = textChannel.setTopic(radio).submit();
+        }
+        if (!lastTickerMessageDj.equals(dj)) {
+            if (djTickerUpdate != null && !djTickerUpdate.isDone()) {
+                djTickerUpdate.cancel(false);
+            }
+            djTickerUpdate = djChannel.setTopic(dj).submit();
+        }
 
         lastTickerMessageRadio = radio;
         lastTickerMessageDj = dj;

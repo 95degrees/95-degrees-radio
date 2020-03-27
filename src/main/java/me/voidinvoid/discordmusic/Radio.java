@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic;
 
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
+import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
@@ -159,7 +160,6 @@ public class Radio implements EventListener {
         registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
         registerService(new NotificationManager());
-        //registerService(new KaraokeManager()); broken, musixmatch chrome extension deleted
         registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener());
@@ -175,6 +175,7 @@ public class Radio implements EventListener {
         registerService(new SuggestionPrivateMessageManager());
         registerService(new RemoteSocketControlManager());
         registerService(new RadioPauseManager());
+        registerService(new YouTubeCacheManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

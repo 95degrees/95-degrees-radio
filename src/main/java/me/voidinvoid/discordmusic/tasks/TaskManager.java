@@ -29,7 +29,7 @@ import static org.quartz.CronScheduleBuilder.cronSchedule;
 
 public class TaskManager implements RadioService {
 
-    private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " TASK " + ConsoleColor.RESET_SPACE;
+    private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " Tasks " + ConsoleColor.RESET_SPACE;
 
     private static Scheduler scheduler;
 

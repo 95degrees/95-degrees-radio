@@ -47,7 +47,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
     }
 
     public void addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
-        Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier + " kidzbop", new AudioLoadResultHandler() {
+        Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
                 Radio.getInstance().getOrchestrator().addNetworkTrack(member, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
@@ -64,7 +64,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
                         channel.sendMessage(new EmbedBuilder()
                                 .setTitle("Search Failure")
                                 .setColor(Colors.ACCENT_ERROR)
-                                .setDescription("No song results found for your search. Some songs were found but were too long/not child-friendly enough to be included")
+                                .setDescription("No song results found for your search. Some songs were found but were too long to be included")
                                 .build()).queue();
                     }
                 } else {

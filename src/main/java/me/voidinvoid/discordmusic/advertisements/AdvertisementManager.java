@@ -21,7 +21,7 @@ import java.util.List;
 
 public class AdvertisementManager implements RadioService, SongEventListener {
 
-    private static final String AD_LOG_PREFIX = ConsoleColor.CYAN_BACKGROUND + " AD ";
+    private static final String AD_LOG_PREFIX = ConsoleColor.CYAN_BACKGROUND + " Adverts ";
     private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
     private List<Advertisement> adverts = new ArrayList<>();

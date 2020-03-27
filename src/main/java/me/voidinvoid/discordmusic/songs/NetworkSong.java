@@ -2,8 +2,10 @@ package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.User;
 
 public class NetworkSong extends Song {

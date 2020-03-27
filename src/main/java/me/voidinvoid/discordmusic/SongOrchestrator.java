@@ -11,16 +11,19 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import me.voidinvoid.discordmusic.audio.AudioPlayerSendHandler;
+import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.*;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
@@ -158,7 +161,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         }
 
         playlists.forEach(p -> {
-            log(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " PLAYLIST " + ConsoleColor.RESET_SPACE + p.getName());
+            log(ConsoleColor.CYAN_BACKGROUND_BRIGHT + ConsoleColor.BLACK_BRIGHT + " Playlist " + ConsoleColor.RESET_SPACE + p.getName());
             if (p.isDefault()) activePlaylist = p;
         });
 
@@ -243,12 +246,22 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         log(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFileName() + ConsoleColor.RESET);
         log("              Jingle after " + timeUntilJingle + " more songs");
 
-        if (song.getTrack() != null) {
+        String cacheFileName = null;
+
+        if (song instanceof DatabaseSong && (song.getFullLocation().toLowerCase().contains("youtu.be") || song.getFullLocation().toLowerCase().contains("youtube.com"))) { //fetch youtube album art
+            cacheFileName = Service.of(YouTubeCacheManager.class).loadOrCache(song.getFullLocation());
+        }
+
+        if (cacheFileName != null && song.getTrack() != null) {
             player.playTrack(song.getTrack());
             return;
         }
 
-        manager.loadItem(song.getFullLocation(), new AudioLoadResultHandler() {
+        if (cacheFileName != null) {
+            log("Loading this song from cache");
+        }
+
+        manager.loadItem(cacheFileName != null ? cacheFileName : song.getFullLocation(), new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
                 track.setUserData(song);
                 player.playTrack(track);

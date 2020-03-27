@@ -11,7 +11,7 @@ import org.quartz.JobExecutionContext;
  */
 public class JobExecutor implements Job {
 
-    private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " TASK EXECUTOR " + ConsoleColor.RESET_SPACE;
+    private static final String TASK_LOG_PREFIX = ConsoleColor.PURPLE_BACKGROUND + " Task Executor " + ConsoleColor.RESET_SPACE;
 
     @Override
     public void execute(JobExecutionContext ctx) {
