@@ -10,7 +10,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
@@ -42,35 +44,44 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
     private static final int RPC_VERSION = 2;
 
-    private static final String CLIENT_REQUEST_STATUS = "request_status";
-    private static final String CLIENT_PAIR_RPC = "pair_rpc";
-    private static final String CLIENT_IDENTIFY = "identify";
-    private static final String CLIENT_RATE_SONG = "rate_song";
-    private static final String CLIENT_QUEUE_SONG = "queue_song";
-    private static final String CLIENT_UNLINK = "unlink";
+    public static final String CLIENT_REQUEST_STATUS = "request_status";
+    public static final String CLIENT_PAIR_RPC = "pair_rpc";
+    public static final String CLIENT_IDENTIFY = "identify";
+    public static final String CLIENT_RATE_SONG = "rate_song";
+    public static final String CLIENT_QUEUE_SONG = "queue_song";
+    public static final String CLIENT_UNLINK = "unlink";
 
-    private static final String SERVER_RPC_LINK_CODE = "rpc_link_code";
-    private static final String SERVER_ACCOUNT_LINKED = "linked_account";
-    private static final String SERVER_SONG_SEEK = "song_seek";
-    private static final String SERVER_SONG_UPDATE = "song_update";
-    private static final String SERVER_RADIO_STATUS = "status";
-    private static final String SERVER_RADIO_LISTENERS = "listeners";
-    private static final String SERVER_COINS = "coins";
-    private static final String SERVER_VERSION_INFO = "version";
-    private static final String SERVER_IDENTITY = "identity";
-    private static final String SERVER_ANNOUNCEMENT = "announcement";
-    private static final String SERVER_QUEUE_UPDATE = "queue_update";
-    private static final String SERVER_MANUAL_SONG_QUEUED = "song_suggestion";
-    private static final String SERVER_MANUAL_SONG_QUEUE_FAILED = "song_suggestion_failed";
-    private static final String SERVER_RATING_SAVED = "rating_saved";
-    private static final String SERVER_ACHIEVEMENT = "achievement";
+    //Control panel
+    public static final String CLIENT_CONTROL_PLAY_PAUSE_SONG = "dj_pause";
+    public static final String CLIENT_CONTROL_RESTART_SONG = "dj_restart";
+    public static final String CLIENT_CONTROL_SKIP_SONG = "dj_skip";
+    public static final String CLIENT_CONTROL_PAUSE_AFTER_SONG = "dj_pause_after_song";
+    public static final String CLIENT_CONTROL_PLAY_JINGLE = "dj_jingle";
+    public static final String CLIENT_CONTROL_QUEUE_AD = "dj_ad";
+    public static final String CLIENT_CONTROL_TOGGLE_SUGGESTIONS = "dj_toggle_suggestions";
+
+    public static final String SERVER_RPC_LINK_CODE = "rpc_link_code";
+    public static final String SERVER_ACCOUNT_LINKED = "linked_account";
+    public static final String SERVER_SONG_SEEK = "song_seek";
+    public static final String SERVER_SONG_UPDATE = "song_update";
+    public static final String SERVER_RADIO_STATUS = "status";
+    public static final String SERVER_RADIO_LISTENERS = "listeners";
+    public static final String SERVER_COINS = "coins";
+    public static final String SERVER_VERSION_INFO = "version";
+    public static final String SERVER_IDENTITY = "identity";
+    public static final String SERVER_ANNOUNCEMENT = "announcement";
+    public static final String SERVER_QUEUE_UPDATE = "queue_update";
+    public static final String SERVER_MANUAL_SONG_QUEUED = "song_suggestion";
+    public static final String SERVER_MANUAL_SONG_QUEUE_FAILED = "song_suggestion_failed";
+    public static final String SERVER_RATING_SAVED = "rating_saved";
+    public static final String SERVER_ACHIEVEMENT = "achievement";
 
     //DJ
-    private static final String CLIENT_GET_PLAYLISTS = "dj_get_playlists";
-    private static final String CLIENT_GET_PLAYLIST_SONGS = "dj_get_songs";
+    public static final String CLIENT_GET_PLAYLISTS = "dj_get_playlists";
+    public static final String CLIENT_GET_PLAYLIST_SONGS = "dj_get_songs";
 
-    private static final String SERVER_LIST_PLAYLISTS = "dj_playlists";
-    private static final String SERVER_LIST_PLAYLIST_SONGS = "dj_songs";
+    public static final String SERVER_LIST_PLAYLISTS = "dj_playlists";
+    public static final String SERVER_LIST_PLAYLIST_SONGS = "dj_songs";
 
     private SocketIOServer server;
 
@@ -215,6 +226,19 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 if (playlist == null) return;
 
                 c.sendEvent(SERVER_LIST_PLAYLIST_SONGS, playlist.getSongs().getSongMap().stream().map(SongInfo::new).collect(Collectors.toList()));
+            });
+
+            //DJ actions
+            Service.of(SongDJ.class).getActions().forEach(a -> {
+                server.addEventListener(a.getSocketCode(), Object.class, (c, o, ack) -> {
+                    var mb = identities.get(c);
+
+                    if (mb == null || !djChannel.canTalk(mb)) return;
+
+                    c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ CONTROLS", "todo: action invoked!"));
+
+                    Service.of(SongDJ.class).invokeAction(a, mb.getUser());
+                });
             });
 
             server.addDisconnectListener(c -> {

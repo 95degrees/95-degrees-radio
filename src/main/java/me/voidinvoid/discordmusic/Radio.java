@@ -194,6 +194,11 @@ public class Radio implements EventListener {
     }
 
     private void registerService(RadioService service) {
+        if (getServices().stream().anyMatch(r -> r.getClass() == service.getClass())) {
+            System.out.println("Skipping service '" + service.getClass().getSimpleName() + "' as an instance of it is already running");
+            return;
+        }
+
         if (!service.canRun(config)) {
             System.out.println("Skipping service '" + service.getClass().getSimpleName() + "' since it can't run with the current config");
             return;
@@ -215,7 +220,17 @@ public class Radio implements EventListener {
 
     public <T> T getService(Class<T> service) {
         Object srv = radioServices.get(service);
-        if (srv == null) return null;
+
+        if (srv == null) {
+            try {
+                srv = service.getDeclaredConstructor().newInstance();
+                System.out.println("Dynamically created '" + service.getSimpleName() + "' instance since it did not exist already");
+
+                registerService((RadioService) srv);
+            } catch (Exception ex) {
+                System.err.println("Error dynamically creating new instance of '" + service.getSimpleName() + "'");
+            }
+        }
 
         return service.cast(srv);
     }

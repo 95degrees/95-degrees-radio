@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -14,7 +15,7 @@ import java.time.OffsetDateTime;
 public class PlayAdvertAction extends DJAction {
 
     public PlayAdvertAction() {
-        super("Queue Advert", "📰");
+        super("Queue Advert", "📰", RPCSocketManager.CLIENT_CONTROL_QUEUE_AD);
     }
 
     @Override

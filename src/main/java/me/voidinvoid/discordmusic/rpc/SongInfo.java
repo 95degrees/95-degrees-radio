@@ -14,29 +14,33 @@ public class SongInfo {
     public String albumArtUrl;
     public long startTime;
     public long endTime;
+    public boolean paused = false;
     public boolean canBeRated = false;
 
     public UserInfo suggestedBy;
 
-    public SongInfo(String name, String artist, String albumArtUrl, long startTime, long endTime, boolean canBeRated, User suggestedBy) {
+    public SongInfo(String name, String artist, String albumArtUrl, long startTime, long endTime, boolean paused, boolean canBeRated, User suggestedBy) {
 
         this.name = name;
         this.artist = artist;
         this.albumArtUrl = albumArtUrl;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.paused = paused;
+
         this.canBeRated = canBeRated;
 
         if (suggestedBy != null) this.suggestedBy = new UserInfo(suggestedBy);
     }
 
-    public SongInfo(DatabaseSong song, String albumArtUrl, long startTime, long endTime, User suggestedBy) {
+    public SongInfo(DatabaseSong song, String albumArtUrl, long startTime, long endTime, boolean paused, User suggestedBy) {
 
         this.name = song.getTitle();
         this.artist = song.getArtist();
         this.albumArtUrl = albumArtUrl;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.paused = paused;
 
         this.canBeRated = true;
 
@@ -56,7 +60,8 @@ public class SongInfo {
             this.name = song.getTrack().getInfo().title;
             this.artist = song.getTrack().getInfo().author;
 
-            if (((NetworkSong) song).getSuggestedBy() != null) this.suggestedBy = new UserInfo(((NetworkSong) song).getSuggestedBy());
+            if (((NetworkSong) song).getSuggestedBy() != null)
+                this.suggestedBy = new UserInfo(((NetworkSong) song).getSuggestedBy());
 
         } else if (song instanceof DatabaseSong) {
             var ds = (DatabaseSong) song;

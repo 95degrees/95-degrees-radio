@@ -9,11 +9,13 @@ public abstract class DJAction {
 
     private final String name;
     private final String emoji;
+    private final String socketCode;
 
-    public DJAction(String name, String emoji) {
+    public DJAction(String name, String emoji, String socketCode) {
 
         this.name = name;
         this.emoji = emoji;
+        this.socketCode = socketCode;
     }
 
     public String getName() {
@@ -29,4 +31,8 @@ public abstract class DJAction {
     }
 
     public abstract void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker);
+
+    public String getSocketCode() {
+        return socketCode;
+    }
 }

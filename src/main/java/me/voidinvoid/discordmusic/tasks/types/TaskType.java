@@ -20,8 +20,6 @@ public enum TaskType {
     PLAY_SPECIAL(new PlaySpecialTask(), of("song_name"), of("play_instantly", false), of("listening_to", null)), //play a song from /Special folder
     ANNOUNCE(new AnnounceTask(), of("event_subscription_id", null), of("title", "Announcement"), of("message"), of("image_url", null), of("delete_after", 0L), of("announce_to_channel", null), of("announce_to_dj_channel", true), of("announce_to_text_channel", true), of("colour", -1)), //white
     CLEAR_QUEUE(new ClearQueueTask()),
-    START_KARAOKE(new KaraokeTask(true)),
-    STOP_KARAOKE(new KaraokeTask(false)),
     RUN_ADVERT(new AdvertisementTask()),
     ENABLE_QUEUE_COMMAND(new ToggleQueueTask(true)),
     DISABLE_QUEUE_COMMAND(new ToggleQueueTask(false)),

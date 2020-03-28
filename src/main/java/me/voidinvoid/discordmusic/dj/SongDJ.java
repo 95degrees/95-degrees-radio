@@ -60,6 +60,10 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         actions.add(new PlayAdvertAction());
     }
 
+    public List<DJAction> getActions() {
+        return actions;
+    }
+
     @Override
     public void onLoad() {
 
@@ -104,10 +108,14 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
 
             String emote = e.getReaction().getReactionEmote().getName();
 
-            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(activeTrack)).findAny().ifPresent(r -> r.invoke(Radio.getInstance().getOrchestrator(), activeTrack, djChannel, e.getUser()));
+            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(activeTrack)).findAny().ifPresent(r -> invokeAction(r, e.getUser()));
 
             e.getReaction().removeReaction(e.getUser()).queue();
         }
+    }
+
+    public void invokeAction(DJAction action, User user) {
+        action.invoke(Radio.getInstance().getOrchestrator(), activeTrack, djChannel, user);
     }
 
     @Override
@@ -200,11 +208,8 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     @Override
     public void onSongLoadError(Song song, FriendlyException error) {
         djChannel.sendMessage(new EmbedBuilder()
-                .setTitle("Failed to Load Track")
                 .setColor(Colors.ACCENT_ERROR)
-                .setDescription("⚠ Failed to load " + song.getFriendlyName() + ".\nCheck the console for stack trace")
-                .addField("Error Message", error.getMessage(), false)
-                .setTimestamp(OffsetDateTime.now()).build()).queue();
+                .setDescription("⚠ Track load error for " + song.getFriendlyName() + ": " + error.getMessage()).build()).queue();
     }
 
     @Override
@@ -213,7 +218,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
                 .setTitle("Playlist")
                 .setColor(Colors.ACCENT_MAIN)
                 .setDescription("Active playlist has been changed")
-                .addField("Name", newPlaylist.getName(), true)
+                .addField("New Playlist", newPlaylist.getName(), true)
                 .setTimestamp(OffsetDateTime.now()).build()).queue();
     }
 

@@ -44,6 +44,7 @@ public class RadioMessageListener implements RadioService, SongEventListener {
                 .setColor(new Color(230, 230, 230))
                 .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, true)
                 .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, true)
+                .setFooter(Formatting.getFormattedMsTimeLabelled(track.getDuration()))
                 .setTimestamp(new Date().toInstant());
 
         if (song instanceof NetworkSong) {
