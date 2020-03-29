@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.SongOrchestrator;
+import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
@@ -59,6 +60,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String CLIENT_CONTROL_PLAY_JINGLE = "dj_jingle";
     public static final String CLIENT_CONTROL_QUEUE_AD = "dj_ad";
     public static final String CLIENT_CONTROL_TOGGLE_SUGGESTIONS = "dj_toggle_suggestions";
+
+    public static final String SERVER_CONTROL_UPCOMING_EVENTS = "dj_upcoming_events";
 
     public static final String SERVER_RPC_LINK_CODE = "rpc_link_code";
     public static final String SERVER_ACCOUNT_LINKED = "linked_account";
@@ -346,18 +349,26 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         var start = System.currentTimeMillis() - track.getPosition();
         var end = start + track.getDuration();
 
+        var orch = Service.of(SongOrchestrator.class);
+
+        boolean paused = orch.getPlayer().isPaused();
+
         if (s.getType() != SongType.SONG) {
-            currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, end, false, suggestedBy);
+            currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, end, false, paused, suggestedBy);
         } else if (s instanceof DatabaseSong) {
             var ds = (DatabaseSong) s;
 
-            currentSongInfo = new SongInfo(ds, albumArtUrl, start, end, suggestedBy);
+            currentSongInfo = new SongInfo(ds, albumArtUrl, start, end, paused, suggestedBy);
 
         } else {
-            currentSongInfo = new SongInfo(track.getInfo().title, track.getInfo().author, albumArtUrl, start, end, false, suggestedBy);
+            currentSongInfo = new SongInfo(track.getInfo().title, track.getInfo().author, albumArtUrl, start, end, false, paused, suggestedBy);
         }
 
         updateQueue();
+
+        var pausePending = orch.isPausePending();
+        var jinglePending = orch.getTimeUntilJingle() == 0;
+        var adPending = !orch.getAwaitingSpecialSongs().isEmpty() && orch.getAwaitingSpecialSongs().get(0).getType() == SongType.ADVERTISEMENT;
 
         server.getBroadcastOperations().sendEvent(SERVER_SONG_UPDATE, currentSongInfo);
         server.getBroadcastOperations().sendEvent(SERVER_QUEUE_UPDATE, queue);

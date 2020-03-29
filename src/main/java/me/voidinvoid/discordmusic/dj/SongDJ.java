@@ -24,7 +24,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.Event;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
@@ -48,6 +47,10 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     private AudioTrack activeTrack;
 
     private Message currentMessage;
+
+    private Message lastSongLoadErrorMessage;
+    private long lastSongLoadError;
+    private int lastSongErrorRepeatCount;
 
     public SongDJ() {
 
@@ -207,9 +210,25 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
 
     @Override
     public void onSongLoadError(Song song, FriendlyException error) {
-        djChannel.sendMessage(new EmbedBuilder()
-                .setColor(Colors.ACCENT_ERROR)
-                .setDescription("⚠ Track load error for " + song.getFriendlyName() + ": " + error.getMessage()).build()).queue();
+        var now = System.currentTimeMillis();
+
+        if (now - lastSongLoadError >= 10000) { //1 error every 10s...
+            lastSongLoadErrorMessage = djChannel.sendMessage(new EmbedBuilder()
+                    .setColor(Colors.ACCENT_ERROR)
+                    .setTitle("⚠ Track load error")
+                    .setDescription(song.getFriendlyName() + ": " + error.getMessage()).build()).complete();
+
+            lastSongErrorRepeatCount = 0;
+        } else if (lastSongLoadErrorMessage != null) { //should always be true
+            lastSongErrorRepeatCount++;
+
+            var embed = lastSongLoadErrorMessage.getEmbeds().get(0);
+            embed = new EmbedBuilder(embed).setTitle("⚠ Track load error (x" + (lastSongErrorRepeatCount + 1) + ")").build();
+
+            lastSongLoadErrorMessage.editMessage(embed).queue(m -> lastSongLoadErrorMessage = m);
+        }
+
+        lastSongLoadError = now;
     }
 
     @Override
