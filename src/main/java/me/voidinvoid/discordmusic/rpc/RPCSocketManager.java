@@ -10,8 +10,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.SongOrchestrator;
-import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
@@ -349,7 +347,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         var start = System.currentTimeMillis() - track.getPosition();
         var end = start + track.getDuration();
 
-        var orch = Service.of(SongOrchestrator.class);
+        var orch = Radio.getInstance().getOrchestrator();
 
         boolean paused = orch.getPlayer().isPaused();
 
@@ -371,6 +369,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         var adPending = !orch.getAwaitingSpecialSongs().isEmpty() && orch.getAwaitingSpecialSongs().get(0).getType() == SongType.ADVERTISEMENT;
 
         server.getBroadcastOperations().sendEvent(SERVER_SONG_UPDATE, currentSongInfo);
+        server.getBroadcastOperations().sendEvent(SERVER_CONTROL_UPCOMING_EVENTS, new UpcomingEventInfo(jinglePending, adPending, pausePending));
         server.getBroadcastOperations().sendEvent(SERVER_QUEUE_UPDATE, queue);
     }
 
