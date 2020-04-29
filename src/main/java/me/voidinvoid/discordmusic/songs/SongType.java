@@ -10,9 +10,10 @@ public enum SongType {
 
     SONG("Song", true, true, (s, a) -> null),
     JINGLE("Jingle", false, false, (s, a) -> a.getJingleAlbumArt()),
-    SPECIAL("Special", false, false, (s, a) -> a.getSpecialAlbumArt()), //todo
+    SPECIAL("Special", false, false, (s, a) -> a.getSpecialAlbumArt()),
     ADVERTISEMENT("Advert", false, false, (s, a) -> a.getAdvertAlbumArt()),
-    QUIZ("Quiz Question", false, false, (s, a) -> a.getSpecialAlbumArt()); //todo
+    REWARD("Reward", false, false, (s, a) -> a.getSpecialAlbumArt()),
+    QUIZ("Quiz Question", false, false, (s, a) -> a.getSpecialAlbumArt());
 
     private final String displayName;
     private final boolean announce;

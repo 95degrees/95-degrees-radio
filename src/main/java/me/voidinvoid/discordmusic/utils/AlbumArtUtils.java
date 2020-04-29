@@ -19,7 +19,7 @@ public final class AlbumArtUtils {
     @CheckReturnValue
     public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel) {
         var art = song.getAlbumArt();
-        if (art == null) art = Radio.getInstance().getService(AlbumArtManager.class).getAdvertAlbumArt();
+        if (art == null) art = Radio.getInstance().getService(AlbumArtManager.class).getFallbackAlbumArt();
 
         return art.attachAlbumArt(embed, channel);
     }
@@ -27,7 +27,7 @@ public final class AlbumArtUtils {
     @CheckReturnValue
     public static MessageAction attachAlbumArtToEdit(EmbedBuilder embed, Song song, Message existingMessage) {
         var art = song.getAlbumArt();
-        if (art == null) art = Radio.getInstance().getService(AlbumArtManager.class).getAdvertAlbumArt();
+        if (art == null) art = Radio.getInstance().getService(AlbumArtManager.class).getFallbackAlbumArt();
 
         return art.attachAlbumArtToEdit(embed, existingMessage);
     }

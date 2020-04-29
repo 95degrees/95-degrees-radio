@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.currency;
+package me.voidinvoid.discordmusic.economy;
 
 /**
  * This code was developed by VoidInVoid / Exfusion

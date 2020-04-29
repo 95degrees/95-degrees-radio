@@ -6,8 +6,10 @@ import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
+import me.voidinvoid.discordmusic.restream.RadioRestreamManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Service;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -43,8 +45,13 @@ public class DebugCommand extends Command {
         LIST_ACTIVE_CLIENTS(d -> {
             d.success(Radio.getInstance().getService(RPCSocketManager.class).getServer().getAllClients().stream().map(c -> c.getSessionId().toString()).collect(Collectors.joining(", ")));
         }),
-        TEST_QUIZ(d -> {
+        RESTREAM(d -> {
+            var id = d.getArgs()[1]; //text channel
 
+            Service.of(RadioRestreamManager.class).joinVoiceChannel(id);
+        }),
+        RESTREAM_LEAVE(d -> {
+            Service.of(RadioRestreamManager.class).leaveVoice(d.getMember().getGuild().getId());
         }),
         QUIZ_PROGRESS(d -> {
             if (Radio.getInstance().getService(QuizManager.class).getActiveQuiz().progress(false)) {
@@ -56,7 +63,7 @@ public class DebugCommand extends Command {
             Radio.getInstance().getService(AchievementManager.class).rewardAchievement(d.getMember().getUser(), a);
         }),
         LEVEL_UP(d -> {
-            int i = d.getArgs().length < 2 ? 1 : Integer.valueOf(d.getArgs()[1]);
+            int i = d.getArgs().length < 2 ? 1 : Integer.parseInt(d.getArgs()[1]);
             d.success("Level up x" + i);
             Radio.getInstance().getService(LevellingManager.class).rewardExperience(d.getMember().getUser(), i);
         });

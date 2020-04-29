@@ -1,6 +1,6 @@
 package me.voidinvoid.discordmusic.utils.cache;
 
-import cf.ninetyfivedegrees.guardian.GuardianBot;
+import me.voidinvoid.discordmusic.Radio;
 import net.dv8tion.jda.api.entities.GuildChannel;
 
 @SuppressWarnings("unchecked")
@@ -23,6 +23,6 @@ public class CachedChannel<T extends GuildChannel> implements ICached<GuildChann
     }
 
     public T get() {
-        return (T) GuardianBot.getInstance().getJda().getGuildChannelById(channelId);
+        return (T) Radio.getInstance().getJda().getGuildChannelById(channelId);
     }
 }

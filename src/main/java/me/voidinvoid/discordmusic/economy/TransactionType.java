@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.currency;
+package me.voidinvoid.discordmusic.economy;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;

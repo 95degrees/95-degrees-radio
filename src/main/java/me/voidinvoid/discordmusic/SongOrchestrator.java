@@ -243,12 +243,12 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             return;
         }
 
-        log(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFileName() + ConsoleColor.RESET);
+        log(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFriendlyName() + ConsoleColor.RESET);
         log("              Jingle after " + timeUntilJingle + " more songs");
 
         String cacheFileName = null;
 
-        if (song instanceof DatabaseSong && (song.getFullLocation().toLowerCase().contains("youtu.be") || song.getFullLocation().toLowerCase().contains("youtube.com"))) { //fetch youtube album art
+        if (song instanceof DatabaseSong && (song.getFullLocation().toLowerCase().contains("youtu.be") || song.getFullLocation().toLowerCase().contains("youtube.com"))) { //fetch cached version if available
             cacheFileName = Service.of(YouTubeCacheManager.class).loadOrCache(song.getFullLocation());
         }
 
@@ -491,17 +491,18 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
     public void setPaused(boolean paused) {
         boolean wasPaused = player.isPaused();
-        if (wasPaused == paused) return;
 
         player.setPaused(paused);
 
         final boolean p = player.isPaused(); //since setPaused might not have an effect (e.g. for streams)
+        if (wasPaused == p) return;
+
         final AudioTrack t = player.getPlayingTrack();
         final Song s = t.getUserData(Song.class);
 
         songEventListeners.forEach(l -> {
             try {
-                l.onSongPause(paused, s, t, player);
+                l.onSongPause(p, s, t, player);
             } catch (Exception ex) {
                 log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();

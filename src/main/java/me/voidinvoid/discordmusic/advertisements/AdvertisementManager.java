@@ -10,9 +10,11 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.time.OffsetDateTime;
@@ -69,6 +71,8 @@ public class AdvertisementManager implements RadioService, SongEventListener {
         List<Song> awaitingSongs = Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs();
         if (awaitingSongs.stream().noneMatch(s -> s.getType() == SongType.ADVERTISEMENT)) { //only queue one ad at a time
             awaitingSongs.add(adverts.get(currentAdIndex).getSong());
+
+            Service.of(RPCSocketManager.class).updateUpcomingEvents();
         }
     }
 

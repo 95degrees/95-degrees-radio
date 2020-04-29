@@ -4,13 +4,14 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.currency.CurrencyManager;
-import me.voidinvoid.discordmusic.currency.Transaction;
-import me.voidinvoid.discordmusic.currency.TransactionType;
+import me.voidinvoid.discordmusic.economy.EconomyManager;
+import me.voidinvoid.discordmusic.economy.Transaction;
+import me.voidinvoid.discordmusic.economy.TransactionType;
 import me.voidinvoid.discordmusic.stats.Statistic;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
@@ -257,7 +258,7 @@ public class LevellingManager implements RadioService, EventListener {
                 unlockedExtras.addAll(l.getExtras());
             }
 
-            if (reward >= 0) Service.of(CurrencyManager.class).makeTransaction(Radio.getInstance().getGuild().getMember(user), new Transaction(TransactionType.RADIO_LEVELLING_REWARD, reward).addParameter("level", currentLevel.getLevel()));
+            if (reward >= 0) Service.of(EconomyManager.class).makeTransaction(Radio.getInstance().getGuild().getMember(user), new Transaction(TransactionType.RADIO_LEVELLING_REWARD, reward).addParameter("level", currentLevel.getLevel()));
             //todo make sure that its only given once if the config is changed
 
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
@@ -266,7 +267,7 @@ public class LevellingManager implements RadioService, EventListener {
                     .setColor(Colors.ACCENT_LEVEL_UP)
                     .setThumbnail(RadioConfig.config.images.levellingUpLogo)
                     .setDescription(user.getAsMention() + " has levelled up for listening to the radio!\nLevel " + prevLevel.getLevel() + " ➠ **" + currentLevel.getLevel() + "**")
-                    .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + reward
+                    .addField("Reward", Emoji.DEGREECOIN + " " + reward
                             + (unlockedExtras.isEmpty() ? "" : "\n" + unlockedExtras.stream().map(a -> a.getExtra().getDisplayName() + " " + a.getExtra().formatParameter(getLatestExtra(xp, a.getExtra()).getValue()) + " ➠ **" + a.getExtra().formatParameter(a.getValue()) + "**").collect(Collectors.joining("\n"))), false)
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl())

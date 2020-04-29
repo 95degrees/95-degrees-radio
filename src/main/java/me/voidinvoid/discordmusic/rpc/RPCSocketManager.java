@@ -41,7 +41,7 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class RPCSocketManager implements RadioService, SongEventListener, EventListener {
 
-    private static final int RPC_VERSION = 2;
+    private static final int RPC_VERSION = 3;
 
     public static final String CLIENT_REQUEST_STATUS = "request_status";
     public static final String CLIENT_PAIR_RPC = "pair_rpc";
@@ -49,6 +49,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String CLIENT_RATE_SONG = "rate_song";
     public static final String CLIENT_QUEUE_SONG = "queue_song";
     public static final String CLIENT_UNLINK = "unlink";
+    public static final String CLIENT_DISCONNECT_ME = "disconnect_me";
 
     //Control panel
     public static final String CLIENT_CONTROL_PLAY_PAUSE_SONG = "dj_pause";
@@ -58,12 +59,14 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String CLIENT_CONTROL_PLAY_JINGLE = "dj_jingle";
     public static final String CLIENT_CONTROL_QUEUE_AD = "dj_ad";
     public static final String CLIENT_CONTROL_TOGGLE_SUGGESTIONS = "dj_toggle_suggestions";
+    public static final String CLIENT_CONTROL_CANCEL_UPCOMING_EVENT = "dj_cancel_upcoming_event";
 
     public static final String SERVER_CONTROL_UPCOMING_EVENTS = "dj_upcoming_events";
 
     public static final String SERVER_RPC_LINK_CODE = "rpc_link_code";
     public static final String SERVER_ACCOUNT_LINKED = "linked_account";
     public static final String SERVER_SONG_SEEK = "song_seek";
+    public static final String SERVER_SONG_PAUSE = "song_pause";
     public static final String SERVER_SONG_UPDATE = "song_update";
     public static final String SERVER_RADIO_STATUS = "status";
     public static final String SERVER_RADIO_LISTENERS = "listeners";
@@ -89,6 +92,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private SongInfo currentSongInfo;
     private List<SongInfo> queue;
     private List<UserInfo> listeners;
+
+    private List<UpcomingEvent> upcomingEvents;
 
     private Map<String, SocketIOClient> pendingPairCodes;
     private Map<SocketIOClient, Member> identities;
@@ -116,6 +121,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         identities = new HashMap<>();
 
         listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList());
+
+        upcomingEvents = new ArrayList<>();
 
         updateQueue();
 
@@ -157,7 +164,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
             });
 
             server.addEventListener(CLIENT_REQUEST_STATUS, Object.class, (c, o, ack) -> {
-                RadioInfo info = new RadioInfo(listeners, currentSongInfo, queue);
+                RadioInfo info = new RadioInfo(RadioConfig.config.voiceInviteLink, listeners, currentSongInfo, queue, upcomingEvents, Radio.getInstance().getOrchestrator().getPlayer().isPaused());
 
                 c.sendEvent(SERVER_RADIO_STATUS, info);
             });
@@ -229,6 +236,14 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 c.sendEvent(SERVER_LIST_PLAYLIST_SONGS, playlist.getSongs().getSongMap().stream().map(SongInfo::new).collect(Collectors.toList()));
             });
 
+            server.addEventListener(CLIENT_DISCONNECT_ME, Object.class, (c, o, ack) -> {
+                var mb = identities.get(c);
+
+                if (mb == null) return;
+
+                mb.getGuild().kickVoiceMember(mb).queue();
+            });
+
             //DJ actions
             Service.of(SongDJ.class).getActions().forEach(a -> {
                 server.addEventListener(a.getSocketCode(), Object.class, (c, o, ack) -> {
@@ -236,11 +251,25 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
                     if (mb == null || !djChannel.canTalk(mb)) return;
 
-                    c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ CONTROLS", "todo: action invoked!"));
+                    c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ CONTROLS", "todo: invoked action " + a + "!"));
 
                     Service.of(SongDJ.class).invokeAction(a, mb.getUser());
                 });
             });
+
+            server.addEventListener(CLIENT_CONTROL_CANCEL_UPCOMING_EVENT, String.class, (c, evId, ack) -> {
+                var mb = identities.get(c);
+
+                if (mb == null || !djChannel.canTalk(mb) || upcomingEvents == null) return;
+
+                for (var ev : upcomingEvents) {
+                    if (ev.id.equals(evId)) {
+                        ev.cancel();
+                        updateUpcomingEvents();
+                        return;
+                    }
+                }
+             });
 
             server.addDisconnectListener(c -> {
                 for (String s : pendingPairCodes.keySet()) {
@@ -270,7 +299,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        if (!(song.getAlbumArt() instanceof RemoteAlbumArt)) return;
+        //if (!(song.getAlbumArt() instanceof RemoteAlbumArt)) return;
         updateSongInfo(track, ((RemoteAlbumArt) song.getAlbumArt()).getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
     }
 
@@ -282,6 +311,16 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     @Override
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
         updateQueue();
+    }
+
+    @Override
+    public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
+        server.getBroadcastOperations().sendEvent(SERVER_SONG_PAUSE, paused);
+    }
+
+    @Override
+    public void onPausePending(boolean isPending) {
+        updateUpcomingEvents();
     }
 
     @Override
@@ -301,6 +340,11 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 es.getKey().sendEvent(SERVER_MANUAL_SONG_QUEUE_FAILED, error.getErrorMessage());
             }
         }
+    }
+
+    @Override
+    public void onTrackStopped() {
+        server.getBroadcastOperations().sendEvent(SERVER_SONG_PAUSE, true);
     }
 
     @Override
@@ -349,36 +393,58 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
         var orch = Radio.getInstance().getOrchestrator();
 
-        boolean paused = orch.getPlayer().isPaused();
-
         if (s.getType() != SongType.SONG) {
-            currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, end, false, paused, suggestedBy);
+            currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, end, false, suggestedBy);
         } else if (s instanceof DatabaseSong) {
             var ds = (DatabaseSong) s;
 
-            currentSongInfo = new SongInfo(ds, albumArtUrl, start, end, paused, suggestedBy);
+            currentSongInfo = new SongInfo(ds, albumArtUrl, start, end, suggestedBy);
 
         } else {
-            currentSongInfo = new SongInfo(track.getInfo().title, track.getInfo().author, albumArtUrl, start, end, false, paused, suggestedBy);
+            currentSongInfo = new SongInfo(track.getInfo().title, track.getInfo().author, albumArtUrl, start, end, false, suggestedBy);
         }
 
         updateQueue();
 
+        server.getBroadcastOperations().sendEvent(SERVER_SONG_UPDATE, currentSongInfo);
+        server.getBroadcastOperations().sendEvent(SERVER_QUEUE_UPDATE, queue);
+        server.getBroadcastOperations().sendEvent(SERVER_SONG_PAUSE, orch.getPlayer().isPaused());
+
+        updateUpcomingEvents();
+    }
+
+    public void updateUpcomingEvents() {
+        var orch = Radio.getInstance().getOrchestrator();
+
         var pausePending = orch.isPausePending();
         var jinglePending = orch.getTimeUntilJingle() == 0;
         var adPending = !orch.getAwaitingSpecialSongs().isEmpty() && orch.getAwaitingSpecialSongs().get(0).getType() == SongType.ADVERTISEMENT;
+        var rewardPending = !orch.getAwaitingSpecialSongs().isEmpty() && orch.getAwaitingSpecialSongs().get(0).getType() == SongType.REWARD;
 
-        server.getBroadcastOperations().sendEvent(SERVER_SONG_UPDATE, currentSongInfo);
-        server.getBroadcastOperations().sendEvent(SERVER_CONTROL_UPCOMING_EVENTS, new UpcomingEventInfo(jinglePending, adPending, pausePending));
-        server.getBroadcastOperations().sendEvent(SERVER_QUEUE_UPDATE, queue);
+        var evs = new UpcomingEventsInfo()
+                .addIf(UpcomingEventsInfo.ADVERT_EVENT, adPending)
+                .addIf(UpcomingEventsInfo.JINGLE_EVENT, jinglePending)
+                .addIf(UpcomingEventsInfo.REWARD_EVENT, rewardPending)
+                .addIf(UpcomingEventsInfo.PAUSE_EVENT, pausePending)
+                .upcomingEvents;
+
+        upcomingEvents = evs;
+
+        for (var client : server.getAllClients()) {
+            var mb = identities.get(client);
+
+            if (mb == null || !djChannel.canTalk(mb)) continue;
+
+            client.sendEvent(SERVER_CONTROL_UPCOMING_EVENTS, evs);
+        }
     }
 
     public void sendCoinNotification(String id, int amount, long totalTime) {
         server.getBroadcastOperations().sendEvent(SERVER_COINS, new CoinsUpdateInfo(id, amount, totalTime));
     }
 
-    public void sendAnnouncement(String message) {
-        server.getBroadcastOperations().sendEvent(SERVER_ANNOUNCEMENT, message);
+    public void sendAnnouncement(String title, String message) {
+        server.getBroadcastOperations().sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo(title, message));
     }
 
     public void updateQueue() {

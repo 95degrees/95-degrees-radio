@@ -4,14 +4,20 @@ import java.util.List;
 
 public class RadioInfo {
 
+    public String inviteLink;
     public List<UserInfo> listeners;
     public SongInfo song;
     public List<SongInfo> queue;
+    public List<UpcomingEvent> events;
+    public boolean paused;
 
-    public RadioInfo(List<UserInfo> listeners, SongInfo song, List<SongInfo> queue) {
+    public RadioInfo(String inviteLink, List<UserInfo> listeners, SongInfo song, List<SongInfo> queue, List<UpcomingEvent> events, boolean paused) {
 
+        this.inviteLink = inviteLink;
         this.listeners = listeners;
         this.song = song;
         this.queue = queue;
+        this.events = events;
+        this.paused = paused;
     }
 }

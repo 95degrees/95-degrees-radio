@@ -3,9 +3,9 @@ package me.voidinvoid.discordmusic.coins;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.currency.CurrencyManager;
-import me.voidinvoid.discordmusic.currency.Transaction;
-import me.voidinvoid.discordmusic.currency.TransactionType;
+import me.voidinvoid.discordmusic.economy.EconomyManager;
+import me.voidinvoid.discordmusic.economy.Transaction;
+import me.voidinvoid.discordmusic.economy.TransactionType;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
@@ -15,6 +15,7 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.stats.Statistic;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -36,6 +37,7 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated //old coin system
 public class CoinCreditorManager implements RadioService, EventListener, SongEventListener {
 
     private VoiceChannel voiceChannel;
@@ -148,7 +150,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
 
         if (amount < 1) return;
 
-        Service.of(CurrencyManager.class).makeTransaction(member, new Transaction(TransactionType.RADIO, amount).addParameter("duration", coins.getTotalTime()));
+        Service.of(EconomyManager.class).makeTransaction(member, new Transaction(TransactionType.RADIO, amount).addParameter("duration", coins.getTotalTime()));
 
         if (!silent) {
             var lb = Service.of(UserStatisticsManager.class).getLeaderboard(Statistic.LISTEN_TIME, true, false);
@@ -164,7 +166,7 @@ public class CoinCreditorManager implements RadioService, EventListener, SongEve
             textChannel.sendMessage(new EmbedBuilder()
                     .setTitle("Earned Degreecoins")
                     .setColor(new Color(110, 230, 140))
-                    .setDescription(user.getName() + " has earned " + CurrencyManager.DEGREECOIN_EMOTE + " " + amount + " for listening to the 95 Degrees Radio for " + Formatting.getFormattedMsTimeLabelled(coins.getTotalTime()))
+                    .setDescription(user.getName() + " has earned " + Emoji.DEGREECOIN + " " + amount + " for listening to the 95 Degrees Radio for " + Formatting.getFormattedMsTimeLabelled(coins.getTotalTime()))
                     .appendDescription("\n\n" + (pos == 1 ? "👑" : "") + "#" + pos + " listener this week!")
                     .setTimestamp(OffsetDateTime.now())
                     .setFooter(user.getName(), user.getAvatarUrl()).build())

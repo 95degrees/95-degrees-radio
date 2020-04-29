@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.currency;
+package me.voidinvoid.discordmusic.economy;
 
 import com.mongodb.client.MongoCollection;
 import me.voidinvoid.discordmusic.DatabaseManager;
@@ -15,9 +15,7 @@ import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class CurrencyManager implements RadioService {
-
-    public static String DEGREECOIN_EMOTE = RadioConfig.config.debug ? "<:degreecoin:479326667660328961>" : "<:degreecoin:431982714212843521>"; //todo dont hardcode
+public class EconomyManager implements RadioService {
 
     private MongoCollection<Document> users;
     private DatabaseManager databaseManager;

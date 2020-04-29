@@ -1,4 +1,4 @@
-package me.voidinvoid.discordmusic.currency;
+package me.voidinvoid.discordmusic.economy;
 
 import java.util.HashMap;
 import java.util.Map;

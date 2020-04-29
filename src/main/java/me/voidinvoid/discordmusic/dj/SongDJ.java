@@ -17,6 +17,7 @@ import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -187,15 +188,15 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
 
             embed.addField("Title", Formatting.escape(ds.getTitle()), true);
             embed.addField("Artist", Formatting.escape(ds.getArtist()), true);
-            embed.addField("Album Art ID", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + Formatting.escape(ds.getFileName()), true);
-            embed.addField("MBID", ds.getMbId() == null ? "Unknown" : Formatting.escape(ds.getMbId()), true);
+            //embed.addField("MBID", ds.getMbId() == null ? "Unknown" : Formatting.escape(ds.getMbId()), true);
+            embed.setFooter("(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(ds.getFileName()));
 
         } else if (song instanceof FileSong) {
 
             if (song.getType() == SongType.SONG) {
                 embed.addField("Title", Formatting.escape(track.getInfo().title), true);
                 embed.addField("Artist", Formatting.escape(track.getInfo().author), true);
-                embed.addField("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + ") " + Formatting.escape(song.getFileName()), true);
+                embed.setFooter("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getFileName()));
             }
 
         } else {
@@ -215,7 +216,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         if (now - lastSongLoadError >= 10000) { //1 error every 10s...
             lastSongLoadErrorMessage = djChannel.sendMessage(new EmbedBuilder()
                     .setColor(Colors.ACCENT_ERROR)
-                    .setTitle("⚠ Track load error")
+                    .setTitle(Emoji.WARN + " Track load error")
                     .setDescription(song.getFriendlyName() + ": " + error.getMessage()).build()).complete();
 
             lastSongErrorRepeatCount = 0;
@@ -223,7 +224,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
             lastSongErrorRepeatCount++;
 
             var embed = lastSongLoadErrorMessage.getEmbeds().get(0);
-            embed = new EmbedBuilder(embed).setTitle("⚠ Track load error (x" + (lastSongErrorRepeatCount + 1) + ")").build();
+            embed = new EmbedBuilder(embed).setTitle(Emoji.WARN + " Track load error (x" + (lastSongErrorRepeatCount + 1) + ")").build();
 
             lastSongLoadErrorMessage.editMessage(embed).queue(m -> lastSongLoadErrorMessage = m);
         }

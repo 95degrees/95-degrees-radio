@@ -7,7 +7,7 @@ package me.voidinvoid.discordmusic.levelling;
 public enum Achievement {
     //LISTEN_WITH_10_PEOPLE("Radio Rave", "Listen to the radio whilst as least 10 people are listening", 30),
     LISTEN_FOR_10_HOURS("Avid Listener", "Listen to the radio for 10 hours total", 60),
-    OVER_LENGTH_LIMIT("Not Allowed", "Queue a song that's just 1 second over the length limit", 50),
+    OVER_LENGTH_LIMIT("Not Allowed", "Attempt to queue a song that's just 1 second over the length limit", 50),
     LISTEN_FOR_5_HOURS_AT_ONCE("In the Zone", "Listen to the radio for 5 or more hours at once", 100),
     RATE_SONG("Democracy", "Give a rating to a song", 30),
     MUTE_RADIO(":(", "Deafen yourself whilst in the radio text channel", 30),

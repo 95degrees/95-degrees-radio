@@ -13,6 +13,7 @@ public class RadioConfig {
     public static RadioConfig config;
 
     public String botToken;
+    public String restreamBotToken;
     public String voiceInviteLink;
     public boolean useCoinGain;
     public boolean debug;
@@ -29,17 +30,16 @@ public class RadioConfig {
     public Roles roles;
     public Orchestration orchestration;
 
-    public class Roles {
+    public static class Roles {
         //public String notificationsOptOutRole;
         public String quizInGameRole, quizEliminatedRole;
     }
 
-    public class Channels {
-        public String voice, radioChat, djChat, lyricsChat, leaderboards;
+    public static class Channels {
+        public String voice, radioChat, djChat, leaderboards;
     }
 
-    public class Locations {
-        public String coinUpdates;
+    public static class Locations {
         @Deprecated
         public String playlists;
         public String specialPlaylist;
@@ -52,9 +52,10 @@ public class RadioConfig {
         @Deprecated
         public String recordings;
         public String songCache;
+        public String[] rewardIdentifiers;
     }
 
-    public class Images {
+    public static class Images {
         public String fallbackAlbumArt;
         public String jingleAlbumArt;
         public String advertAlbumArt;
@@ -64,7 +65,7 @@ public class RadioConfig {
         public String achievementLogo;
     }
 
-    public class Orchestration {
+    public static class Orchestration {
         public int jingleFrequency;
         public long maxSongLength;
         public int userQueueLimit;

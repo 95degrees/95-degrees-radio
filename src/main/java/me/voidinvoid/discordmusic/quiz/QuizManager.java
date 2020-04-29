@@ -358,9 +358,8 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
             if (!att.isImage() && att.getFileName().endsWith(".quiz")) {
                 try {
                     Path file = Files.createTempDirectory("quiz-attachment-").resolve("quiz");
-                    att.downloadToFile(file.toFile());
+                    att.downloadToFile(file.toFile()).thenAccept(f -> loadDynamicQuiz(f.toPath()));
 
-                    loadDynamicQuiz(file);
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }

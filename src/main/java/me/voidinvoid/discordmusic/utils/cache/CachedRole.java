@@ -1,6 +1,6 @@
 package me.voidinvoid.discordmusic.utils.cache;
 
-import cf.ninetyfivedegrees.guardian.GuardianBot;
+import me.voidinvoid.discordmusic.Radio;
 import net.dv8tion.jda.api.entities.Role;
 
 public class CachedRole implements ICached {
@@ -22,6 +22,6 @@ public class CachedRole implements ICached {
     }
 
     public Role get() {
-        return GuardianBot.getInstance().getJda().getRoleById(roleId);
+        return Radio.getInstance().getJda().getRoleById(roleId);
     }
 }

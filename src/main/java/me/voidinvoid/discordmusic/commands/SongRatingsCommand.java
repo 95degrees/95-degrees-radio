@@ -48,7 +48,10 @@ public class SongRatingsCommand extends Command {
 
             var ds = (DatabaseSong) song;
 
-            data.code("Ratings for " + song.getFriendlyName() + "\n\n" + ratings.stream().map(e -> e.getKey() + " - " + (100 * (double) ((ArrayList<String>) e.getValue()).size() / totalRatings) + "%").collect(Collectors.joining("\n")));
+            data.code("Ratings for " + song.getFriendlyName() + "\n\n" + ratings.stream().map(e -> {
+                double rating = ((ArrayList<String>) e.getValue()).size();
+                return e.getKey() + " - " + (100d * (rating / totalRatings) + "% (" + rating + ")");
+            }).collect(Collectors.joining("\n")));
             return;
         }
 

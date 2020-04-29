@@ -5,7 +5,7 @@ import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.currency.CurrencyManager;
+import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.*;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
@@ -14,6 +14,7 @@ import me.voidinvoid.discordmusic.notifications.NotificationManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.remotecontrol.RemoteSocketControlManager;
+import me.voidinvoid.discordmusic.restream.RadioRestreamManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
@@ -24,8 +25,8 @@ import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
-import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -148,6 +149,8 @@ public class Radio implements EventListener {
         registerService(databaseManager);
         orchestrator = new SongOrchestrator(this, config);
 
+        Emoji.init();
+
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
@@ -167,7 +170,7 @@ public class Radio implements EventListener {
         registerService(new CoinCreditorManager());
         registerService(new StatusManager());
         registerService(new AdvertisementManager());
-        registerService(new CurrencyManager());
+        registerService(new EconomyManager());
         registerService(new LevellingManager());
         registerService(new AchievementManager());
         registerService(new TaskManager());
@@ -176,6 +179,7 @@ public class Radio implements EventListener {
         registerService(new RemoteSocketControlManager());
         registerService(new RadioPauseManager());
         registerService(new YouTubeCacheManager());
+        registerService(new RadioRestreamManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

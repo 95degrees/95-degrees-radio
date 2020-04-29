@@ -5,9 +5,9 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.currency.CurrencyManager;
-import me.voidinvoid.discordmusic.currency.Transaction;
-import me.voidinvoid.discordmusic.currency.TransactionType;
+import me.voidinvoid.discordmusic.economy.EconomyManager;
+import me.voidinvoid.discordmusic.economy.Transaction;
+import me.voidinvoid.discordmusic.economy.TransactionType;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
@@ -48,10 +48,10 @@ public class AchievementManager implements RadioService, SongEventListener {
                     .setThumbnail(RadioConfig.config.images.achievementLogo)
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")
                     .addField(achievement.getDisplay(), achievement.getDescription(), false)
-                    .addField("Reward", CurrencyManager.DEGREECOIN_EMOTE + " " + achievement.getReward(), false)
+                    .addField("Reward", Emoji.DEGREECOIN + " " + achievement.getReward(), false)
                     .build()).build()).queue();
 
-            Service.of(CurrencyManager.class).makeTransaction(Radio.getInstance().getGuild().getMember(user), new Transaction(TransactionType.RADIO_ACHIEVEMENT, achievement.getReward()).addParameter("achievement", achievement.name()));
+            Service.of(EconomyManager.class).makeTransaction(Radio.getInstance().getGuild().getMember(user), new Transaction(TransactionType.RADIO_ACHIEVEMENT, achievement.getReward()).addParameter("achievement", achievement.name()));
 
             var rpc = Radio.getInstance().getService(RPCSocketManager.class);
             if (rpc != null) {

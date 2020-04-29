@@ -1,6 +1,6 @@
 package me.voidinvoid.discordmusic.utils.cache;
 
-import cf.ninetyfivedegrees.guardian.GuardianBot;
+import me.voidinvoid.discordmusic.Radio;
 import net.dv8tion.jda.api.entities.Guild;
 
 public class CachedGuild implements ICached {
@@ -22,6 +22,6 @@ public class CachedGuild implements ICached {
     }
 
     public Guild get() {
-        return GuardianBot.getInstance().getJda().getGuildById(guildId);
+        return Radio.getInstance().getJda().getGuildById(guildId);
     }
 }
