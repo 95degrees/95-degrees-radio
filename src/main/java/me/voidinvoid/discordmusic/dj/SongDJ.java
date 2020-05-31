@@ -19,6 +19,7 @@ import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
@@ -39,12 +40,9 @@ import java.util.stream.Collectors;
 
 public class SongDJ implements RadioService, SongEventListener, EventListener {
 
-    private TextChannel djChannel, radioChannel;
-
-    private List<DJAction> actions = new ArrayList<>();
-
-    private Map<String, NetworkSong> queueDeletionMessages = new HashMap<>();
-
+    private final List<DJAction> actions = new ArrayList<>();
+    private final Map<String, NetworkSong> queueDeletionMessages = new HashMap<>();
+    private CachedChannel<TextChannel> djChannel, radioChannel;
     private AudioTrack activeTrack;
 
     private Message currentMessage;
@@ -71,8 +69,8 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     @Override
     public void onLoad() {
 
-        djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
-        radioChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+        djChannel = new CachedChannel<>(RadioConfig.config.channels.djChat);
+        radioChannel = new CachedChannel<>(RadioConfig.config.channels.radioChat);
     }
 
     public void removeSongFromQueue(Message m, NetworkSong song) {
@@ -92,10 +90,10 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
             embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
         }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, djChannel).queue(); //TODO split into another event? and remove via orchestrator
+        AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get()).queue(); //TODO split into another event? and remove via orchestrator
 
         if (Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) {
-            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel).queue();
+            AlbumArtUtils.attachAlbumArt(embed, song, radioChannel.get()).queue();
         }
     }
 
@@ -118,8 +116,8 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         }
     }
 
-    public void invokeAction(DJAction action, User user) {
-        action.invoke(Radio.getInstance().getOrchestrator(), activeTrack, djChannel, user);
+    public String invokeAction(DJAction action, User user) {
+        return action.invoke(Radio.getInstance().getOrchestrator(), activeTrack, djChannel.get(), user);
     }
 
     @Override
@@ -136,7 +134,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
                 if (queueDeletionMessages.get(id).equals(song)) {
                     MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
                     mr.removeCallback(id);
-                    djChannel.retrieveMessageById(id).queue(m -> m.clearReactions().queue());
+                    djChannel.get().retrieveMessageById(id).queue(m -> m.clearReactions().queue());
                     queueDeletionMessages.remove(id); //remove the ability to cancel this song since it's already playing by now
                     break;
                 }
@@ -206,7 +204,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + Formatting.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
         embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
 
-        return AlbumArtUtils.attachAlbumArt(embed, song, djChannel);
+        return AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get());
     }
 
     @Override
@@ -214,7 +212,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         var now = System.currentTimeMillis();
 
         if (now - lastSongLoadError >= 10000) { //1 error every 10s...
-            lastSongLoadErrorMessage = djChannel.sendMessage(new EmbedBuilder()
+            lastSongLoadErrorMessage = djChannel.get().sendMessage(new EmbedBuilder()
                     .setColor(Colors.ACCENT_ERROR)
                     .setTitle(Emoji.WARN + " Track load error")
                     .setDescription(song.getFriendlyName() + ": " + error.getMessage()).build()).complete();
@@ -234,7 +232,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
 
     @Override
     public void onPlaylistChange(Playlist oldPlaylist, Playlist newPlaylist) {
-        djChannel.sendMessage(new EmbedBuilder()
+        djChannel.get().sendMessage(new EmbedBuilder()
                 .setTitle("Playlist")
                 .setColor(Colors.ACCENT_MAIN)
                 .setDescription("Active playlist has been changed")
@@ -252,7 +250,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(source.getName(), source.getAvatarUrl());
 
-        djChannel.sendMessage(embed.build()).queue();
+        djChannel.get().sendMessage(embed.build()).queue();
     }
 
     @Override
@@ -272,7 +270,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
 
         MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 
-        AlbumArtUtils.attachAlbumArt(embed, song, djChannel).queue(m -> {
+        AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get()).queue(m -> {
             m.addReaction("❌").queue();
             queueDeletionMessages.put(m.getId(), song);
             mr.registerCallback(m.getId(), e -> removeSongFromQueue(m, song));

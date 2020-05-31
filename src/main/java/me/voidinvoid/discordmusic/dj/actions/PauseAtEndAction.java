@@ -18,7 +18,7 @@ public class PauseAtEndAction extends DJAction {
     }
 
     @Override
-    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
+    public String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
         boolean paused = !orch.isPausePending();
         orch.setPausePending(paused);
 
@@ -29,5 +29,7 @@ public class PauseAtEndAction extends DJAction {
                 .setFooter(invoker.getName(), invoker.getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .build()).queue(m -> m.delete().queueAfter(10, TimeUnit.SECONDS));
+
+        return paused ? "⏸ Now pausing after this song ends" : "▶ No longer pausing after this song ends";
     }
 }

@@ -10,11 +10,11 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -42,15 +42,20 @@ public class RadioMessageListener implements RadioService, SongEventListener {
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
                 .setColor(new Color(230, 230, 230))
-                .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, true)
-                .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, true)
-                .setFooter(Formatting.getFormattedMsTimeLabelled(track.getDuration()))
+                .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, false)
+                .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, false)
                 .setTimestamp(new Date().toInstant());
+
+        var duration = song.getTrack() != null && song.getTrack().getInfo() == null ? null : Formatting.getFormattedMsTimeLabelled(track.getDuration());
+
+        if (duration != null) {
+            embed.setFooter(duration);
+        }
 
         if (song instanceof NetworkSong) {
             NetworkSong ns = (NetworkSong) song;
             if (ns.getSuggestedBy() != null)
-                embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
+                embed.setFooter(ns.getSuggestedBy().getName() + (duration == null ? "" : " • " + duration), ns.getSuggestedBy().getAvatarUrl());
         }
 
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {

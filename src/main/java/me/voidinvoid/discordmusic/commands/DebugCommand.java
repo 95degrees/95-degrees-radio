@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.coins.RadioAwardsManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
@@ -52,6 +53,9 @@ public class DebugCommand extends Command {
         }),
         RESTREAM_LEAVE(d -> {
             Service.of(RadioRestreamManager.class).leaveVoice(d.getMember().getGuild().getId());
+        }),
+        REWARD(d -> {
+            Service.of(RadioAwardsManager.class).pushAward();
         }),
         QUIZ_PROGRESS(d -> {
             if (Radio.getInstance().getService(QuizManager.class).getActiveQuiz().progress(false)) {

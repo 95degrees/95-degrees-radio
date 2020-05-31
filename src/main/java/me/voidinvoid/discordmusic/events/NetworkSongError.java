@@ -2,6 +2,10 @@ package me.voidinvoid.discordmusic.events;
 
 public enum NetworkSongError {
 
+    //these are not user-facing errors
+    ILLEGAL_SONG_LOCATION(null),
+    INVALID_PLAYLIST_TYPE(null),
+
     EXCEEDS_LENGTH_LIMIT("Song is too long to be added to the queue"),
     QUEUE_LIMIT_REACHED("Song could not be queued because you already have too many suggested songs in the queue"),
     IS_STREAM("Streams cannot be queued"),

@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic;
 import me.voidinvoid.discordmusic.advertisements.AdvertisementManager;
 import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
+import me.voidinvoid.discordmusic.coins.RadioAwardsManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.economy.EconomyManager;
@@ -18,6 +19,7 @@ import me.voidinvoid.discordmusic.restream.RadioRestreamManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
 import me.voidinvoid.discordmusic.status.TickerManager;
@@ -180,6 +182,8 @@ public class Radio implements EventListener {
         registerService(new RadioPauseManager());
         registerService(new YouTubeCacheManager());
         registerService(new RadioRestreamManager());
+        registerService(new RadioAwardsManager());
+        registerService(new SpotifyManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

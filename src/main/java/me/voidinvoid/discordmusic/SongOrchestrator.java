@@ -14,6 +14,7 @@ import me.voidinvoid.discordmusic.audio.AudioPlayerSendHandler;
 import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
+import me.voidinvoid.discordmusic.events.NetworkSongException;
 import me.voidinvoid.discordmusic.events.SongEventListener;
 import me.voidinvoid.discordmusic.levelling.*;
 import me.voidinvoid.discordmusic.songs.*;
@@ -381,16 +382,24 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     }
 
     public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
+        return addNetworkTrack(suggestedBy, track, bypassErrors, playInstantly, pushToStart, null, null);
+    }
+
+    public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart, Consumer<NetworkSong> successCallback, Consumer<NetworkSongException> errorCallback) {
         log("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
 
         User user = suggestedBy == null ? null : suggestedBy.getUser();
 
         if (!bypassErrors && track instanceof LocalAudioTrack) {
             log(suggestedBy + " tried to play a local track - disallowed");
+            if (errorCallback != null) errorCallback.accept(new NetworkSongException(NetworkSongError.ILLEGAL_SONG_LOCATION));
             return false;
         }
 
-        if (!(activePlaylist instanceof RadioPlaylist)) return false;
+        if (!(activePlaylist instanceof RadioPlaylist)) {
+            if (errorCallback != null) errorCallback.accept(new NetworkSongException(NetworkSongError.INVALID_PLAYLIST_TYPE));
+            return false;
+        }
 
         RadioPlaylist sp = (RadioPlaylist) activePlaylist;
 
@@ -437,6 +446,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
                         ex.printStackTrace();
                     }
                 });
+                if (errorCallback != null) errorCallback.accept(new NetworkSongException(error));
                 return false;
             }
         }
@@ -469,6 +479,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         }
 
         log("Network track is in the queue: #" + (index + 1));
+        if (successCallback != null) successCallback.accept(song);
         return true;
     }
 

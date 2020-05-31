@@ -4,6 +4,7 @@ import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketConfig;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.google.gson.Gson;
 import com.mongodb.client.MongoCollection;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -21,6 +22,7 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
 import me.voidinvoid.discordmusic.utils.Service;
@@ -48,6 +50,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String CLIENT_IDENTIFY = "identify";
     public static final String CLIENT_RATE_SONG = "rate_song";
     public static final String CLIENT_QUEUE_SONG = "queue_song";
+    public static final String CLIENT_QUEUE_SPOTIFY = "queue_spotify";
     public static final String CLIENT_UNLINK = "unlink";
     public static final String CLIENT_DISCONNECT_ME = "disconnect_me";
 
@@ -80,12 +83,17 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String SERVER_RATING_SAVED = "rating_saved";
     public static final String SERVER_ACHIEVEMENT = "achievement";
 
-    //DJ
-    public static final String CLIENT_GET_PLAYLISTS = "dj_get_playlists";
-    public static final String CLIENT_GET_PLAYLIST_SONGS = "dj_get_songs";
+    //Song manager
+    public static final String CLIENT_MANAGER_GET_ALL_PLAYLISTS = "manager_get_all_playlists";
+    public static final String CLIENT_MANAGER_GET_PLAYLIST = "manager_get_playlist";
+    public static final String CLIENT_MANAGER_SAVE_PLAYLIST = "manager_save_playlist";
 
-    public static final String SERVER_LIST_PLAYLISTS = "dj_playlists";
-    public static final String SERVER_LIST_PLAYLIST_SONGS = "dj_songs";
+    //DJ (OLD)
+    //public static final String CLIENT_GET_PLAYLISTS = "dj_get_playlists";
+    //public static final String CLIENT_GET_PLAYLIST_SONGS = "dj_get_songs";
+
+    //public static final String SERVER_LIST_PLAYLISTS = "dj_playlists";
+    //public static final String SERVER_LIST_PLAYLIST_SONGS = "dj_songs";
 
     private SocketIOServer server;
 
@@ -216,24 +224,62 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 Service.of(SongSuggestionManager.class).addSuggestion(url, null, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), id, true, SuggestionQueueMode.NORMAL);
             });
 
-            server.addEventListener(CLIENT_GET_PLAYLISTS, Object.class, (c, o, ack) -> {
+            server.addEventListener(CLIENT_QUEUE_SPOTIFY, String.class, (c, url, ack) -> {
+                if (url == null) return;
+
+                var id = identities.get(c);
+                if (id == null) return;
+
+                var spotify = Service.of(SpotifyManager.class);
+                if (spotify == null) return;
+
+                log("Spotify queue: " + url);
+
+                spotify.findTrack(url).thenAccept(t -> {
+                    log("Spotify track is null!");
+                    if (t == null) return;
+
+                    spotify.queueTrack(t, id).whenComplete((s, e) -> {
+                        if (e != null) {
+                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE ERROR", e.getMessage()));
+                            return;
+                        }
+
+                        if (s != null) {
+                            Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
+                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE", s.getFriendlyName()));
+                        } else {
+                            log("Song is null?!");
+                        }
+                    });
+                });
+            });
+
+            server.addEventListener(CLIENT_MANAGER_GET_PLAYLIST, String.class, (c, playlist, ack) -> {
+                log("play11");
+
                 var mb = identities.get(c);
 
                 if (mb == null || !djChannel.canTalk(mb)) return;
 
-                c.sendEvent(SERVER_LIST_PLAYLISTS, Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist).map(p -> new PlaylistInfo((RadioPlaylist) p)).collect(Collectors.toList()));
+                var p = Service.of(DatabaseManager.class).getCollection("playlists").find(eq(playlist)).first();
+
+                log("CLIENT GET A PLAYLIST!! " + playlist);
+
+                ack.sendAckData(p == null ? null : p.toJson());
             });
 
-            server.addEventListener(CLIENT_GET_PLAYLIST_SONGS, String.class, (c, id, ack) -> {
+            server.addEventListener(CLIENT_MANAGER_GET_ALL_PLAYLISTS, Object.class, (c, o, ack) -> {
+                log("play22");
                 var mb = identities.get(c);
 
-                if (id == null || mb == null || !djChannel.canTalk(mb)) return;
+                if (mb == null || !djChannel.canTalk(mb)) return;
 
-                var playlist = (RadioPlaylist) Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist && p.getInternal().equals(id)).findFirst().orElse(null);
+                log("CLIENT GET ALL PLAYLISTS!!");
 
-                if (playlist == null) return;
+                log(new Gson().toJson(Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist).map(p -> new PlaylistInfo((RadioPlaylist) p)).collect(Collectors.toList())));
 
-                c.sendEvent(SERVER_LIST_PLAYLIST_SONGS, playlist.getSongs().getSongMap().stream().map(SongInfo::new).collect(Collectors.toList()));
+                ack.sendAckData((Object) Radio.getInstance().getOrchestrator().getPlaylists().stream().filter(p -> p instanceof RadioPlaylist).map(p -> new PlaylistInfo((RadioPlaylist) p)).collect(Collectors.toList()));
             });
 
             server.addEventListener(CLIENT_DISCONNECT_ME, Object.class, (c, o, ack) -> {
@@ -251,9 +297,11 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
                     if (mb == null || !djChannel.canTalk(mb)) return;
 
-                    c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ CONTROLS", "todo: invoked action " + a + "!"));
+                    var result = Service.of(SongDJ.class).invokeAction(a, mb.getUser());
 
-                    Service.of(SongDJ.class).invokeAction(a, mb.getUser());
+                    if (result != null) {
+                        c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ CONTROLS", result));
+                    }
                 });
             });
 
@@ -269,7 +317,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                         return;
                     }
                 }
-             });
+            });
 
             server.addDisconnectListener(c -> {
                 for (String s : pendingPairCodes.keySet()) {
@@ -285,6 +333,10 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         }
 
         //Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+    }
+
+    public Map<SocketIOClient, Member> getIdentities() {
+        return identities;
     }
 
     @Override

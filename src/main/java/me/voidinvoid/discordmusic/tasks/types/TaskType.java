@@ -23,7 +23,8 @@ public enum TaskType {
     RUN_ADVERT(new AdvertisementTask()),
     ENABLE_QUEUE_COMMAND(new ToggleQueueTask(true)),
     DISABLE_QUEUE_COMMAND(new ToggleQueueTask(false)),
-    LEADERBOARD_REWARD(new LeaderboardRewardTask(), of("type", Statistic.LISTEN_TIME.name()), of("reward", 100));
+    LEADERBOARD_REWARD(new LeaderboardRewardTask(), of("type", Statistic.LISTEN_TIME.name()), of("reward", 100)),
+    REWARD(new RewardTask());
 
     private RadioTaskExecutor executor;
     private Parameter[] params;

@@ -18,7 +18,9 @@ public class RestartSongAction extends DJAction {
     }
 
     @Override
-    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
+    public String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
         orch.seekTrack(0);
+
+        return "Restarting track";
     }
 }

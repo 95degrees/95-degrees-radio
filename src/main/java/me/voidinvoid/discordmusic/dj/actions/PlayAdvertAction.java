@@ -24,7 +24,7 @@ public class PlayAdvertAction extends DJAction {
     }
 
     @Override
-    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
+    public String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
         Radio.getInstance().getService(AdvertisementManager.class).pushAdvertisement();
 
         djChannel.sendMessage(new EmbedBuilder()
@@ -34,5 +34,7 @@ public class PlayAdvertAction extends DJAction {
                 .setFooter(invoker.getName(), invoker.getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now())
                 .build()).queue();
+
+        return "Queued advert";
     }
 }

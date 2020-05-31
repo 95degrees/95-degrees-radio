@@ -115,7 +115,7 @@ public class TaskManager implements RadioService {
         } catch (Exception e) {
             warn("Error invoking task");
             e.printStackTrace();
-            djChannel.sendMessage(new EmbedBuilder().setTitle("⚠ Error executing task " + comp.getName()).setColor(Colors.ACCENT_TASK_ERROR).build()).queue();
+            djChannel.sendMessage(new EmbedBuilder().setTitle("⚠ Error executing task " + comp.getName()).addField("Error message", e.getClass().toString() + ": " + e.getMessage(), true).setColor(Colors.ACCENT_TASK_ERROR).build()).queue();
         }
     }
 

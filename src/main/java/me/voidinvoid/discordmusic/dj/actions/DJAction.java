@@ -30,7 +30,7 @@ public abstract class DJAction {
         return true;
     }
 
-    public abstract void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker);
+    public abstract String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker);
 
     public String getSocketCode() {
         return socketCode;

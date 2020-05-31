@@ -70,7 +70,14 @@ public class AdvertisementManager implements RadioService, SongEventListener {
 
         List<Song> awaitingSongs = Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs();
         if (awaitingSongs.stream().noneMatch(s -> s.getType() == SongType.ADVERTISEMENT)) { //only queue one ad at a time
-            awaitingSongs.add(adverts.get(currentAdIndex).getSong());
+            var song = adverts.get(currentAdIndex).getSong();
+
+            if (song == null) {
+                log("Error pushing ad: song is null!");
+                return;
+            }
+
+            awaitingSongs.add(song);
 
             Service.of(RPCSocketManager.class).updateUpcomingEvents();
         }

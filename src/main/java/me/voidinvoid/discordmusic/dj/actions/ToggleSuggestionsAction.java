@@ -13,7 +13,11 @@ public class ToggleSuggestionsAction extends DJAction {
     }
 
     @Override
-    public void invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
-        orch.setSuggestionsEnabled(!orch.areSuggestionsEnabled(), invoker);
+    public String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
+        var suggestions = !orch.areSuggestionsEnabled();
+
+        orch.setSuggestionsEnabled(suggestions, invoker);
+
+        return "Suggestions " + (suggestions ? "enabled" : "disabled");
     }
 }
