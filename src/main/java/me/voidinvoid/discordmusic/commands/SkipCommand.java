@@ -61,7 +61,8 @@ public class SkipCommand extends Command {
                 skipCooldowns.put(data.getMember().getUser().getId(), System.currentTimeMillis() + 15000); //15 secs
                 orch.playNextSong();
 
-                data.success("Skipped to the next song");
+                data.sendMessage("⏩ | Skipped to the next song");
+
                 return;
             }
 

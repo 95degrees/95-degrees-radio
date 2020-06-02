@@ -1,16 +1,19 @@
 package me.voidinvoid.discordmusic.commands;
 
+import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.coins.RadioAwardsManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
+import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.restream.RadioRestreamManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Service;
+import net.dv8tion.jda.api.JDAInfo;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -70,6 +73,16 @@ public class DebugCommand extends Command {
             int i = d.getArgs().length < 2 ? 1 : Integer.parseInt(d.getArgs()[1]);
             d.success("Level up x" + i);
             Radio.getInstance().getService(LevellingManager.class).rewardExperience(d.getMember().getUser(), i);
+        }),
+        LYRICS(d -> {
+            var sm = Service.of(LiveLyricsManager.class);
+
+            sm.setEnabled(!sm.isEnabled());
+
+            d.success("Lyrics scraping " + (sm.isEnabled() ? "enabled" : "disabled"));
+        }),
+        VERSIONS(d -> {
+            d.success("Version info:\nJDA: " + JDAInfo.VERSION + "\nLavaplayer: " + PlayerLibrary.VERSION);
         });
 
         private Consumer<CommandData> action;

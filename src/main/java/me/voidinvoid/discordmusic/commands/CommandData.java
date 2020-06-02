@@ -219,7 +219,7 @@ public class CommandData {
     }
 
     public MessageAction mentionAction(String prefix, String message) {
-        String msg = (prefix == null || prefix.isEmpty() ? "" : prefix + " | ") + (member == null ? "Console" : "**" + member.getUser().getAsTag() + "**") + ", " + message;
+        String msg = (prefix == null || prefix.isEmpty() ? "" : prefix + " | ") + (member == null ? "Console" : "**" + member.getUser().getName() + "**") + ", " + message;
         if (textChannel == null) {
             System.out.println(msg);
             return null;

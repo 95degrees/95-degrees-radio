@@ -2,89 +2,272 @@ package me.voidinvoid.discordmusic.events;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
 import me.voidinvoid.discordmusic.ratings.Rating;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
-import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
-import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
+import me.voidinvoid.discordmusic.utils.*;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
+import me.voidinvoid.discordmusic.utils.reactions.MessageReactionListener;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.Date;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class RadioMessageListener implements RadioService, SongEventListener {
+public class RadioMessageListener implements RadioService, SongEventListener, EventListener {
 
     private TextChannel textChannel;
+    private ScheduledExecutorService updaterExecutor;
+
+    private Message activeMessage;
+    private CompletableFuture currentEdit;
+
+    private String mostRecentMessageId;
+
+    private String previousLyric;
+    private boolean lyricChangeFlag;
+
+    private long nextForcedUpdate;
 
     @Override
     public void onLoad() {
         textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
+
+        if (updaterExecutor != null) {
+            updaterExecutor.shutdown();
+        }
+
+        updaterExecutor = Executors.newScheduledThreadPool(1);
+
+        updaterExecutor.scheduleAtFixedRate(() -> {
+            if (activeMessage != null /*&& (currentEdit == null || currentEdit.isDone())*/) {
+                var prog = generateProgressMessage();
+
+                if (nextForcedUpdate > System.currentTimeMillis() && !lyricChangeFlag) return;
+
+                if (prog != null && Objects.equals(activeMessage.getEmbeds().get(0).getDescription(), prog.getDescription()))
+                    return;
+
+                if (mostRecentMessageId != null && !mostRecentMessageId.equals(activeMessage.getId())) {
+                    activeMessage.delete().queue();
+
+                    activeMessage = null;
+                    currentEdit = null;
+
+                    if (prog != null) {
+                        textChannel.sendMessage(prog).queue(m -> activeMessage = m);
+
+                        lyricChangeFlag = false;
+                        nextForcedUpdate = System.currentTimeMillis() + 2000;
+                    }
+
+                    return;
+                }
+
+                if (prog != null) {
+                    currentEdit = activeMessage.editMessage(prog).submit();
+
+                    lyricChangeFlag = false;
+                    nextForcedUpdate = System.currentTimeMillis() + 2000;
+                }
+            }
+        }, 2000, 200, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void onShutdown() {
+        if (activeMessage != null) {
+            activeMessage.delete().queue();
+        }
+    }
+
+    private void appendSpotifyTrackDetails(EmbedBuilder builder, Track track) {
+        if (track == null) return;
+
+        builder.clearFields();
+        builder.addField("[Spotify] **" + track.getName() + "**",
+                track.getArtists()[0].getName() + "\n ", false);
     }
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!song.getType().useAnnouncement()) return;
 
+        var embedReady = new CompletableFuture<EmbedBuilder>();
+
+        EmbedBuilder embed = new EmbedBuilder()
+                .setDescription("\u200b\n")
+                .setColor(new Color(230, 230, 230))
+                .addField("**" + (song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title) + "**",
+                        (song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author) + "\n ", false);
+        // .setTimestamp(new Date().toInstant());
+
+        if (song instanceof NetworkSong) {
+            NetworkSong ns = (NetworkSong) song;
+            if (ns.getSuggestedBy() != null) {
+                embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
+            }
+
+            if (ns.getSpotifyTrack() != null) {
+                appendSpotifyTrackDetails(embed, ns.getSpotifyTrack());
+                embedReady.complete(embed);
+
+            } else {
+                Service.of(SpotifyManager.class).searchTrack(track.getInfo().title)
+                        .whenComplete((t, e) -> {
+                            appendSpotifyTrackDetails(embed, ns.getSpotifyTrack());
+                            embedReady.complete(embed);
+                        });
+            }
+        } else {
+            embedReady.complete(embed);
+        }
+
+        /*
         EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
                 .setColor(new Color(230, 230, 230))
                 .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, false)
                 .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, false)
-                .setTimestamp(new Date().toInstant());
+                .setTimestamp(new Date().toInstant());*/
 
-        var duration = song.getTrack() != null && song.getTrack().getInfo() == null ? null : Formatting.getFormattedMsTimeLabelled(track.getDuration());
 
-        if (duration != null) {
-            embed.setFooter(duration);
-        }
+        embedReady.thenAccept(em -> {
+            AlbumArtUtils.attachAlbumArt(em, song, textChannel).queue(m -> {
 
-        if (song instanceof NetworkSong) {
-            NetworkSong ns = (NetworkSong) song;
-            if (ns.getSuggestedBy() != null)
-                embed.setFooter(ns.getSuggestedBy().getName() + (duration == null ? "" : " • " + duration), ns.getSuggestedBy().getAvatarUrl());
-        }
+                RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
-            RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
-
-            if (srv != null && song.getAlbumArt() instanceof LocalAlbumArt) {
-                srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
-            }
-
-            if (song instanceof DatabaseSong) {
-                for (Rating r : Rating.values()) {
-                    m.addReaction(r.getEmote()).queue();
+                if (srv != null && song.getAlbumArt() instanceof LocalAlbumArt) {
+                    srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
                 }
 
-                MessageReactionCallbackManager cb = Radio.getInstance().getService(MessageReactionCallbackManager.class);
+                if (song instanceof DatabaseSong) {
 
-                cb.registerCallback(m.getId(), e -> {
-                    String re = e.getReaction().getReactionEmote().getName();
+                    var rl = new MessageReactionListener(m);
+
                     for (Rating r : Rating.values()) {
-                        if (r.getEmote().equals(re)) {
-                            SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
-                            rm.rateSong(e.getUser(), (DatabaseSong) song, r, false);
-                            m.getChannel().sendMessage(new EmbedBuilder().setTitle("Song Rating").setColor(Colors.ACCENT_SONG_RATING).setDescription(e.getMember().getAsMention() + ", your rating of **" + Formatting.escape(((DatabaseSong) song).getTitle()) + "** has been saved").setTimestamp(OffsetDateTime.now()).setFooter(e.getMember().getUser().getName(), e.getMember().getUser().getAvatarUrl()).build()).queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
-                            return;
-                        }
+                        rl.on(r.getEmote(), member -> {
+                            var rm = Radio.getInstance().getService(SongRatingManager.class);
+                            rm.rateSong(member.getUser(), (DatabaseSong) song, r, false);
+
+                            m.getChannel().sendMessage(new EmbedBuilder()
+                                    .setTitle("Song Rating")
+                                    .setColor(Colors.ACCENT_SONG_RATING)
+                                    .setDescription(member.getUser().getAsMention() + ", your rating of **" + Formatting.escape(((DatabaseSong) song).getTitle()) + "** has been saved")
+                                    .setTimestamp(OffsetDateTime.now()).setFooter(member.getUser().getName(), member.getUser().getAvatarUrl()).build())
+                                    .queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
+                        });
                     }
+
+                    MessageReactionCallbackManager cb = Radio.getInstance().getService(MessageReactionCallbackManager.class);
+
+                    cb.registerCallback(m.getId(), e -> {
+                        String re = e.getReaction().getReactionEmote().getName();
+                        for (Rating r : Rating.values()) {
+                            if (r.getEmote().equals(re)) {
+                                SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
+                                rm.rateSong(e.getUser(), (DatabaseSong) song, r, false);
+                                m.getChannel().sendMessage(new EmbedBuilder().setTitle("Song Rating").setColor(Colors.ACCENT_SONG_RATING).setDescription(e.getMember().getAsMention() + ", your rating of **" + Formatting.escape(((DatabaseSong) song).getTitle()) + "** has been saved").setTimestamp(OffsetDateTime.now()).setFooter(e.getMember().getUser().getName(), e.getMember().getUser().getAvatarUrl()).build()).queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
+                                return;
+                            }
+                        }
+                    });
+                }
+            });
+
+            var prog = generateProgressMessage();
+            if (prog != null) {
+                textChannel.sendMessage(prog).queue(m -> {
+                    activeMessage = m;
                 });
             }
         });
+    }
+
+    private MessageEmbed generateProgressMessage() {
+        var track = Radio.getInstance().getOrchestrator().getPlayer().getPlayingTrack();
+
+        try {
+            if (track != null && track.isSeekable()) {
+                double progPercent = (double) track.getPosition() / (double) track.getDuration();
+
+                var seekBarPosition = (int) (progPercent * 14);
+
+                var seekBar = Radio.getInstance().getOrchestrator().getPlayer().isPaused() ? Emoji.PAUSE.toString() : Emoji.PLAY.toString();
+
+                seekBar += " ";
+
+                if (seekBarPosition > 0) {
+                    seekBar += Emoji.SEEK_COMPLETE_START;
+                    seekBar += Emoji.SEEK_MID_COMPLETE.toString().repeat(seekBarPosition - 1);
+                }
+
+                if ((progPercent * 14d) % 1 < 0.5) {
+                    seekBar += seekBarPosition == 0 ? Emoji.SEEK_LEFT_EDGE_ACTIVE : Emoji.SEEK_ACTIVE;
+                } else {
+                    seekBar += seekBarPosition == 0 ? Emoji.SEEK_LEFT_EDGE_ACTIVE_LEFT : Emoji.SEEK_ACTIVE_LEFT;
+                    seekBar += seekBarPosition == 14 ? Emoji.SEEK_RIGHT_EDGE_ACTIVE_RIGHT : Emoji.SEEK_ACTIVE_RIGHT;
+                    seekBarPosition++;
+                }
+
+                if (seekBarPosition != 14) {
+                    seekBar += Emoji.SEEK_MID.toString().repeat(14 - seekBarPosition);
+                    seekBar += Emoji.SEEK_END;
+                }
+
+                var eb = new EmbedBuilder().setDescription(seekBar + " `" + Formatting.getFormattedMsTime(track.getPosition()) + " / " + Formatting.getFormattedMsTime(track.getDuration()) + "`");
+
+                var colour = (int) (progPercent * 255);
+                eb.setColor(new Color(colour, colour, colour));
+
+                var lyrics = Service.of(LiveLyricsManager.class).getActiveSongLyrics();
+                if (lyrics != null) { //add 200ms to account for lag
+                    var lyric = lyrics.getCurrentLine(track.getPosition() + 200).getContent();
+                    if (lyric.isEmpty()) {
+                        lyric = "...";
+                    }
+
+                    eb.appendDescription("\n\n**" + Formatting.escape(lyric) + "**");
+
+                    if (!lyric.equals(previousLyric)) {
+                        lyricChangeFlag = true;
+                    }
+
+                    previousLyric = lyric;
+                }
+
+                return eb.build();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public void onSongEnd(Song song, AudioTrack track) {
+        if (activeMessage != null) activeMessage.delete().queue();
+        activeMessage = null;
+        currentEdit = null;
     }
 
     @Override
@@ -110,15 +293,27 @@ public class RadioMessageListener implements RadioService, SongEventListener {
         if (member == null || !Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) return;
         User user = member.getUser();
 
+        var title = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getName() : track.getInfo().title;
+        var artist = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getName() : track.getInfo().uri;
+
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")
                 .setColor(new Color(230, 230, 230))
-                .addField("Title", track.getInfo().title, true)
-                .addField("URL", track.getInfo().uri, true)
+                .addField("Title", title, true)
+                .addField(song.getSpotifyTrack() != null ? "Artist" : "URL", artist, true)
                 .addField("Queue Position", "#" + (queuePosition + 1), false)
                 .setTimestamp(OffsetDateTime.now())
                 .setFooter(user.getName(), user.getAvatarUrl());
 
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
+    }
+
+    @Override
+    public void onEvent(@Nonnull GenericEvent ev) {
+        if (ev instanceof GuildMessageReceivedEvent) {
+            if (((GuildMessageReceivedEvent) ev).getChannel().equals(textChannel)) {
+                mostRecentMessageId = ((GuildMessageReceivedEvent) ev).getMessageId();
+            }
+        }
     }
 }

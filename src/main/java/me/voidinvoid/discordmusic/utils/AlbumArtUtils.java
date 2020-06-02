@@ -18,6 +18,12 @@ public final class AlbumArtUtils {
 
     @CheckReturnValue
     public static MessageAction attachAlbumArt(EmbedBuilder embed, Song song, TextChannel channel) {
+
+        var built = embed.build();
+        if (built.getThumbnail() != null) {
+            return channel.sendMessage(built);
+        }
+
         var art = song.getAlbumArt();
         if (art == null) art = Radio.getInstance().getService(AlbumArtManager.class).getFallbackAlbumArt();
 

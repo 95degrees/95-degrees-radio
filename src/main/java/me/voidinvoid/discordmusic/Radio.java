@@ -8,9 +8,13 @@ import me.voidinvoid.discordmusic.commands.CommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.dj.SongDJ;
-import me.voidinvoid.discordmusic.events.*;
+import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
+import me.voidinvoid.discordmusic.events.RadioMessageListener;
+import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.SuggestionPrivateMessageManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
+import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
 import me.voidinvoid.discordmusic.notifications.NotificationManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
@@ -22,7 +26,6 @@ import me.voidinvoid.discordmusic.songs.database.SongTriggerManager;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.stats.UserStatisticsManager;
 import me.voidinvoid.discordmusic.status.StatusManager;
-import me.voidinvoid.discordmusic.status.TickerManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
@@ -165,7 +168,7 @@ public class Radio implements EventListener {
         registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
         registerService(new NotificationManager());
-        registerService(new TickerManager());
+        //registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new RadioMessageListener());
         registerService(new QuizManager());
@@ -184,6 +187,7 @@ public class Radio implements EventListener {
         registerService(new RadioRestreamManager());
         registerService(new RadioAwardsManager());
         registerService(new SpotifyManager());
+        registerService(new LiveLyricsManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

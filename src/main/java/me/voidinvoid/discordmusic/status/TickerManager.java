@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+@Deprecated //discord api changes have ruined this
 public class TickerManager implements RadioService, SongEventListener {
 
     private ScheduledExecutorService executor;

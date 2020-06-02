@@ -445,6 +445,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
         var orch = Radio.getInstance().getOrchestrator();
 
+        boolean paused = orch.getPlayer() != null && orch.getPlayer().isPaused();
+
         if (s.getType() != SongType.SONG) {
             currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, end, false, suggestedBy);
         } else if (s instanceof DatabaseSong) {

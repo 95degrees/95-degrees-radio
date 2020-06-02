@@ -22,6 +22,7 @@ import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Service;
@@ -459,6 +460,10 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             index = sp.getSongs().addNetworkSong(song);
         }
 
+        if (successCallback != null) {
+            successCallback.accept(song);
+        }
+
         songEventListeners.forEach(l -> {
             try {
                 l.onNetworkSongQueued(song, track, suggestedBy, index);
@@ -479,7 +484,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         }
 
         log("Network track is in the queue: #" + (index + 1));
-        if (successCallback != null) successCallback.accept(song);
+
         return true;
     }
 

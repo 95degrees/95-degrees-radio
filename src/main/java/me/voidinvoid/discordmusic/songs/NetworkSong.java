@@ -2,7 +2,7 @@ package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
+import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
@@ -14,6 +14,7 @@ public class NetworkSong extends Song {
     private String url;
     private User suggestedBy;
     private AudioTrack track;
+    private Track spotifyTrack;
 
     private AlbumArt albumArt;
 
@@ -54,10 +55,30 @@ public class NetworkSong extends Song {
 
     @Override
     public AlbumArt getAlbumArt() {
+        //if this song type overrides album art, use that. otherwise, use our own album art
         var p = getType().getAlbumArt(this);
 
-        //if this song type overrides album art, use that. otherwise, use our own album art
-        return p == null ? albumArt == null ? Service.of(AlbumArtManager.class).getNetworkAlbumArt() : albumArt : p;
+        if (p != null) {
+            return p;
+        }
+
+        if (albumArt != null) {
+            return albumArt;
+        }
+
+        return Service.of(AlbumArtManager.class).getNetworkAlbumArt();
+    }
+
+    public Track getSpotifyTrack() {
+        return spotifyTrack;
+    }
+
+    public void setSpotifyTrack(Track spotifyTrack) {
+        this.spotifyTrack = spotifyTrack;
+
+        if (spotifyTrack != null && spotifyTrack.getAlbum().getImages() != null && spotifyTrack.getAlbum().getImages().length > 0) {
+            albumArt = new RemoteAlbumArt(spotifyTrack.getAlbum().getImages()[0].getUrl());
+        }
     }
 
     @Override

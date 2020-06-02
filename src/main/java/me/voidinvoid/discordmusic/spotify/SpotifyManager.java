@@ -11,6 +11,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.net.URI;
@@ -29,7 +30,7 @@ public class SpotifyManager implements RadioService {
 
     //private static final String SPOTIFY_TRACK_URL = "https://open.spotify.com/track/";
     private static final String SPOTIFY_TRACK_URL_REGEX = "^https?://open.spotify.com/track/[a-zA-Z0-9]{22}$";
-    private static final Pattern spotifyUrlPattern = Pattern.compile(SPOTIFY_TRACK_URL_REGEX);
+    public static final Pattern SPOTIFY_TRACK_URL_PATTERN = Pattern.compile(SPOTIFY_TRACK_URL_REGEX);
 
     private SpotifyApi spotifyApi;
 
@@ -56,9 +57,39 @@ public class SpotifyManager implements RadioService {
         }
     }
 
+    public CompletableFuture<Track> searchTrack(String title) {
+        var future = new CompletableFuture<Track>();
+
+        title = Songs.deyoutubeifySong(title);
+
+        log("search: " + title);
+        spotifyApi.searchTracks(title).build().executeAsync()
+                .whenComplete((t, e) -> {
+                    log("search complete!");
+
+                    if (e != null) {
+                        e.printStackTrace();
+                        future.complete(null);
+                        return;
+                    }
+
+                    if (t.getItems().length == 0) {
+                        future.complete(null);
+                        return;
+                    }
+
+                    future.complete(t.getItems()[0]);
+                });
+
+        return future;
+    }
+
     public CompletableFuture<Track> findTrack(String url) {
         //https://open.spotify.com/track/0Sm93pz6kzCglkjDiCkmYM
-        if (!spotifyUrlPattern.matcher(url).matches()) return null;
+        if (url.contains("?")) {
+            url = url.split("\\?")[0];
+        }
+        if (!SPOTIFY_TRACK_URL_PATTERN.matcher(url).matches()) return null;
 
         var id = url.substring(url.length() - 22); //22 = spotify id length
 
@@ -100,9 +131,9 @@ public class SpotifyManager implements RadioService {
                 future.completeExceptionally(ex);
             }
 
-            private void queue(AudioTrack track) {
-                Radio.getInstance().getOrchestrator().addNetworkTrack(suggestedBy, track, false, false, false,
-                        future::complete,
+            private void queue(AudioTrack lavaTrack) {
+                Radio.getInstance().getOrchestrator().addNetworkTrack(suggestedBy, lavaTrack, false, false, false,
+                        s -> s.setSpotifyTrack(track),
                         future::completeExceptionally);
             }
         });

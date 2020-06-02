@@ -7,8 +7,10 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.LevelExtras;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
@@ -23,7 +25,7 @@ public class SongSearchResult {
 
     private static final int MAX_SEARCH_RESULTS = 5;
 
-    private static final String CANCEL_EMOJI = "❌";
+    private static final Emote CANCEL_EMOJI = Emoji.CROSS.getEmote();
 
     private List<AudioTrack> playlist;
     private User user;
@@ -87,7 +89,7 @@ public class SongSearchResult {
 
     public boolean handleReaction(GuildMessageReactionAddEvent e) {
         if (e.getUser().getIdLong() == user.getIdLong()) {
-            String reaction = e.getReaction().getReactionEmote().getName();
+            String reaction = e.getReactionEmote().getName();
             if (Formatting.NUMBER_EMOTES.contains(reaction)) {
                 int index = Formatting.NUMBER_EMOTES.indexOf(reaction);
 
@@ -101,7 +103,7 @@ public class SongSearchResult {
                     System.out.println("Error handling search reaction event");
                     ex.printStackTrace();
                 }
-            } else if (reaction.equals(CANCEL_EMOJI)) {
+            } else if (e.getReactionEmote().getEmote().equals(CANCEL_EMOJI)) {
                 e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
             }
         }

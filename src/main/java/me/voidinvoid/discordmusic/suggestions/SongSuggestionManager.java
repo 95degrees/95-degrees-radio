@@ -6,8 +6,10 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -47,6 +49,24 @@ public class SongSuggestionManager implements RadioService, EventListener {
     }
 
     public void addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
+
+        var sm = Service.of(SpotifyManager.class);
+        var find = sm.findTrack(identifier);
+
+        if (find != null) {
+            find.thenAccept(t -> {
+                if (t != null) {
+                    sm.queueTrack(t, member).thenAccept(s -> {
+                        if (s != null) {
+                            suggestionMessage.delete().reason("Song suggestion URL").queue();
+                        }
+                    });
+                }
+            });
+
+            return;
+        }
+
         Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
