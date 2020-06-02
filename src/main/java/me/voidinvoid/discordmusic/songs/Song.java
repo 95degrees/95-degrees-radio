@@ -17,13 +17,15 @@ public abstract class Song {
         return null;
     }
 
-    public abstract String getFileName();
+    public abstract String getInternalName();
 
-    public abstract String getFullLocation();
+    public abstract String getLavaIdentifier();
 
     public abstract AlbumArt getAlbumArt();
 
-    public abstract String getFriendlyName();
+    public abstract String getTitle();
+
+    public abstract String getArtist();
 
     public abstract boolean isPersistent();
 

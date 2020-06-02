@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.songs;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.entities.User;
 
 import java.util.*;
@@ -35,7 +36,7 @@ public abstract class SongQueue extends AudioEventAdapter {
             System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + (playlist == null ? "<null>" : playlist.getName()));
 
             List<Song> songMap = new ArrayList<>(l); //a clone
-            songMap.sort(Comparator.comparing(Song::getFullLocation)); //probably not needed but just in-case
+            songMap.sort(Comparator.comparing(Song::getLavaIdentifier)); //probably not needed but just in-case
 
             if (shuffleSongs) Collections.shuffle(l);
 
@@ -138,7 +139,7 @@ public abstract class SongQueue extends AudioEventAdapter {
         for (Song s : songMap) {
             i++;
             if (i - 1 < min || i - 1 >= max) continue;
-            String loc = s.getFriendlyName();
+            String loc = Songs.titleArtist(s);
             output.append(i).append(i < 10 ? "  " : i < 100 ? " " : "").append(": ").append(loc, 0, Math.min(loc.length(), 150)).append("\n");
         }
 
@@ -154,7 +155,7 @@ public abstract class SongQueue extends AudioEventAdapter {
         int i = 0;
         for (Song s : queue) {
             i++;
-            output.append(i).append(i < 10 ? " " : "").append(": ").append(s.getFriendlyName()).append("\n");
+            output.append(i).append(i < 10 ? " " : "").append(": ").append(Songs.titleArtist(s)).append("\n");
 
             if (i >= 10) break;
         }

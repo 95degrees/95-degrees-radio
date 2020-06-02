@@ -1,5 +1,7 @@
 package me.voidinvoid.discordmusic.utils;
 
+import me.voidinvoid.discordmusic.songs.Song;
+
 public final class Songs {
 
     public static String deyoutubeifySong(String song) {
@@ -20,5 +22,9 @@ public final class Songs {
                 .replaceAll("hd", "")
                 .replaceAll("1080p", "")
                 .replaceAll("720p", "");
+    }
+
+    public static String titleArtist(Song song) {
+        return song.getTitle() + " - " + song.getArtist();
     }
 }

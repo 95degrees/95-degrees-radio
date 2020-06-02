@@ -13,7 +13,7 @@ public class ContinuitySuggestionData {
 
     public ContinuitySuggestionData(NetworkSong song) {
         user = song.getSuggestedBy() == null ? null : song.getSuggestedBy().getId();
-        identifier = song.getFullLocation();
+        identifier = song.getLavaIdentifier();
     }
 
     public String getUser() {

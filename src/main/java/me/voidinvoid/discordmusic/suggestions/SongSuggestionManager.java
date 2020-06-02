@@ -56,9 +56,11 @@ public class SongSuggestionManager implements RadioService, EventListener {
         if (find != null) {
             find.thenAccept(t -> {
                 if (t != null) {
-                    sm.queueTrack(t, member).thenAccept(s -> {
+                    sm.fetchLavaTrack(t).thenAccept(s -> {
                         if (s != null) {
                             suggestionMessage.delete().reason("Song suggestion URL").queue();
+
+                            Radio.getInstance().getOrchestrator().addNetworkTrack(member, s, false, false, false, null, null);
                         }
                     });
                 }

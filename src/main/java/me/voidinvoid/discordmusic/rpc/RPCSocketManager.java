@@ -26,6 +26,7 @@ import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
 import me.voidinvoid.discordmusic.utils.Service;
+import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.voice.GenericGuildVoiceEvent;
@@ -239,15 +240,23 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                     log("Spotify track is null!");
                     if (t == null) return;
 
-                    spotify.queueTrack(t, id).whenComplete((s, e) -> {
+                    spotify.fetchLavaTrack(t).whenComplete((s, e) -> {
                         if (e != null) {
                             c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE ERROR", e.getMessage()));
                             return;
                         }
 
                         if (s != null) {
-                            Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
-                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE", s.getFriendlyName()));
+                            Radio.getInstance().getOrchestrator().addNetworkTrack(id, s, false, false, false,
+                                    ns -> {
+                                        Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
+                                        c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE", Songs.titleArtist(ns)));
+                                    },
+                                    err -> {
+                                        if (err != null) {
+                                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE ERROR", err.getMessage()));
+                                        }
+                                    });
                         } else {
                             log("Song is null?!");
                         }

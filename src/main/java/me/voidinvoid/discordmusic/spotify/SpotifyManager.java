@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.spotify;
 
 import com.google.gson.Gson;
+import com.mongodb.client.model.UpdateOptions;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
@@ -8,17 +9,26 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
+import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.entities.Member;
+import org.bson.Document;
 
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  * DiscordMusic - 30/04/2020
@@ -33,6 +43,10 @@ public class SpotifyManager implements RadioService {
     public static final Pattern SPOTIFY_TRACK_URL_PATTERN = Pattern.compile(SPOTIFY_TRACK_URL_REGEX);
 
     private SpotifyApi spotifyApi;
+
+    private OffsetDateTime lastCollaborativePlaylistCheck = OffsetDateTime.now();
+
+    private ScheduledExecutorService executorService;
 
     @Override
     public void onLoad() {
@@ -54,6 +68,79 @@ public class SpotifyManager implements RadioService {
         } catch (Exception ex) {
             log("Error loading Spotify API:");
             ex.printStackTrace();
+        }
+
+        executorService = Executors.newScheduledThreadPool(1);
+
+        executorService.scheduleWithFixedDelay(() -> {
+
+            try {
+                var playlist = spotifyApi.getPlaylist("0yMCH3oKa943HwWCqEUVft").build().execute();
+                //https://open.spotify.com/playlist/5cT02lDTkgoxboOaVBsaPs?si=uPmp_j-HQseT_f_4G1Ptbw
+                //https://open.spotify.com/playlist/0yMCH3oKa943HwWCqEUVft?si=zap40_72RSCQvO0Rs_ufmQ
+
+                if (playlist == null) return;
+
+                var tracks = playlist.getTracks().getItems();
+
+                for (var track : tracks) {
+                    if (track.getAddedAt().toInstant().isAfter(lastCollaborativePlaylistCheck.toInstant())) {
+                        log("found track, queueing!!!");
+                        fetchLavaTrack((Track) track.getTrack()).thenAccept(s -> {
+                            if (s != null) {
+                                Radio.getInstance().getOrchestrator().addNetworkTrack(Radio.getInstance().getGuild().getSelfMember(), s, false, false, false, null, null);
+                            }
+                        });
+                    }
+                }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            lastCollaborativePlaylistCheck = OffsetDateTime.now();
+
+        }, 10, 3, TimeUnit.SECONDS);
+    }
+
+    public String getIdentifier(Track track) {
+        var cached = getCachedIdentifier(track);
+
+        if (cached != null) {
+            return cached;
+        }
+
+        var lava = fetchLavaTrack(track).join();
+
+        if (lava == null) {
+            return null;
+        }
+
+        return lava.getIdentifier();
+    }
+
+    public String getCachedIdentifier(Track track) {
+        var coll = Service.of(DatabaseManager.class).getCollection("spotifycache");
+        var doc = coll.find(eq(track.getId())).first();
+
+        if (doc != null) {
+            return doc.getString("identifier");
+        }
+
+        return null;
+    }
+
+    public void saveCachedIdentifier(Track track, String identifier) {
+        var coll = Service.of(DatabaseManager.class).getCollection("spotifycache");
+
+        coll.updateOne(eq(track.getId()), new Document("$set", new Document("identifier", identifier).append("cached_at", System.currentTimeMillis())), new UpdateOptions().upsert(true));
+    }
+
+    @Override
+    public void onShutdown() {
+        if (executorService != null) {
+            executorService.shutdown();
+            executorService = null;
         }
     }
 
@@ -84,6 +171,19 @@ public class SpotifyManager implements RadioService {
         return future;
     }
 
+    public SpotifyApi getSpotifyApi() {
+        return spotifyApi;
+    }
+
+    public void findPlaylist(String playlist) {
+        spotifyApi.getPlaylist(playlist).build().executeAsync()
+                .thenAccept(p -> {
+                    p.getTracks().getItems()[0].getAddedAt();
+                    log("playlist: " + p.getName());
+                });
+        //https://open.spotify.com/playlist/5cT02lDTkgoxboOaVBsaPs?si=uPmp_j-HQseT_f_4G1Ptbw
+    }
+
     public CompletableFuture<Track> findTrack(String url) {
         //https://open.spotify.com/track/0Sm93pz6kzCglkjDiCkmYM
         if (url.contains("?")) {
@@ -98,18 +198,23 @@ public class SpotifyManager implements RadioService {
         return spotifyApi.getTrack(id).build().executeAsync();
     }
 
-    public CompletableFuture<NetworkSong> queueTrack(Track track, Member suggestedBy) {
+    public CompletableFuture<AudioTrack> fetchLavaTrack(Track track) {
 
-        var searchQuery = "ytsearch:" + track.getName() + " " + Arrays.stream(track.getArtists()).map(ArtistSimplified::getName).collect(Collectors.joining(" ")) + " topic";
+        String searchQuery = getCachedIdentifier(track);
 
-        var future = new CompletableFuture<NetworkSong>();
+        if (searchQuery == null) {
+            searchQuery = "ytsearch:" + track.getName() + " " + Arrays.stream(track.getArtists()).map(ArtistSimplified::getName).collect(Collectors.joining(" ")) + " topic";
+        }
+
+        var future = new CompletableFuture<AudioTrack>();
 
         log("Attempting to lookup song with identifier " + searchQuery);
 
         Radio.getInstance().getOrchestrator().getAudioManager().loadItem(searchQuery, new AudioLoadResultHandler() {
             @Override
-            public void trackLoaded(AudioTrack track) {
-                queue(track);
+            public void trackLoaded(AudioTrack lavaTrack) {
+                saveCachedIdentifier(track, lavaTrack.getIdentifier());
+                future.complete(lavaTrack);
             }
 
             @Override
@@ -117,24 +222,22 @@ public class SpotifyManager implements RadioService {
                 log("Debug: playlist for Spotify search: " + playlist.getTracks().size() + " tracks");
 
                 if (!playlist.getTracks().isEmpty()) {
-                    queue(playlist.getTracks().get(0));
+                    var lavaTrack = playlist.getTracks().get(0);
+
+                    saveCachedIdentifier(track, lavaTrack.getIdentifier());
+                    future.complete(lavaTrack);
                 }
             }
 
             @Override
             public void noMatches() {
+                log("no matches found!");
                 future.complete(null);
             }
 
             @Override
             public void loadFailed(FriendlyException ex) {
                 future.completeExceptionally(ex);
-            }
-
-            private void queue(AudioTrack lavaTrack) {
-                Radio.getInstance().getOrchestrator().addNetworkTrack(suggestedBy, lavaTrack, false, false, false,
-                        s -> s.setSpotifyTrack(track),
-                        future::completeExceptionally);
             }
         });
 

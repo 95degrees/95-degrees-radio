@@ -59,7 +59,7 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (song.getType() != SongType.SONG) return;
 
-        var name = song.getFileName();
+        var name = song.getInternalName();
 
         log("Attempting to fetch lyrics for " + name + "...");
 
@@ -82,9 +82,9 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
 
         var future = new CompletableFuture<LiveLyrics>();
 
-        var existingLyrics = lyrics.find(eq(song.getFileName())).first();
+        var existingLyrics = lyrics.find(eq(song.getInternalName())).first();
         if (existingLyrics != null) {
-            log("Lyrics already exist for " + song.getFileName());
+            log("Lyrics already exist for " + song.getInternalName());
 
             future.complete(new LiveLyrics(existingLyrics.getString("subtitles")));
             return future;
@@ -135,14 +135,14 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
         client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                 .whenComplete((r, e) -> {
                     if (e != null) {
-                        log("Exception fetching lyrics for " + song.getFileName());
+                        log("Exception fetching lyrics for " + song.getInternalName());
                         e.printStackTrace();
                         future.complete(null);
                         return;
                     }
 
                     if (r.statusCode() != 200) {
-                        log("HTTP error (" + r.statusCode() + ") fetching lyrics for " + song.getFileName() + ":\n" + r.body());
+                        log("HTTP error (" + r.statusCode() + ") fetching lyrics for " + song.getInternalName() + ":\n" + r.body());
                         future.complete(null);
                         return;
                     }
@@ -178,14 +178,14 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
 
                     try {
                         log("Inserting...");
-                        lyrics.insertOne(new Document("_id", song.getFileName()).append("subtitles", subtitles).append("rawJson", r.body()));
+                        lyrics.insertOne(new Document("_id", song.getInternalName()).append("subtitles", subtitles).append("rawJson", r.body()));
                     } catch (Exception ex) {
                         ex.printStackTrace();
                         future.complete(null);
                         return;
                     }
 
-                    log("Fetched lyrics successfully for " + song.getFileName());
+                    log("Fetched lyrics successfully for " + song.getInternalName());
 
                     future.complete(new LiveLyrics(subtitles));
                 });

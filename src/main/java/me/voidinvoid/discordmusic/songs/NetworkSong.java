@@ -32,12 +32,17 @@ public class NetworkSong extends Song {
     }
 
     @Override
-    public String getFriendlyName() {
-        return track.getInfo().title + " (" + track.getInfo().author + ")";
+    public String getTitle() {
+        return track.getInfo().title;
     }
 
     @Override
-    public String getFileName() {
+    public String getArtist() {
+        return track.getInfo().author;
+    }
+
+    @Override
+    public String getInternalName() {
         return track.getInfo().uri;
     }
 
@@ -49,7 +54,7 @@ public class NetworkSong extends Song {
     }
 
     @Override
-    public String getFullLocation() {
+    public String getLavaIdentifier() {
         return url;
     }
 

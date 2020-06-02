@@ -294,7 +294,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
         User user = member.getUser();
 
         var title = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getName() : track.getInfo().title;
-        var artist = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getName() : track.getInfo().uri;
+        var artist = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getArtists()[0].getName() : track.getInfo().uri;
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")

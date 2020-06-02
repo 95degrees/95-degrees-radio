@@ -5,6 +5,8 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Songs;
 
 import java.util.List;
 
@@ -48,6 +50,6 @@ public class QueueSongCommand extends Command {
         Song song = map.get(songId);
 
         ((RadioPlaylist) active).getSongs().moveSongToFront(song);
-        data.success("Queued `" + song.getFriendlyName().replace("`", "") + "`");
+        data.success("Queued `" + Formatting.escape(Songs.titleArtist(song)) + "`");
     }
 }

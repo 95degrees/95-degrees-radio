@@ -61,17 +61,22 @@ public class FileSong extends Song {
     }
 
     @Override
-    public String getFriendlyName() {
-        return mp3Artist + " - " + mp3Title;
+    public String getTitle() {
+        return mp3Title;
     }
 
     @Override
-    public String getFileName() {
+    public String getArtist() {
+        return mp3Artist;
+    }
+
+    @Override
+    public String getInternalName() {
         return file.getFileName().toString();
     }
 
     @Override
-    public String getFullLocation() {
+    public String getLavaIdentifier() {
         return file.toString();
     }
 

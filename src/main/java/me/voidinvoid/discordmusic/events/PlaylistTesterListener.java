@@ -82,10 +82,10 @@ public class PlaylistTesterListener implements RadioService, SongEventListener, 
 
             if (reaction.equals(VALID_REACTION)) {
                 result = true;
-                textChannel.sendMessage("✅ Marked `" + song.getFileName() + "` as valid").queue();
+                textChannel.sendMessage("✅ Marked `" + song.getInternalName() + "` as valid").queue();
             } else if (reaction.equals(INVALID_REACTION)) {
                 result = false;
-                textChannel.sendMessage("❌ Marked `" + song.getFileName() + "` as invalid").queue();
+                textChannel.sendMessage("❌ Marked `" + song.getInternalName() + "` as invalid").queue();
             } else {
                 return;
             }
@@ -121,7 +121,7 @@ public class PlaylistTesterListener implements RadioService, SongEventListener, 
             Path target = result ? validSongs : invalidSongs;
 
             try {
-                Files.move(Paths.get(song.getFullLocation()), target.resolve(song.getFileName()));
+                Files.move(Paths.get(song.getLavaIdentifier()), target.resolve(song.getInternalName()));
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

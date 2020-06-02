@@ -5,6 +5,8 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Songs;
 
 import java.util.List;
 
@@ -53,6 +55,6 @@ public class PlaySongCommand extends Command {
         }
 
         Radio.getInstance().getOrchestrator().playSong(toPlay);
-        data.success("Now playing `" + toPlay.getFriendlyName().replace("`", "") + "`");
+        data.success("Now playing `" + Formatting.escape(Songs.titleArtist(toPlay)) + "`");
     }
 }

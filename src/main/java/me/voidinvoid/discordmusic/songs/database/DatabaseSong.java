@@ -73,10 +73,12 @@ public class DatabaseSong extends Song {
         }
     }
 
+    @Override
     public String getTitle() {
         return title;
     }
 
+    @Override
     public String getArtist() {
         return artist;
     }
@@ -94,17 +96,12 @@ public class DatabaseSong extends Song {
     }
 
     @Override
-    public String getFriendlyName() {
-        return artist + " - " + title;
+    public String getInternalName() {
+        return albumArtId;
     }
 
     @Override
-    public String getFileName() {
-        return albumArtId; //todo?
-    }
-
-    @Override
-    public String getFullLocation() {
+    public String getLavaIdentifier() {
         return source;
     }
 

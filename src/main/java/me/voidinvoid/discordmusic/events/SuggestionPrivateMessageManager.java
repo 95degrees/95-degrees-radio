@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Service;
+import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -43,7 +44,7 @@ public class SuggestionPrivateMessageManager implements RadioService, SongEventL
 
                     MessageEmbed pm = new EmbedBuilder()
                             .setTitle("Song Suggestion Reminder")
-                            .setDescription(ns.getFriendlyName() + " is now playing on 95 Degrees Radio!")
+                            .setDescription(Songs.titleArtist(ns) + " is now playing on 95 Degrees Radio!")
                             .setTimestamp(OffsetDateTime.now())
                             .setColor(Colors.ACCENT_MAIN)
                             .setFooter("🔔 Suggestion reminder", null)

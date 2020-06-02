@@ -90,7 +90,7 @@ public class AdvertisementManager implements RadioService, SongEventListener {
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (song.getType() == SongType.ADVERTISEMENT) {
-            Advertisement ad = adverts.stream().filter(a -> a.getIdentifier().equalsIgnoreCase(song.getFileName())).findAny().orElse(null);
+            Advertisement ad = adverts.stream().filter(a -> a.getIdentifier().equalsIgnoreCase(song.getInternalName())).findAny().orElse(null);
 
             if (ad == null) {
                 warn("Couldn't find advert for song");

@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Songs;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class SongRatingsCommand extends Command {
                 return;
             }
 
-            var doc = db.getCollection("ratings").find(eq("song", song.getFileName())).first();
+            var doc = db.getCollection("ratings").find(eq("song", song.getInternalName())).first();
 
             if (doc == null) {
                 data.success("No ratings have been found for this song");
@@ -46,9 +47,7 @@ public class SongRatingsCommand extends Command {
             var ratings = doc.get("ratings", Document.class).entrySet();
             var totalRatings = ratings.stream().mapToInt(e -> ((ArrayList<String>) e.getValue()).size()).sum();
 
-            var ds = (DatabaseSong) song;
-
-            data.code("Ratings for " + song.getFriendlyName() + "\n\n" + ratings.stream().map(e -> {
+            data.code("Ratings for " + Songs.titleArtist(song) + "\n\n" + ratings.stream().map(e -> {
                 double rating = ((ArrayList<String>) e.getValue()).size();
                 return e.getKey() + " - " + (100d * (rating / totalRatings) + "% (" + rating + ")");
             }).collect(Collectors.joining("\n")));

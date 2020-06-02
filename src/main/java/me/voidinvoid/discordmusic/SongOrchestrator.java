@@ -20,26 +20,20 @@ import me.voidinvoid.discordmusic.levelling.*;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
-import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
-import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Service;
+import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import org.bson.Document;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SongOrchestrator extends AudioEventAdapter implements RadioService {
 
@@ -245,13 +239,13 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             return;
         }
 
-        log(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + song.getFriendlyName() + ConsoleColor.RESET);
+        log(ConsoleColor.BLACK_BACKGROUND_BRIGHT + " NOW PLAYING " + ConsoleColor.RESET_SPACE + ConsoleColor.WHITE_BOLD + Songs.titleArtist(song) + ConsoleColor.RESET);
         log("              Jingle after " + timeUntilJingle + " more songs");
 
         String cacheFileName = null;
 
-        if (song instanceof DatabaseSong && (song.getFullLocation().toLowerCase().contains("youtu.be") || song.getFullLocation().toLowerCase().contains("youtube.com"))) { //fetch cached version if available
-            cacheFileName = Service.of(YouTubeCacheManager.class).loadOrCache(song.getFullLocation());
+        if (song instanceof DatabaseSong && (song.getLavaIdentifier().toLowerCase().contains("youtu.be") || song.getLavaIdentifier().toLowerCase().contains("youtube.com"))) { //fetch cached version if available
+            cacheFileName = Service.of(YouTubeCacheManager.class).loadOrCache(song.getLavaIdentifier());
         }
 
         if (cacheFileName != null && song.getTrack() != null) {
@@ -263,7 +257,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             log("Loading this song from cache");
         }
 
-        manager.loadItem(cacheFileName != null ? cacheFileName : song.getFullLocation(), new AudioLoadResultHandler() {
+        manager.loadItem(cacheFileName != null ? cacheFileName : song.getLavaIdentifier(), new AudioLoadResultHandler() {
             public void trackLoaded(AudioTrack track) {
                 track.setUserData(song);
                 player.playTrack(track);
@@ -278,7 +272,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             }
 
             public void loadFailed(FriendlyException e) {
-                log("Load failed for file: (ID) " + song.getFullLocation());
+                log("Load failed for file: (ID) " + song.getLavaIdentifier());
                 e.printStackTrace();
                 playNextSong(false, false);
 

@@ -38,9 +38,9 @@ public class SongRatingManager implements RadioService {
         var am = Service.of(AchievementManager.class);
         am.rewardAchievement(user, Achievement.RATE_SONG);
 
-        if (ratings.find(eq("song", song.getFileName())).first() == null) {
+        if (ratings.find(eq("song", song.getInternalName())).first() == null) {
             Document d = new Document();
-            d.put("song", song.getFileName());
+            d.put("song", song.getInternalName());
             Document rt = new Document();
             for (Rating r : Rating.values()) {
                 rt.put(r.name(), r == rating ? Collections.singletonList(user.getId()) : Collections.emptyList());
@@ -55,8 +55,8 @@ public class SongRatingManager implements RadioService {
             rt.put("ratings." + r, user.getId());
         }
 
-        ratings.updateOne(eq("song", song.getFileName()), new Document("$pull", rt));
-        ratings.updateOne(eq("song", song.getFileName()), new Document("$addToSet", new Document("ratings." + rating, user.getId()))).getModifiedCount();
+        ratings.updateOne(eq("song", song.getInternalName()), new Document("$pull", rt));
+        ratings.updateOne(eq("song", song.getInternalName()), new Document("$addToSet", new Document("ratings." + rating, user.getId()))).getModifiedCount();
 
         return true;
     }

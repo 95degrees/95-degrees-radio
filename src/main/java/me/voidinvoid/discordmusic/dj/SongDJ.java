@@ -15,10 +15,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
-import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
-import me.voidinvoid.discordmusic.utils.Colors;
-import me.voidinvoid.discordmusic.utils.Emoji;
-import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.*;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -174,7 +171,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         if (song instanceof NetworkSong) {
             embed.addField("Title", Formatting.escape(track.getInfo().title), true);
             embed.addField("Uploader", Formatting.escape(track.getInfo().author), true);
-            embed.addField("URL", Formatting.escape(song.getFileName()), true);
+            embed.addField("URL", Formatting.escape(song.getInternalName()), true);
 
             NetworkSong ns = (NetworkSong) song;
             if (ns.getSuggestedBy() != null) {
@@ -187,14 +184,14 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
             embed.addField("Title", Formatting.escape(ds.getTitle()), true);
             embed.addField("Artist", Formatting.escape(ds.getArtist()), true);
             //embed.addField("MBID", ds.getMbId() == null ? "Unknown" : Formatting.escape(ds.getMbId()), true);
-            embed.setFooter("(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(ds.getFileName()));
+            embed.setFooter("(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(ds.getInternalName()));
 
         } else if (song instanceof FileSong) {
 
             if (song.getType() == SongType.SONG) {
                 embed.addField("Title", Formatting.escape(track.getInfo().title), true);
                 embed.addField("Artist", Formatting.escape(track.getInfo().author), true);
-                embed.setFooter("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getFileName()));
+                embed.setFooter("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getInternalName()));
             }
 
         } else {
@@ -215,7 +212,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
             lastSongLoadErrorMessage = djChannel.get().sendMessage(new EmbedBuilder()
                     .setColor(Colors.ACCENT_ERROR)
                     .setTitle(Emoji.WARN + " Track load error")
-                    .setDescription(song.getFriendlyName() + ": " + error.getMessage()).build()).complete();
+                    .setDescription(Songs.titleArtist(song) + ": " + error.getMessage()).build()).complete();
 
             lastSongErrorRepeatCount = 0;
         } else if (lastSongLoadErrorMessage != null) { //should always be true

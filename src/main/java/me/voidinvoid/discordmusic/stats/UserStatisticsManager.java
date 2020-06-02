@@ -164,6 +164,8 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
 
     @Override
     public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+        if (member == null || member.getUser().isBot()) return;
+
         addStatistic(member.getUser(), Statistic.SONGS_SUGGESTED, 1);
     }
 }
