@@ -201,7 +201,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 var srm = Radio.getInstance().getService(SongRatingManager.class);
                 var song = Radio.getInstance().getOrchestrator().getCurrentSong();
 
-                if (song instanceof DatabaseSong && song.getType() == SongType.SONG) {
+                if (Songs.isRatable(song) && song.getType() == SongType.SONG) {
                     try {
                         if (!srm.rateSong(user.getUser(), (DatabaseSong) song, Rating.valueOf(rating), false)) {
                             c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG RATING ERROR", "Please wait before rating songs again"));

@@ -62,8 +62,6 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         this.radio = radio;
         jda = radio.getJda();
 
-        loadPlaylists();
-
         manager = new DefaultAudioPlayerManager();
 
         AudioSourceManagers.registerLocalSource(manager);
@@ -244,7 +242,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
         String cacheFileName = null;
 
-        if (song instanceof DatabaseSong && (song.getLavaIdentifier().toLowerCase().contains("youtu.be") || song.getLavaIdentifier().toLowerCase().contains("youtube.com"))) { //fetch cached version if available
+        if ((song instanceof DatabaseSong || song instanceof SpotifySong) && (song.getLavaIdentifier().toLowerCase().contains("youtu.be") || song.getLavaIdentifier().toLowerCase().contains("youtube.com"))) { //fetch cached version if available
             cacheFileName = Service.of(YouTubeCacheManager.class).loadOrCache(song.getLavaIdentifier());
         }
 

@@ -133,7 +133,7 @@ public class SpotifyManager implements RadioService {
     public void saveCachedIdentifier(Track track, String identifier) {
         var coll = Service.of(DatabaseManager.class).getCollection("spotifycache");
 
-        coll.updateOne(eq(track.getId()), new Document("$set", new Document("identifier", identifier).append("cached_at", System.currentTimeMillis())), new UpdateOptions().upsert(true));
+        coll.updateOne(eq(track.getId()), new Document("$set", new Document("identifier", identifier).append("title", track.getName()).append("cached_at", System.currentTimeMillis())), new UpdateOptions().upsert(true));
     }
 
     @Override

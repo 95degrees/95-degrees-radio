@@ -189,8 +189,8 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         } else if (song instanceof FileSong) {
 
             if (song.getType() == SongType.SONG) {
-                embed.addField("Title", Formatting.escape(track.getInfo().title), true);
-                embed.addField("Artist", Formatting.escape(track.getInfo().author), true);
+                embed.addField("Title", Formatting.escape(song.getTitle()), true);
+                embed.addField("Artist", Formatting.escape(song.getArtist()), true);
                 embed.setFooter("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getInternalName()));
             }
 

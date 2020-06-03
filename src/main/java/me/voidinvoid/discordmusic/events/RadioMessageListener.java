@@ -12,6 +12,7 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
@@ -117,8 +118,8 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
         EmbedBuilder embed = new EmbedBuilder()
                 .setDescription("\u200b\n")
                 .setColor(new Color(230, 230, 230))
-                .addField("**" + (song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title) + "**",
-                        (song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author) + "\n ", false);
+                .addField("**" + song.getTitle() + "**",
+                        song.getArtist() + "\n\u200b", false);
         // .setTimestamp(new Date().toInstant());
 
         if (song instanceof NetworkSong) {
@@ -127,11 +128,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
             }
 
-            if (ns.getSpotifyTrack() != null) {
-                appendSpotifyTrackDetails(embed, ns.getSpotifyTrack());
-                embedReady.complete(embed);
-
-            } else {
+            if (ns.getSpotifyTrack() == null) {
                 Service.of(SpotifyManager.class).searchTrack(track.getInfo().title)
                         .whenComplete((t, e) -> {
                             appendSpotifyTrackDetails(embed, ns.getSpotifyTrack());
@@ -139,6 +136,11 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                         });
             }
         } else {
+            embedReady.complete(embed);
+        }
+
+        if (song instanceof SpotifyTrackHolder) {
+            appendSpotifyTrackDetails(embed, ((SpotifyTrackHolder) song).getSpotifyTrack());
             embedReady.complete(embed);
         }
 
@@ -159,19 +161,19 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                     srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
                 }
 
-                if (song instanceof DatabaseSong) {
+                if (Songs.isRatable(song)) {
 
                     var rl = new MessageReactionListener(m);
 
                     for (Rating r : Rating.values()) {
                         rl.on(r.getEmote(), member -> {
                             var rm = Radio.getInstance().getService(SongRatingManager.class);
-                            rm.rateSong(member.getUser(), (DatabaseSong) song, r, false);
+                            rm.rateSong(member.getUser(), song, r, false);
 
                             m.getChannel().sendMessage(new EmbedBuilder()
                                     .setTitle("Song Rating")
                                     .setColor(Colors.ACCENT_SONG_RATING)
-                                    .setDescription(member.getUser().getAsMention() + ", your rating of **" + Formatting.escape(((DatabaseSong) song).getTitle()) + "** has been saved")
+                                    .setDescription(member.getUser().getAsMention() + ", your rating of **" + Formatting.escape(song.getTitle()) + "** has been saved")
                                     .setTimestamp(OffsetDateTime.now()).setFooter(member.getUser().getName(), member.getUser().getAvatarUrl()).build())
                                     .queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
                         });
@@ -184,7 +186,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                         for (Rating r : Rating.values()) {
                             if (r.getEmote().equals(re)) {
                                 SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
-                                rm.rateSong(e.getUser(), (DatabaseSong) song, r, false);
+                                rm.rateSong(e.getUser(), song, r, false);
                                 m.getChannel().sendMessage(new EmbedBuilder().setTitle("Song Rating").setColor(Colors.ACCENT_SONG_RATING).setDescription(e.getMember().getAsMention() + ", your rating of **" + Formatting.escape(((DatabaseSong) song).getTitle()) + "** has been saved").setTimestamp(OffsetDateTime.now()).setFooter(e.getMember().getUser().getName(), e.getMember().getUser().getAvatarUrl()).build()).queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
                                 return;
                             }

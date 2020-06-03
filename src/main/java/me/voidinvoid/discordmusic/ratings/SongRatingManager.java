@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
+import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.User;
@@ -25,7 +26,7 @@ public class SongRatingManager implements RadioService {
 
     private Map<String, Long> lastRatingAttempt = new HashMap<>();
 
-    public boolean rateSong(User user, DatabaseSong song, Rating rating, boolean force) {
+    public boolean rateSong(User user, Song song, Rating rating, boolean force) {
         if (!force && (System.currentTimeMillis() - lastRatingAttempt.getOrDefault(user.getId(), 0L)) < 10000L) {
             return false;
         }

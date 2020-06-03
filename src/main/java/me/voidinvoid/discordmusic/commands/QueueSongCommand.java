@@ -33,7 +33,7 @@ public class QueueSongCommand extends Command {
 
         int songId;
         try {
-            songId = Integer.valueOf(args[0]);
+            songId = Integer.parseInt(args[0]);
         } catch (Exception ignored) {
             data.error("Invalid song number. Use `!songs` to list songs");
             return;

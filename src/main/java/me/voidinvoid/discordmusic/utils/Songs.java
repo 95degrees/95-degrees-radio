@@ -1,6 +1,8 @@
 package me.voidinvoid.discordmusic.utils;
 
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.SpotifySong;
+import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 
 public final class Songs {
 
@@ -26,5 +28,9 @@ public final class Songs {
 
     public static String titleArtist(Song song) {
         return song.getTitle() + " - " + song.getArtist();
+    }
+
+    public static boolean isRatable(Song song) {
+        return song instanceof DatabaseSong || song instanceof SpotifySong;
     }
 }

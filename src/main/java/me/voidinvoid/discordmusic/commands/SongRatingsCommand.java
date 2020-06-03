@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.SpotifySong;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Songs;
@@ -32,7 +33,7 @@ public class SongRatingsCommand extends Command {
                 return;
             }
 
-            if (!(song instanceof DatabaseSong)) {
+            if (!(song instanceof DatabaseSong) && !(song instanceof SpotifySong)) {
                 data.error("Ratings aren't available for this song");
                 return;
             }

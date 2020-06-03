@@ -1,14 +1,12 @@
-package me.voidinvoid.discordmusic.songs.database;
+package me.voidinvoid.discordmusic.songs;
 
 import com.wrapper.spotify.model_objects.specification.Track;
-import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.Service;
 
-public class SpotifySong extends Song {
+public class SpotifySong extends Song implements SpotifyTrackHolder {
 
     private Track spotifyTrack;
     private String identifier;
@@ -22,6 +20,11 @@ public class SpotifySong extends Song {
 
         this.albumArt = spotifyTrack.getAlbum() == null || spotifyTrack.getAlbum().getImages() == null ?
                 null : new RemoteAlbumArt(spotifyTrack.getAlbum().getImages()[0].getUrl());
+    }
+
+    @Override
+    public Track getSpotifyTrack() {
+        return spotifyTrack;
     }
 
     @Override

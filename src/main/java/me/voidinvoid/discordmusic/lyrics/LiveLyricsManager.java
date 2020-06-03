@@ -95,8 +95,8 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
             return future;
         }
 
-        var title = track.getInfo().title;
-        var artist = track.getInfo().author;
+        var title = song.getTitle();
+        var artist = song.getArtist();
 
         if (song instanceof NetworkSong) {
             var ns = (NetworkSong) song;
@@ -105,12 +105,6 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
 
             artist = artist.toLowerCase()
                     .replaceAll("vevo", "");
-
-        } else if (song instanceof DatabaseSong) {
-            var ds = (DatabaseSong) song;
-
-            title = ds.getTitle();
-            artist = ds.getArtist();
         }
 
         var cm = new CookieManager();

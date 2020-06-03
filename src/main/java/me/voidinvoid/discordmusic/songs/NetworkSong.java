@@ -9,7 +9,7 @@ import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.User;
 
-public class NetworkSong extends Song {
+public class NetworkSong extends Song implements SpotifyTrackHolder {
 
     private String url;
     private User suggestedBy;
@@ -74,6 +74,7 @@ public class NetworkSong extends Song {
         return Service.of(AlbumArtManager.class).getNetworkAlbumArt();
     }
 
+    @Override
     public Track getSpotifyTrack() {
         return spotifyTrack;
     }

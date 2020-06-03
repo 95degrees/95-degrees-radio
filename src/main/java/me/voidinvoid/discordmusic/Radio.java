@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.or;
 
 public class Radio implements EventListener {
 
@@ -153,6 +154,8 @@ public class Radio implements EventListener {
 
         registerService(databaseManager);
         orchestrator = new SongOrchestrator(this, config);
+
+        orchestrator.loadPlaylists();
 
         Emoji.init();
 
