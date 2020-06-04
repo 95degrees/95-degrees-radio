@@ -69,6 +69,8 @@ public class SongInfo {
 
         this.canBeRated = song instanceof DatabaseSong || song instanceof SpotifySong;
 
-        this.albumArtUrl = song.getAlbumArt() instanceof RemoteAlbumArt ? ((RemoteAlbumArt) song.getAlbumArt()).getUrl() : null;
+        var albumArt = song.getAlbumArt();
+
+        this.albumArtUrl = albumArt instanceof RemoteAlbumArt ? ((RemoteAlbumArt) albumArt).getUrl() : null;
     }
 }

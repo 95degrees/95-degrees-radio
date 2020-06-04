@@ -45,7 +45,6 @@ public class CommandManager implements RadioService, EventListener {
         register(new StopRadioCommand());
         register(new DebugCommand());
         register(new ServicesCommand());
-        register(new PairRPCCommand());
         if (RadioConfig.config.useQuizSocketServer) register(new QuizSocketServerKeyCommand());
         register(new CommandListCommand(commands));
 

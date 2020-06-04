@@ -3,6 +3,8 @@ package me.voidinvoid.discordmusic.utils.cache;
 import me.voidinvoid.discordmusic.Radio;
 import net.dv8tion.jda.api.entities.Role;
 
+import java.util.Objects;
+
 public class CachedRole implements ICached {
 
     private String roleId;
@@ -23,5 +25,10 @@ public class CachedRole implements ICached {
 
     public Role get() {
         return Radio.getInstance().getJda().getRoleById(roleId);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof CachedRole && Objects.equals(roleId, ((CachedRole) obj).roleId);
     }
 }

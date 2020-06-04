@@ -12,10 +12,8 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
-import net.dv8tion.jda.api.entities.Member;
 import org.bson.Document;
 
 import java.net.URI;

@@ -47,12 +47,10 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private static final int RPC_VERSION = 3;
 
     public static final String CLIENT_REQUEST_STATUS = "request_status";
-    public static final String CLIENT_PAIR_RPC = "pair_rpc";
     public static final String CLIENT_IDENTIFY = "identify";
     public static final String CLIENT_RATE_SONG = "rate_song";
     public static final String CLIENT_QUEUE_SONG = "queue_song";
     public static final String CLIENT_QUEUE_SPOTIFY = "queue_spotify";
-    public static final String CLIENT_UNLINK = "unlink";
     public static final String CLIENT_DISCONNECT_ME = "disconnect_me";
 
     //Control panel
@@ -67,7 +65,6 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
     public static final String SERVER_CONTROL_UPCOMING_EVENTS = "dj_upcoming_events";
 
-    public static final String SERVER_RPC_LINK_CODE = "rpc_link_code";
     public static final String SERVER_ACCOUNT_LINKED = "linked_account";
     public static final String SERVER_SONG_SEEK = "song_seek";
     public static final String SERVER_SONG_PAUSE = "song_pause";
@@ -104,14 +101,11 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
     private List<UpcomingEvent> upcomingEvents;
 
-    private Map<String, SocketIOClient> pendingPairCodes;
     private Map<SocketIOClient, Member> identities;
 
     private VoiceChannel voiceChannel;
     private TextChannel djChannel;
     private Guild guild;
-
-    private MongoCollection<Document> linkedAccounts;
 
     @Override
     public boolean canRun(RadioConfig config) {
@@ -124,9 +118,6 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
         guild = voiceChannel.getGuild();
 
-        linkedAccounts = Radio.getInstance().getService(DatabaseManager.class).getCollection("rpcusers");
-
-        pendingPairCodes = new HashMap<>();
         identities = new HashMap<>();
 
         listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList());
@@ -151,15 +142,11 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
             server.addEventListener(CLIENT_IDENTIFY, String.class, (c, id, ack) -> {
 
-                log(id);
                 if (id == null) return;
 
-                var idDoc = linkedAccounts.find(eq(id)).first();
-                log(idDoc);
+                try {
+                    var user = voiceChannel.getGuild().getMemberById(id);
 
-                if (idDoc != null) try {
-                    var user = voiceChannel.getGuild().getMemberById(idDoc.getString("discordId"));
-                    log(user);
                     if (user != null) {
                         identities.put(c, user);
                         c.sendEvent(SERVER_IDENTITY, new IdentityInfo(user.getUser()));
@@ -176,21 +163,6 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 RadioInfo info = new RadioInfo(RadioConfig.config.voiceInviteLink, listeners, currentSongInfo, queue, upcomingEvents, Radio.getInstance().getOrchestrator().getPlayer().isPaused());
 
                 c.sendEvent(SERVER_RADIO_STATUS, info);
-            });
-
-            server.addEventListener(CLIENT_PAIR_RPC, Object.class, (c, o, ack) -> {
-                String code = UUID.randomUUID().toString().substring(0, 8);
-
-                pendingPairCodes.put(code, c);
-                c.sendEvent(SERVER_RPC_LINK_CODE, code);
-            });
-
-            server.addEventListener(CLIENT_UNLINK, String.class, (c, code, ack) -> {
-
-                linkedAccounts.deleteOne(eq(code));
-                identities.remove(c);
-
-                c.sendEvent(SERVER_IDENTITY);
             });
 
             server.addEventListener(CLIENT_RATE_SONG, String.class, (c, rating, ack) -> {
@@ -328,16 +300,6 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 }
             });
 
-            server.addDisconnectListener(c -> {
-                for (String s : pendingPairCodes.keySet()) {
-                    if (pendingPairCodes.get(s).equals(c)) {
-                        pendingPairCodes.remove(s);
-                        return;
-                    }
-                }
-                identities.remove(c);
-            });
-
             server.startAsync();
         }
 
@@ -424,26 +386,6 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
     public SocketIOServer getServer() {
         return server;
-    }
-
-    public boolean linkAccount(Member member, String linkCode) {
-        if (!pendingPairCodes.containsKey(linkCode)) return false;
-
-        var code = UUID.randomUUID().toString();
-        linkedAccounts.insertOne(new Document("_id", code).append("discordId", member.getUser().getId()).append("timestamp", System.currentTimeMillis()));
-
-        var c = pendingPairCodes.remove(linkCode);
-
-        c.sendEvent(SERVER_ACCOUNT_LINKED, code);
-        c.sendEvent(SERVER_IDENTITY, new IdentityInfo(member.getUser()));
-
-        identities.put(c, member);
-
-        var am = Radio.getInstance().getService(AchievementManager.class);
-
-        am.rewardAchievement(member.getUser(), Achievement.USE_RDP);
-
-        return true;
     }
 
     public void updateSongInfo(AudioTrack track, String albumArtUrl, User suggestedBy) {
