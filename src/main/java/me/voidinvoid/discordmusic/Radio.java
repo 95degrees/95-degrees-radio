@@ -185,7 +185,7 @@ public class Radio implements EventListener {
         registerService(new UserStatisticsManager());
         registerService(new SuggestionPrivateMessageManager());
         registerService(new RemoteSocketControlManager());
-        registerService(new RadioPauseManager());
+        //registerService(new RadioPauseManager());
         registerService(new YouTubeCacheManager());
         registerService(new RadioRestreamManager());
         registerService(new RadioAwardsManager());

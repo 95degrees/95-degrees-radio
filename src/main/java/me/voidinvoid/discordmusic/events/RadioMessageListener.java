@@ -14,11 +14,9 @@ import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
-import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.*;
-import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
-import me.voidinvoid.discordmusic.utils.reactions.MessageReactionListener;
+import me.voidinvoid.discordmusic.utils.reactions.ReactionListener;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -163,34 +161,26 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
                 if (Songs.isRatable(song)) {
 
-                    var rl = new MessageReactionListener(m);
+                    var rl = new ReactionListener(m);
 
                     for (Rating r : Rating.values()) {
-                        rl.on(r.getEmote(), member -> {
+                        rl.add(r.getEmote(), ev -> {
+                            ev.setCancelled(true);
+
                             var rm = Radio.getInstance().getService(SongRatingManager.class);
-                            rm.rateSong(member.getUser(), song, r, false);
+                            rm.rateSong(ev.getMember().getUser(), song, r, false);
 
                             m.getChannel().sendMessage(new EmbedBuilder()
                                     .setTitle("Song Rating")
                                     .setColor(Colors.ACCENT_SONG_RATING)
-                                    .setDescription(member.getUser().getAsMention() + ", your rating of **" + Formatting.escape(song.getTitle()) + "** has been saved")
-                                    .setTimestamp(OffsetDateTime.now()).setFooter(member.getUser().getName(), member.getUser().getAvatarUrl()).build())
+                                    .setDescription(ev.getMember().getUser().getAsMention() + ", your rating of **" + Formatting.escape(song.getTitle()) + "** has been saved")
+                                    .setTimestamp(OffsetDateTime.now()).setFooter(ev.getMember().getUser().getName(), ev.getMember().getUser().getAvatarUrl()).build())
                                     .queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
                         });
                     }
 
-                    MessageReactionCallbackManager cb = Radio.getInstance().getService(MessageReactionCallbackManager.class);
-
-                    cb.registerCallback(m.getId(), e -> {
-                        String re = e.getReaction().getReactionEmote().getName();
-                        for (Rating r : Rating.values()) {
-                            if (r.getEmote().equals(re)) {
-                                SongRatingManager rm = Radio.getInstance().getService(SongRatingManager.class);
-                                rm.rateSong(e.getUser(), song, r, false);
-                                m.getChannel().sendMessage(new EmbedBuilder().setTitle("Song Rating").setColor(Colors.ACCENT_SONG_RATING).setDescription(e.getMember().getAsMention() + ", your rating of **" + Formatting.escape(((DatabaseSong) song).getTitle()) + "** has been saved").setTimestamp(OffsetDateTime.now()).setFooter(e.getMember().getUser().getName(), e.getMember().getUser().getAvatarUrl()).build()).queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
-                                return;
-                            }
-                        }
+                    rl.add(Emoji.GNOME.getEmote(), ev -> {
+                        ev.setCancelled(true);
                     });
                 }
             });

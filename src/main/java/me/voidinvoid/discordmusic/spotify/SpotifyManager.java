@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.wrapper.spotify.SpotifyApi;
+import com.wrapper.spotify.model_objects.credentials.ClientCredentials;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.DatabaseManager;
@@ -49,33 +50,18 @@ public class SpotifyManager implements RadioService {
     @Override
     public void onLoad() {
 
-        try {
-            spotifyApi = new SpotifyApi.Builder()
-                    .setClientId("a8914a22ae464d6bae3539eecb20d19c")
-                    .setClientSecret("25dc603108814cddb7859eaf73b71cdb")
-                    .setRedirectUri(new URI("http://localhost/")) //todo store in config
-                    .build();
-
-            var credentials = spotifyApi.clientCredentials().build();
-            var res = credentials.execute();
-
-            log("Spotify API credentials: " + new Gson().toJson(res));
-
-            spotifyApi.setAccessToken(res.getAccessToken());
-
-        } catch (Exception ex) {
-            log("Error loading Spotify API:");
-            ex.printStackTrace();
-        }
-
         executorService = Executors.newScheduledThreadPool(1);
+
+        var res = authenticate();
+
+        if (res == null) {
+            return;
+        }
 
         executorService.scheduleWithFixedDelay(() -> {
 
             try {
-                var playlist = spotifyApi.getPlaylist("0yMCH3oKa943HwWCqEUVft").build().execute();
-                //https://open.spotify.com/playlist/5cT02lDTkgoxboOaVBsaPs?si=uPmp_j-HQseT_f_4G1Ptbw
-                //https://open.spotify.com/playlist/0yMCH3oKa943HwWCqEUVft?si=zap40_72RSCQvO0Rs_ufmQ
+                var playlist = spotifyApi.getPlaylist("0yMCH3oKa943HwWCqEUVft").build().execute(); //todo no hardcode
 
                 if (playlist == null) return;
 
@@ -99,6 +85,34 @@ public class SpotifyManager implements RadioService {
             lastCollaborativePlaylistCheck = OffsetDateTime.now();
 
         }, 10, 3, TimeUnit.SECONDS);
+    }
+
+    public ClientCredentials authenticate() {
+        try {
+            spotifyApi = new SpotifyApi.Builder()
+                    .setClientId("a8914a22ae464d6bae3539eecb20d19c")
+                    .setClientSecret("25dc603108814cddb7859eaf73b71cdb")
+                    .setRedirectUri(new URI("http://localhost/")) //todo store in config
+                    .build();
+
+            var credentials = spotifyApi.clientCredentials().build();
+            var res = credentials.execute();
+
+            log("Spotify API credentials: " + new Gson().toJson(res));
+
+            spotifyApi.setAccessToken(res.getAccessToken());
+
+            executorService.schedule(this::authenticate, res.getExpiresIn() - 30, TimeUnit.SECONDS);
+            //reauthenticate automatically
+
+            return res;
+
+        } catch (Exception ex) {
+            log("Error loading Spotify API:");
+            ex.printStackTrace();
+        }
+
+        return null;
     }
 
     public String getIdentifier(Track track) {
@@ -137,7 +151,7 @@ public class SpotifyManager implements RadioService {
     @Override
     public void onShutdown() {
         if (executorService != null) {
-            executorService.shutdown();
+            executorService.shutdownNow();
             executorService = null;
         }
     }
