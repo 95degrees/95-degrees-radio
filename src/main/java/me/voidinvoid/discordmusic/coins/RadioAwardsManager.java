@@ -13,6 +13,7 @@ import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
+import me.voidinvoid.discordmusic.utils.reactions.ReactionListener;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -102,7 +103,7 @@ public class RadioAwardsManager implements RadioService, SongEventListener, Even
                         .build()).queue(m -> {
 
                     activeRewards.put(m.getId(), reward);
-                    new MessageReactionListener(m).on("🎈", mb -> giveReward(mb, reward));
+                    new ReactionListener(m, true).add("🎈", ev -> giveReward(ev.getMember(), reward));
 
                     m.delete().queueAfter(3, TimeUnit.MINUTES); //todo make configurable?
                 }

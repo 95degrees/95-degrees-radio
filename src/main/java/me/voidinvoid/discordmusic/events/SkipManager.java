@@ -33,6 +33,10 @@ public class SkipManager implements RadioService, SongEventListener, EventListen
         }
     }
 
+    public int getSkipThreshold() {
+        return skipThreshold;
+    }
+
     public void addSkipRequest() {
         currentSkipRequests++;
 

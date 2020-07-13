@@ -37,7 +37,8 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
     private TextChannel textChannel;
     private ScheduledExecutorService updaterExecutor;
 
-    private Message activeMessage;
+    private Message activeTitleArtMessage;
+    private Message activeProgressMessage;
     private CompletableFuture currentEdit;
 
     private String mostRecentMessageId;
@@ -58,22 +59,22 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
         updaterExecutor = Executors.newScheduledThreadPool(1);
 
         updaterExecutor.scheduleAtFixedRate(() -> {
-            if (activeMessage != null /*&& (currentEdit == null || currentEdit.isDone())*/) {
+            if (activeProgressMessage != null /*&& (currentEdit == null || currentEdit.isDone())*/) {
                 var prog = generateProgressMessage();
 
                 if (nextForcedUpdate > System.currentTimeMillis() && !lyricChangeFlag) return;
 
-                if (prog != null && Objects.equals(activeMessage.getEmbeds().get(0).getDescription(), prog.getDescription()))
+                if (prog != null && Objects.equals(activeProgressMessage.getEmbeds().get(0).getDescription(), prog.getDescription()))
                     return;
 
-                if (mostRecentMessageId != null && !mostRecentMessageId.equals(activeMessage.getId())) {
-                    activeMessage.delete().queue();
+                if (mostRecentMessageId != null && !mostRecentMessageId.equals(activeProgressMessage.getId())) {
+                    activeProgressMessage.delete().queue();
 
-                    activeMessage = null;
+                    activeProgressMessage = null;
                     currentEdit = null;
 
                     if (prog != null) {
-                        textChannel.sendMessage(prog).queue(m -> activeMessage = m);
+                        textChannel.sendMessage(prog).queue(m -> activeProgressMessage = m);
 
                         lyricChangeFlag = false;
                         nextForcedUpdate = System.currentTimeMillis() + 2000;
@@ -83,7 +84,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                 }
 
                 if (prog != null) {
-                    currentEdit = activeMessage.editMessage(prog).submit();
+                    currentEdit = activeProgressMessage.editMessage(prog).submit();
 
                     lyricChangeFlag = false;
                     nextForcedUpdate = System.currentTimeMillis() + 2000;
@@ -94,8 +95,8 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
     @Override
     public void onShutdown() {
-        if (activeMessage != null) {
-            activeMessage.delete().queue();
+        if (activeProgressMessage != null) {
+            activeProgressMessage.delete().queue();
         }
     }
 
@@ -114,10 +115,12 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
         var embedReady = new CompletableFuture<EmbedBuilder>();
 
         EmbedBuilder embed = new EmbedBuilder()
-                .setDescription("\u200b\n")
                 .setColor(new Color(230, 230, 230))
-                .addField("**" + song.getTitle() + "**",
-                        song.getArtist() + "\n\u200b", false);
+                .setTitle("Now Playing")
+                .addField("Title", song.getTitle(), false)
+                .addField("Artist", song.getArtist(), false)
+                .addField("Skip Requests (todo)", "0/0", false)
+                .setTimestamp(OffsetDateTime.now());
         // .setTimestamp(new Date().toInstant());
 
         if (song instanceof NetworkSong) {
@@ -152,6 +155,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
         embedReady.thenAccept(em -> {
             AlbumArtUtils.attachAlbumArt(em, song, textChannel).queue(m -> {
+                activeTitleArtMessage = m;
 
                 RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
 
@@ -161,7 +165,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
                 if (Songs.isRatable(song)) {
 
-                    var rl = new ReactionListener(m);
+                    var rl = new ReactionListener(m, true);
 
                     for (Rating r : Rating.values()) {
                         rl.add(r.getEmote(), ev -> {
@@ -180,7 +184,10 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                     }
 
                     rl.add(Emoji.GNOME.getEmote(), ev -> {
-                        ev.setCancelled(true);
+                        ev.setCancelled(false);
+
+                        var sm = Service.of(SkipManager.class);
+
                     });
                 }
             });
@@ -188,7 +195,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
             var prog = generateProgressMessage();
             if (prog != null) {
                 textChannel.sendMessage(prog).queue(m -> {
-                    activeMessage = m;
+                    activeProgressMessage = m;
                 });
             }
         });
@@ -203,27 +210,35 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
                 var seekBarPosition = (int) (progPercent * 14);
 
-                var seekBar = Radio.getInstance().getOrchestrator().getPlayer().isPaused() ? Emoji.PAUSE.toString() : Emoji.PLAY.toString();
+                //var seekBar = Radio.getInstance().getOrchestrator().getPlayer().isPaused() ? Emoji.PAUSE.toString() : Emoji.PLAY.toString();
 
-                seekBar += " ";
+                String seekBar = Emoji.SEEK_BAR_LEFT_BORDER.toString();
 
                 if (seekBarPosition > 0) {
-                    seekBar += Emoji.SEEK_COMPLETE_START;
-                    seekBar += Emoji.SEEK_MID_COMPLETE.toString().repeat(seekBarPosition - 1);
+                    seekBar += Emoji.SEEK_BAR_MID_100.toString().repeat(seekBarPosition);
                 }
 
-                if ((progPercent * 14d) % 1 < 0.5) {
-                    seekBar += seekBarPosition == 0 ? Emoji.SEEK_LEFT_EDGE_ACTIVE : Emoji.SEEK_ACTIVE;
+                var blockProgress = (progPercent * 14d) % 1;
+
+                Emoji blockEmoji;
+
+                if (blockProgress > 0.75) {
+                    blockEmoji = Emoji.SEEK_BAR_MID_75;
+                } else if (blockProgress > 0.5) {
+                    blockEmoji = Emoji.SEEK_BAR_MID_50;
+                } else if (blockProgress > 0.25) {
+                    blockEmoji = Emoji.SEEK_BAR_MID_25;
                 } else {
-                    seekBar += seekBarPosition == 0 ? Emoji.SEEK_LEFT_EDGE_ACTIVE_LEFT : Emoji.SEEK_ACTIVE_LEFT;
-                    seekBar += seekBarPosition == 14 ? Emoji.SEEK_RIGHT_EDGE_ACTIVE_RIGHT : Emoji.SEEK_ACTIVE_RIGHT;
-                    seekBarPosition++;
+                    blockEmoji = Emoji.SEEK_BAR_MID_INCOMPLETE;
                 }
 
-                if (seekBarPosition != 14) {
-                    seekBar += Emoji.SEEK_MID.toString().repeat(14 - seekBarPosition);
-                    seekBar += Emoji.SEEK_END;
+                seekBar += blockEmoji;
+
+                if (seekBarPosition < 14) {
+                    seekBar += Emoji.SEEK_BAR_MID_INCOMPLETE.toString().repeat(13 - seekBarPosition);
                 }
+
+                seekBar += Emoji.SEEK_BAR_RIGHT_BORDER;
 
                 var eb = new EmbedBuilder().setDescription(seekBar + " `" + Formatting.getFormattedMsTime(track.getPosition()) + " / " + Formatting.getFormattedMsTime(track.getDuration()) + "`");
 
@@ -237,7 +252,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
                         lyric = "...";
                     }
 
-                    eb.appendDescription("\n\n**" + Formatting.escape(lyric) + "**");
+                    eb.appendDescription("\n\n> **" + Formatting.escape(lyric) + "**");
 
                     if (!lyric.equals(previousLyric)) {
                         lyricChangeFlag = true;
@@ -257,8 +272,8 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
-        if (activeMessage != null) activeMessage.delete().queue();
-        activeMessage = null;
+        if (activeProgressMessage != null) activeProgressMessage.delete().queue();
+        activeProgressMessage = null;
         currentEdit = null;
     }
 

@@ -44,16 +44,13 @@ public final class Emoji {
     public static Emoji PLAY;
     public static Emoji PAUSE;
 
-    public static Emoji SEEK_LEFT_EDGE_ACTIVE;
-    public static Emoji SEEK_END;
-    public static Emoji SEEK_MID;
-    public static Emoji SEEK_MID_COMPLETE;
-    public static Emoji SEEK_ACTIVE;
-    public static Emoji SEEK_ACTIVE_LEFT;
-    public static Emoji SEEK_LEFT_EDGE_ACTIVE_LEFT;
-    public static Emoji SEEK_ACTIVE_RIGHT;
-    public static Emoji SEEK_RIGHT_EDGE_ACTIVE_RIGHT;
-    public static Emoji SEEK_COMPLETE_START;
+    public static Emoji SEEK_BAR_LEFT_BORDER;
+    public static Emoji SEEK_BAR_RIGHT_BORDER;
+    public static Emoji SEEK_BAR_MID_INCOMPLETE;
+    public static Emoji SEEK_BAR_MID_25;
+    public static Emoji SEEK_BAR_MID_50;
+    public static Emoji SEEK_BAR_MID_75;
+    public static Emoji SEEK_BAR_MID_100;
 
     public static void init() {
         var g = Radio.getInstance().getJda().getGuildById("605044866912747521");
@@ -95,16 +92,13 @@ public final class Emoji {
         PLAY = new Emoji(g.getEmoteById("717119119572598857"));
         PAUSE = new Emoji(g.getEmoteById("717119119484256307"));
 
-        SEEK_LEFT_EDGE_ACTIVE = new Emoji(g.getEmoteById("717080102290063450"));
-        SEEK_END = new Emoji(g.getEmoteById("717077069422526466"));
-        SEEK_MID = new Emoji(g.getEmoteById("717077069447561216"));
-        SEEK_MID_COMPLETE = new Emoji(g.getEmoteById("717077069518995576"));
-        SEEK_ACTIVE = new Emoji(g.getEmoteById("717077069292503150"));
-        SEEK_ACTIVE_LEFT = new Emoji(g.getEmoteById("717077069321863178"));
-        SEEK_LEFT_EDGE_ACTIVE_LEFT = new Emoji(g.getEmoteById("717077069518864394"));
-        SEEK_ACTIVE_RIGHT = new Emoji(g.getEmoteById("717077069414268948"));
-        SEEK_RIGHT_EDGE_ACTIVE_RIGHT = new Emoji(g.getEmoteById("717077069351092317"));
-        SEEK_COMPLETE_START = new Emoji(g.getEmoteById("717077069212942458"));
+        SEEK_BAR_LEFT_BORDER = new Emoji(g.getEmoteById("718559656078868570"));
+        SEEK_BAR_RIGHT_BORDER = new Emoji(g.getEmoteById("718559452642410586"));
+        SEEK_BAR_MID_INCOMPLETE = new Emoji(g.getEmoteById("718559452114190398"));
+        SEEK_BAR_MID_25 = new Emoji(g.getEmoteById("718559452147482685"));
+        SEEK_BAR_MID_50 = new Emoji(g.getEmoteById("718559452105801769"));
+        SEEK_BAR_MID_75 = new Emoji(g.getEmoteById("718559452369911818"));
+        SEEK_BAR_MID_100 = new Emoji(g.getEmoteById("718559452478832730"));
     }
 
     private final Emote emote;
