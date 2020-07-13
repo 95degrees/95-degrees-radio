@@ -153,6 +153,8 @@ public class Radio implements EventListener {
         Message msg = djChannel == null ? null : djChannel.sendMessage(loading.setTimestamp(OffsetDateTime.now()).build()).complete();
 
         registerService(databaseManager);
+        registerService(new SpotifyManager());
+
         orchestrator = new SongOrchestrator(this, config);
 
         orchestrator.loadPlaylists();
@@ -189,7 +191,6 @@ public class Radio implements EventListener {
         registerService(new YouTubeCacheManager());
         registerService(new RadioRestreamManager());
         registerService(new RadioAwardsManager());
-        registerService(new SpotifyManager());
         registerService(new LiveLyricsManager());
 
         if (djChannel != null)

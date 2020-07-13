@@ -130,19 +130,31 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
             }
 
             if (ns.getSpotifyTrack() == null) {
+                System.out.println("searching spotify!!");
                 Service.of(SpotifyManager.class).searchTrack(track.getInfo().title)
                         .whenComplete((t, e) -> {
+                            ns.setSpotifyTrack(t); //TODO this should be done on track creation
                             appendSpotifyTrackDetails(embed, ns.getSpotifyTrack());
+                            System.out.println("appened deets! track: " + t);
                             embedReady.complete(embed);
                         });
+            } else {
+                System.out.println("aaa");
+                embedReady.complete(embed);
             }
         } else {
+            System.out.println("bbb");
             embedReady.complete(embed);
         }
 
         if (song instanceof SpotifyTrackHolder) {
-            appendSpotifyTrackDetails(embed, ((SpotifyTrackHolder) song).getSpotifyTrack());
-            embedReady.complete(embed);
+            var sh = (SpotifyTrackHolder) song;
+
+            if (sh.getSpotifyTrack() != null) {
+                System.out.println("im a track holder :) track: " + ((SpotifyTrackHolder) song).getSpotifyTrack());
+                appendSpotifyTrackDetails(embed, ((SpotifyTrackHolder) song).getSpotifyTrack());
+                embedReady.complete(embed);
+            }
         }
 
         /*
@@ -154,6 +166,7 @@ public class RadioMessageListener implements RadioService, SongEventListener, Ev
 
 
         embedReady.thenAccept(em -> {
+            System.out.println("ready!!");
             AlbumArtUtils.attachAlbumArt(em, song, textChannel).queue(m -> {
                 activeTitleArtMessage = m;
 

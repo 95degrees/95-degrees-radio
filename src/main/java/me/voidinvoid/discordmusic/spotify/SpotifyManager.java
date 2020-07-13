@@ -164,7 +164,10 @@ public class SpotifyManager implements RadioService {
         log("search: " + title);
         spotifyApi.searchTracks(title).build().executeAsync()
                 .whenComplete((t, e) -> {
-                    log("search complete!");
+                    log("search complete! " + t.getItems().length);
+                    if (t.getItems().length > 0) {
+                        log("item 0: " + t.getItems()[0].getName());
+                    }
 
                     if (e != null) {
                         e.printStackTrace();

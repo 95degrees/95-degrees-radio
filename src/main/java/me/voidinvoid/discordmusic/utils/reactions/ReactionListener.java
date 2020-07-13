@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.utils.reactions;
 
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 
 import java.util.HashMap;
@@ -28,18 +29,22 @@ public class ReactionListener {
         this.autoCancel = autoCancel;
     }
 
-    private void onReact(MessageReactionAddEvent e) {
+    private void onReact(GenericMessageReactionEvent e) {
+
+        if (!(e instanceof MessageReactionAddEvent)) {
+            return;
+        }
 
         var reaction = e.getReaction().getReactionEmote().getName();
 
         var cb = callbacks.get(reaction);
 
         if (cb != null) {
-            var ev = new ReactionEvent(e);
+            var ev = new ReactionEvent(((MessageReactionAddEvent) e));
             ev.setCancelled(autoCancel);
             cb.accept(ev);
 
-            if (ev.isCancelled() && !(e.getChannel() instanceof PrivateChannel)) { //remove their reaction
+            if (ev.isCancelled() && !(e.getChannel() instanceof PrivateChannel) && e.getUser() != null) { //remove their reaction
                 e.getReaction().removeReaction(e.getUser()).queue();
             }
         }

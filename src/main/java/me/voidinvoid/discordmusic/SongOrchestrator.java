@@ -6,10 +6,14 @@ import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioTrack;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import com.sedmelluq.lava.extensions.youtuberotator.YoutubeIpRotatorSetup;
+import com.sedmelluq.lava.extensions.youtuberotator.planner.NanoIpRoutePlanner;
+import com.sedmelluq.lava.extensions.youtuberotator.tools.ip.Ipv6Block;
 import me.voidinvoid.discordmusic.audio.AudioPlayerSendHandler;
 import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
@@ -32,6 +36,7 @@ import org.bson.Document;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -66,6 +71,10 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
         AudioSourceManagers.registerLocalSource(manager);
         AudioSourceManagers.registerRemoteSources(manager);
+
+        var youtube = manager.source(YoutubeAudioSourceManager.class);
+        new YoutubeIpRotatorSetup(new NanoIpRoutePlanner(Collections.singletonList(new Ipv6Block("2001:bc8:1820:111a::/64")), true))
+                .forSource(youtube).setup();
 
         player = manager.createPlayer();
         player.addListener(this);

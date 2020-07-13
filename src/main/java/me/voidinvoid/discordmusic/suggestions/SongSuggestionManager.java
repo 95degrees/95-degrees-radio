@@ -53,14 +53,14 @@ public class SongSuggestionManager implements RadioService, EventListener {
         var sm = Service.of(SpotifyManager.class);
         var find = sm.findTrack(identifier);
 
-        if (find != null) {
+        if (find != null) { //if this is a spotify uri
             find.thenAccept(t -> {
                 if (t != null) {
                     sm.fetchLavaTrack(t).thenAccept(s -> {
                         if (s != null) {
                             suggestionMessage.delete().reason("Song suggestion URL").queue();
 
-                            Radio.getInstance().getOrchestrator().addNetworkTrack(member, s, false, false, false, null, null);
+                            Radio.getInstance().getOrchestrator().addNetworkTrack(member, s, false, false, false, nt -> nt.setSpotifyTrack(t), null);
                         }
                     });
                 }

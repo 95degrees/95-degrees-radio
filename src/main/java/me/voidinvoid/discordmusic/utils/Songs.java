@@ -9,6 +9,7 @@ public final class Songs {
     public static String deyoutubeifySong(String song) {
 
         return song.toLowerCase()
+                .replaceAll("\\(official\\)", "")
                 .replaceAll("[()\\[\\]{}]", "")
                 .replaceAll("official music video", "")
                 .replaceAll("official lyrics video", "")
@@ -16,12 +17,14 @@ public final class Songs {
                 .replaceAll("official video", "")
                 .replaceAll("official lyrics", "")
                 .replaceAll("lyrics", "")
+                .replaceAll("lyric", "")
                 .replaceAll("audio", "")
                 .replaceAll("music video", "")
                 .replaceAll(" video", "")
                 .replaceAll("karaoke version", "")
                 .replaceAll("full hd", "")
-                .replaceAll("hd", "")
+                .replaceAll(" hd", "")
+                .replaceAll("4k", "")
                 .replaceAll("1080p", "")
                 .replaceAll("720p", "");
     }
