@@ -19,12 +19,13 @@ import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.NetworkSongException;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.levelling.*;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.LocalSongQueue;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Service;
@@ -36,9 +37,10 @@ import org.bson.Document;
 
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
 
 public class SongOrchestrator extends AudioEventAdapter implements RadioService {
 
@@ -60,9 +62,9 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
     private List<Song> awaitingSpecialSongs = new ArrayList<>();
 
-    private List<SongEventListener> songEventListeners = new ArrayList<>();
+    private List<RadioEventListener> radioEventListeners = new ArrayList<>();
 
-    public SongOrchestrator(Radio radio, RadioConfig config) {
+    public SongOrchestrator(Radio radio) {
 
         this.radio = radio;
         jda = radio.getJda();
@@ -82,8 +84,8 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         audioSendHandler = new AudioPlayerSendHandler(player);
     }
 
-    public void registerSongEventListener(SongEventListener listener) {
-        songEventListeners.add(listener);
+    public void registerSongEventListener(RadioEventListener listener) {
+        radioEventListeners.add(listener);
     }
 
     public JDA getJda() {
@@ -117,16 +119,16 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     public void setActivePlaylist(Playlist activePlaylist) {
         if (this.activePlaylist instanceof RadioPlaylist) {
             RadioPlaylist sp = (RadioPlaylist) this.activePlaylist;
-            List<NetworkSong> networkSongs = sp.getSongs().clearNetworkSongs();
+            List<Song> networkSongs = sp.getSongs().clearSuggestions();
 
             if (activePlaylist instanceof RadioPlaylist) {
-                ((RadioPlaylist) activePlaylist).getSongs().addNetworkSongs(networkSongs); //transfer network queue songs across
+                ((RadioPlaylist) activePlaylist).getSongs().addSuggestions(networkSongs); //transfer network queue songs across
             }
         }
 
         activePlaylist.onDeactivate();
 
-        songEventListeners.forEach(l -> {
+        radioEventListeners.forEach(l -> {
             try {
                 l.onPlaylistChange(this.activePlaylist, activePlaylist);
             } catch (Exception ex) {
@@ -195,7 +197,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
         if (pausePending) {
             pausePending = false;
-            songEventListeners.forEach(l -> {
+            radioEventListeners.forEach(l -> {
                 try {
                     l.onPausePending(false);
                 } catch (Exception ex) {
@@ -205,7 +207,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             });
 
             player.stopTrack();
-            songEventListeners.forEach(l -> {
+            radioEventListeners.forEach(l -> {
                 try {
                     l.onTrackStopped();
                 } catch (Exception ex) {
@@ -235,7 +237,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
     public void playSong(final Song song) {
         if (song == null) {
-            songEventListeners.forEach(l -> {
+            radioEventListeners.forEach(l -> {
                 try {
                     l.onNoSongsInQueue(activePlaylist);
                 } catch (Exception ex) {
@@ -283,7 +285,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
                 e.printStackTrace();
                 playNextSong(false, false);
 
-                songEventListeners.forEach(l -> {
+                radioEventListeners.forEach(l -> {
                     try {
                         l.onSongLoadError(song, e);
                     } catch (Exception ex) {
@@ -305,7 +307,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         if (!track.isSeekable()) return;
         track.setPosition(pos);
 
-        songEventListeners.forEach(l -> {
+        radioEventListeners.forEach(l -> {
             try {
                 l.onSongSeek(track, pos, player);
             } catch (Exception ex) {
@@ -319,7 +321,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         final Song song = track.getUserData(Song.class);
 
-        songEventListeners.forEach(l -> {
+        radioEventListeners.forEach(l -> {
             try {
                 l.onSongStart(song, track, player, timeUntilJingle);
             } catch (Exception ex) {
@@ -333,7 +335,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext || endReason == AudioTrackEndReason.REPLACED) {
             Song song = track.getUserData(Song.class);
-            songEventListeners.forEach(l -> {
+            radioEventListeners.forEach(l -> {
                 try {
                     l.onSongEnd(song, track);
                 } catch (Exception ex) {
@@ -359,134 +361,174 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         playNextSong();
     }
 
-    public void createNetworkTrack(SongType type, String url, Consumer<NetworkSong> callback) {
-        manager.loadItem(url, new AudioLoadResultHandler() {
+    public CompletableFuture<NetworkSong> createNetworkSong(SongType type, String url) {
+        return createTrack(url).thenApply(t -> t == null ? null : new NetworkSong(type, t, null));
+    }
+
+    public CompletableFuture<AudioTrack> createTrack(String identifier) {
+        var future = new CompletableFuture<AudioTrack>();
+
+        manager.loadItem(identifier, new AudioLoadResultHandler() {
             @Override
-            public void trackLoaded(AudioTrack audioTrack) {
-                callback.accept(new NetworkSong(type, audioTrack, null));
+            public void trackLoaded(AudioTrack track) {
+                future.complete(track);
             }
 
             @Override
             public void playlistLoaded(AudioPlaylist audioPlaylist) {
-                callback.accept(null);
+                future.complete(null);
             }
 
             @Override
             public void noMatches() {
-                callback.accept(null);
+                future.complete(null);
             }
 
             @Override
             public void loadFailed(FriendlyException e) {
-                callback.accept(null);
+                future.complete(null);
             }
         });
+
+        return future;
     }
 
-    public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart) {
-        return addNetworkTrack(suggestedBy, track, bypassErrors, playInstantly, pushToStart, null, null);
-    }
+    public <T extends Song> CompletableFuture<T> queueSuggestion(T song, QueueOption... options) { //todo dynamically load audiotrack here?
+        var opts = Arrays.asList(options);
+        var future = new CompletableFuture<T>();
 
-    public boolean addNetworkTrack(Member suggestedBy, AudioTrack track, boolean bypassErrors, boolean playInstantly, boolean pushToStart, Consumer<NetworkSong> successCallback, Consumer<NetworkSongException> errorCallback) {
-        log("Found network track '" + track.getInfo().title + "', suggested by " + suggestedBy);
+        log("Adding suggested song '" + song.getTitle() + "' to queue");
 
-        User user = suggestedBy == null ? null : suggestedBy.getUser();
+        int debugA = 0;
+        log(++debugA);
+        final Member member;
 
-        if (!bypassErrors && track instanceof LocalAudioTrack) {
-            log(suggestedBy + " tried to play a local track - disallowed");
-            if (errorCallback != null) errorCallback.accept(new NetworkSongException(NetworkSongError.ILLEGAL_SONG_LOCATION));
-            return false;
+        if (song instanceof UserSuggestable) {
+            var s = ((UserSuggestable) song);
+            var mb = s.getSuggestedBy();
+
+            if (mb != null) {
+                member = Radio.getInstance().getGuild().retrieveMember(mb).complete();
+            } else {
+                member = null;
+            }
+        } else {
+            member = null;
         }
-
+        log(++debugA);
         if (!(activePlaylist instanceof RadioPlaylist)) {
-            if (errorCallback != null) errorCallback.accept(new NetworkSongException(NetworkSongError.INVALID_PLAYLIST_TYPE));
-            return false;
+            future.completeExceptionally(new NetworkSongException(NetworkSongError.INVALID_PLAYLIST_TYPE));
+            return future;
         }
-
+        log(++debugA);
+        if (!opts.contains(QueueOption.BYPASS_ERRORS) && song instanceof NetworkSong && song.getTrack() instanceof LocalAudioTrack) {
+            log(member + " tried to play a local track - disallowed");
+            future.completeExceptionally(new NetworkSongException(NetworkSongError.ILLEGAL_SONG_LOCATION));
+            return future;
+        }
+        log(++debugA);
         RadioPlaylist sp = (RadioPlaylist) activePlaylist;
 
-        NetworkSong song = new NetworkSong(SongType.SONG, track, user);
-
-        if (!bypassErrors) {
+        if (!opts.contains(QueueOption.BYPASS_ERRORS)) {
             final NetworkSongError error;
-
+            log("branch " + ++debugA);
             long maxLength = RadioConfig.config.orchestration.maxSongLength;
             int maxSuggestions = RadioConfig.config.orchestration.userQueueLimit;
 
             LevellingManager lm = Radio.getInstance().getService(LevellingManager.class);
-            if (lm != null && suggestedBy != null) {
-                AppliedLevelExtra a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
+            if (lm != null && member != null) {
+                AppliedLevelExtra a = lm.getLatestExtra(member.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
                 if (a != null) maxLength = (long) a.getValue();
 
-                a = lm.getLatestExtra(suggestedBy.getUser(), LevelExtras.MAX_SUGGESTIONS_IN_QUEUE);
+                a = lm.getLatestExtra(member.getUser(), LevelExtras.MAX_SUGGESTIONS_IN_QUEUE);
                 if (a != null) maxSuggestions = (int) a.getValue();
             }
 
             if (!suggestionsEnabled) {
                 error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
-            } else if (sp.getSongs().suggestionsBy(user).size() >= maxSuggestions) {
+            } else if (member != null && sp.getSongs().suggestionsBy(member.getUser()).size() >= maxSuggestions) {
                 error = NetworkSongError.QUEUE_LIMIT_REACHED;
-            } else if (track.getInfo().isStream) {
+            } else if (song.getTrack().getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
-            } else if (track.getDuration() > maxLength) {
-                if (suggestedBy != null && track.getDuration() - maxLength <= 1000) {
-                    Radio.getInstance().getService(AchievementManager.class).rewardAchievement(suggestedBy.getUser(), Achievement.OVER_LENGTH_LIMIT);
+            } else if (song.getTrack().getDuration() > maxLength) {
+                if (member != null && song.getTrack().getDuration() - maxLength <= 1000) {
+                    Radio.getInstance().getService(AchievementManager.class).rewardAchievement(member.getUser(), Achievement.OVER_LENGTH_LIMIT);
                 }
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
-            } else if (suggestedBy != null && (!suggestedBy.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(suggestedBy.getVoiceState().getChannel()))) {
+            } else if (member != null && (member.getVoiceState() == null || !member.getVoiceState().inVoiceChannel() || !ChannelScope.RADIO_VOICE.check(member.getVoiceState().getChannel()))) {
                 error = NetworkSongError.NOT_IN_VOICE_CHANNEL;
             } else {
                 error = null;
             }
 
+            log(error);
+
             if (error != null) {
-                songEventListeners.forEach(l -> {
+                log(++debugA);;
+                radioEventListeners.forEach(l -> {
                     try {
-                        l.onNetworkSongQueueError(song, track, suggestedBy, error);
+                        l.onSongQueueError(song, song.getTrack(), member, error);
                     } catch (Exception ex) {
                         log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                         ex.printStackTrace();
                     }
                 });
-                if (errorCallback != null) errorCallback.accept(new NetworkSongException(error));
-                return false;
+
+                future.completeExceptionally(new NetworkSongException(error));
+                return future;
             }
         }
+
+        log(++debugA);
 
         final int index;
 
-        if (pushToStart || playInstantly) {
+        if (opts.contains(QueueOption.PUSH_TO_START) || opts.contains(QueueOption.PLAY_INSTANTLY)) {
             index = 0;
-        } else {
-            index = sp.getSongs().addNetworkSong(song);
-        }
-
-        if (successCallback != null) {
-            successCallback.accept(song);
-        }
-
-        songEventListeners.forEach(l -> {
-            try {
-                l.onNetworkSongQueued(song, track, suggestedBy, index);
-            } catch (Exception ex) {
-                log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
-                ex.printStackTrace();
-            }
-        });
-
-        if (pushToStart || playInstantly) {
             sp.getSongs().getQueue().add(0, song);
+        } else {
+            index = sp.getSongs().addSuggestion(song);
+        }
 
-            if (playInstantly) {
+        log(++debugA);
+
+        if (song instanceof SpotifyTrackHolder && ((SpotifyTrackHolder) song).getSpotifyTrack() == null && song.getType() == SongType.SONG) {
+            Service.of(SpotifyManager.class).searchTrack(song.getTitle()).whenComplete((spotify, ex) -> {
+                log("spotify complete! " + spotify + ", " + ex);
+                if (spotify != null) {
+                    ((SpotifyTrackHolder) song).setSpotifyTrack(spotify);
+                }
+
+                future.complete(song);
+            });
+        } else {
+            future.complete(song);
+        }
+
+        log(++debugA);
+
+        future.thenRun(() -> {
+            radioEventListeners.forEach(l -> {
+                try {
+                    l.onSongQueued(song, song.getTrack(), member, index);
+                } catch (Exception ex) {
+                    log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                    ex.printStackTrace();
+                }
+            });
+
+            if (opts.contains(QueueOption.PLAY_INSTANTLY)) {
                 player.setPaused(false);
                 player.stopTrack();
                 playNextSong(true, false);
             }
-        }
 
-        log("Network track is in the queue: #" + (index + 1));
+            log("Network track is in the queue: #" + (index + 1));
+        });
 
-        return true;
+        log(++debugA);
+
+        return future;
     }
 
     public boolean areSuggestionsEnabled() {
@@ -494,7 +536,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     }
 
     public boolean setSuggestionsEnabled(boolean enabled, User source) {
-        songEventListeners.forEach(l -> {
+        radioEventListeners.forEach(l -> {
             try {
                 l.onSuggestionsToggle(enabled, source);
             } catch (Exception ex) {
@@ -517,7 +559,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         final AudioTrack t = player.getPlayingTrack();
         final Song s = t.getUserData(Song.class);
 
-        songEventListeners.forEach(l -> {
+        radioEventListeners.forEach(l -> {
             try {
                 l.onSongPause(p, s, t, player);
             } catch (Exception ex) {
@@ -555,7 +597,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         if (pausePending == this.pausePending) return;
         this.pausePending = pausePending;
 
-        songEventListeners.forEach(l -> {
+        radioEventListeners.forEach(l -> {
             try {
                 l.onPausePending(pausePending);
             } catch (Exception ex) {

@@ -4,11 +4,12 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.tasks.RadioTaskComposition;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class TasksCommand extends Command {
 
     TasksCommand() {
-        super("tasks", "Lists all active tasks", null, ChannelScope.DJ_CHAT);
+        super("tasks", "Lists all active tasks", null, Rank.DJ);
     }
 
     @Override

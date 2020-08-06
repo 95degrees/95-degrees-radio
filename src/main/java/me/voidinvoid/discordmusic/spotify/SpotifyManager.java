@@ -13,6 +13,8 @@ import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
 import org.bson.Document;
@@ -37,7 +39,7 @@ import static com.mongodb.client.model.Filters.eq;
 
 public class SpotifyManager implements RadioService {
 
-    //private static final String SPOTIFY_TRACK_URL = "https://open.spotify.com/track/";
+    public static final String SPOTIFY_TRACK_URL = "https://open.spotify.com/track/";
     private static final String SPOTIFY_TRACK_URL_REGEX = "^https?://open.spotify.com/track/[a-zA-Z0-9]{22}$";
     public static final Pattern SPOTIFY_TRACK_URL_PATTERN = Pattern.compile(SPOTIFY_TRACK_URL_REGEX);
 
@@ -70,10 +72,10 @@ public class SpotifyManager implements RadioService {
                 for (var track : tracks) {
                     if (track.getAddedAt().toInstant().isAfter(lastCollaborativePlaylistCheck.toInstant())) {
                         log("found track, queueing!!!");
-                        fetchLavaTrack((Track) track.getTrack()).thenAccept(s -> {
-                            if (s != null) {
-                                Radio.getInstance().getOrchestrator().addNetworkTrack(Radio.getInstance().getGuild().getSelfMember(), s, false, false, false, null, null);
-                            }
+                        var spotifyTrack = (Track) track.getTrack();
+                        fetchLavaTrack(spotifyTrack).thenAccept(s -> {
+                            var song = new NetworkSong(SongType.SONG, s, null);
+                            Radio.getInstance().getOrchestrator().queueSuggestion(song);
                         });
                     }
                 }
@@ -252,7 +254,9 @@ public class SpotifyManager implements RadioService {
 
             @Override
             public void loadFailed(FriendlyException ex) {
-                future.completeExceptionally(ex);
+                ex.printStackTrace();
+                log("friendly exception!");
+                future.complete(null);
             }
         });
 

@@ -1,11 +1,7 @@
 package me.voidinvoid.discordmusic.rpc;
 
-import com.corundumstudio.socketio.Configuration;
-import com.corundumstudio.socketio.SocketConfig;
-import com.corundumstudio.socketio.SocketIOClient;
-import com.corundumstudio.socketio.SocketIOServer;
+import com.corundumstudio.socketio.*;
 import com.google.gson.Gson;
-import com.mongodb.client.MongoCollection;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
@@ -14,14 +10,16 @@ import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
+import me.voidinvoid.discordmusic.lyrics.LiveLyrics;
 import me.voidinvoid.discordmusic.ratings.Rating;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
+import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
@@ -34,15 +32,21 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
-import org.bson.Document;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class RPCSocketManager implements RadioService, SongEventListener, EventListener {
+public class RPCSocketManager implements RadioService, RadioEventListener, EventListener {
 
     private static final int RPC_VERSION = 3;
 
@@ -51,6 +55,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String CLIENT_RATE_SONG = "rate_song";
     public static final String CLIENT_QUEUE_SONG = "queue_song";
     public static final String CLIENT_QUEUE_SPOTIFY = "queue_spotify";
+    public static final String CLIENT_QUEUE_BINARY = "queue_binary";
+    public static final String CLIENT_QUEUE_UPLOAD = "queue_upload";
     public static final String CLIENT_DISCONNECT_ME = "disconnect_me";
 
     //Control panel
@@ -80,6 +86,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     public static final String SERVER_MANUAL_SONG_QUEUE_FAILED = "song_suggestion_failed";
     public static final String SERVER_RATING_SAVED = "rating_saved";
     public static final String SERVER_ACHIEVEMENT = "achievement";
+    public static final String SERVER_LYRICS = "lyrics";
 
     //Song manager
     public static final String CLIENT_MANAGER_GET_ALL_PLAYLISTS = "manager_get_all_playlists";
@@ -96,6 +103,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private SocketIOServer server;
 
     private SongInfo currentSongInfo;
+    private LiveLyrics currentLyrics;
+
     private List<SongInfo> queue;
     private List<UserInfo> listeners;
 
@@ -107,6 +116,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     private TextChannel djChannel;
     private Guild guild;
 
+    private ScheduledExecutorService executorService;
+
     @Override
     public boolean canRun(RadioConfig config) {
         return config.useSocketServer;
@@ -114,6 +125,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
     @Override
     public void onLoad() {
+        executorService = Executors.newScheduledThreadPool(1);
+
         voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
         djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
         guild = voiceChannel.getGuild();
@@ -129,7 +142,8 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         if (server == null) {
             Configuration config = new Configuration();
             config.setHostname("0.0.0.0");
-            config.setPort(RadioConfig.config.debug ? 9300 : 9500);
+            config.setPort(RadioConfig.config.debug ? 9502 : 9501);
+            config.setMaxFramePayloadLength(16777216); //~16mb
 
             SocketConfig sockets = new SocketConfig();
             sockets.setReuseAddress(true);
@@ -145,7 +159,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 if (id == null) return;
 
                 try {
-                    var user = voiceChannel.getGuild().getMemberById(id);
+                    var user = voiceChannel.getGuild().retrieveMemberById(id).onErrorMap(m -> null).complete();
 
                     if (user != null) {
                         identities.put(c, user);
@@ -163,6 +177,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 RadioInfo info = new RadioInfo(RadioConfig.config.voiceInviteLink, listeners, currentSongInfo, queue, upcomingEvents, Radio.getInstance().getOrchestrator().getPlayer().isPaused());
 
                 c.sendEvent(SERVER_RADIO_STATUS, info);
+                c.sendEvent(SERVER_LYRICS, currentLyrics);
             });
 
             server.addEventListener(CLIENT_RATE_SONG, String.class, (c, rating, ack) -> {
@@ -176,7 +191,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 if (Songs.isRatable(song) && song.getType() == SongType.SONG) {
                     try {
                         if (!srm.rateSong(user.getUser(), (DatabaseSong) song, Rating.valueOf(rating), false)) {
-                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG RATING ERROR", "Please wait before rating songs again"));
+                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song rating error", "Please wait before rating songs again"));
                             return;
                         }
 
@@ -194,7 +209,13 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 if (id == null) return;
 
                 Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
-                Service.of(SongSuggestionManager.class).addSuggestion(url, null, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), id, true, SuggestionQueueMode.NORMAL);
+                var future = Service.of(SongSuggestionManager.class).addSuggestion(url, null, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), id, true, true, SuggestionQueueMode.NORMAL);
+
+                future.thenAccept(res -> {
+                   if (!res) {
+                       c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song queue error", "Song could not be queued as a suitable stream could not be found"));
+                   }
+                });
             });
 
             server.addEventListener(CLIENT_QUEUE_SPOTIFY, String.class, (c, url, ack) -> {
@@ -214,25 +235,100 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
 
                     spotify.fetchLavaTrack(t).whenComplete((s, e) -> {
                         if (e != null) {
-                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE ERROR", e.getMessage()));
+                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song queue error", e.getMessage()));
                             return;
                         }
 
                         if (s != null) {
-                            Radio.getInstance().getOrchestrator().addNetworkTrack(id, s, false, false, false,
-                                    ns -> {
-                                        Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
-                                        c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE", Songs.titleArtist(ns)));
-                                    },
-                                    err -> {
-                                        if (err != null) {
-                                            c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("SONG QUEUE ERROR", err.getMessage()));
-                                        }
-                                    });
+                            Radio.getInstance().getOrchestrator().queueSuggestion(new NetworkSong(SongType.SONG, s, id.getUser())).whenComplete((song, ex) -> {
+                                if (ex == null) {
+                                    c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song queue", Songs.titleArtist(song)));
+                                } else {
+                                    c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song queue error", ex.getMessage()));
+                                }
+                            });
                         } else {
                             log("Song is null?!");
                         }
                     });
+                });
+            });
+
+            server.addEventListener(CLIENT_QUEUE_BINARY, Object[].class, (c, data, ack) -> {
+                log("A");
+                if (data == null || data.length < 2) return;
+
+                var id = identities.get(c);
+                if (id == null) return;
+
+                String fileName = (String) data[0];
+
+                log(data.length);
+                log(fileName);
+
+                byte[] bin = Base64.getDecoder().decode(((String) data[1]).getBytes());
+
+                log("B");
+
+                if (fileName == null || bin.length == 0) return;
+
+                log("c");
+
+                if (fileName.length() > 10) {
+                    fileName = fileName.substring(fileName.length() - 10);
+                    log("d");
+                } //todo add bin length limits (10mb??)
+
+                var file = Files.createTempFile("radiotrack", fileName);
+
+                log("FILENAME: " + file);
+
+                try (var fos = new FileOutputStream(file.toFile())) {
+                    fos.write(bin);
+                }
+
+                var fs = new FileSong(SongType.SONG, file, id.getUser());
+
+                Radio.getInstance().getOrchestrator().queueSuggestion(fs);
+
+            });
+
+            server.addEventListener(CLIENT_QUEUE_UPLOAD, String.class, (c, file, ack) -> {
+
+                log("Got file: " + file);
+
+                if (file == null) return;
+
+                var id = identities.get(c);
+                if (id == null) return;
+
+                if (file.startsWith("radiofiles/")) {
+                    file = file.substring(11);
+                }
+
+                log("a");
+                if (file.contains(File.separator) || file.contains("/") || file.contains("\\")) return; //dont escape the dir we want!
+
+                log("b");
+
+                file = "/home/web/radioserver/radiofiles/" + file;
+
+                log("File: " + file);
+                var path = Path.of(file);
+
+                log("Exists: " + Files.exists(path));
+
+                Radio.getInstance().getOrchestrator().createTrack(file).thenAccept(t -> {
+                    if (t != null) {
+                        Radio.getInstance().getOrchestrator().queueSuggestion(new FileSong(SongType.SONG, path, id.getUser()).setTrack(t)).whenComplete((song, ex) -> {
+                            log("Song queue: " + song + ", " + (ex == null ? "no ex" : ex.getMessage()));
+                            if (ex != null) {
+                                ex.printStackTrace();
+                            }
+                        });
+                    } else {
+                        c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song queue error", "Unknown error queuing song"));
+                    }
                 });
             });
 
@@ -281,7 +377,7 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                     var result = Service.of(SongDJ.class).invokeAction(a, mb.getUser());
 
                     if (result != null) {
-                        c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ CONTROLS", result));
+                        c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ controls", result));
                     }
                 });
             });
@@ -303,6 +399,13 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
             server.startAsync();
         }
 
+        executorService.scheduleAtFixedRate(() -> {
+            var track = Radio.getInstance().getOrchestrator().getPlayer().getPlayingTrack();
+            if (track != null) {
+                server.getBroadcastOperations().sendEvent(SERVER_SONG_SEEK, track.getPosition());
+            }
+        }, 10, 2, TimeUnit.SECONDS);
+
         //Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
 
@@ -323,12 +426,13 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         //if (!(song.getAlbumArt() instanceof RemoteAlbumArt)) return;
-        updateSongInfo(track, ((RemoteAlbumArt) song.getAlbumArt()).getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
+        updateSongInfo(track, song.getAlbumArt() instanceof RemoteAlbumArt ? ((RemoteAlbumArt) song.getAlbumArt()).getUrl() : null, song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
+        sendLyricsUpdate(null);
     }
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
-        server.getBroadcastOperations().sendEvent(SERVER_SONG_UPDATE);
+        server.getBroadcastOperations().sendEvent(SERVER_SONG_UPDATE, (Object) null);
     }
 
     @Override
@@ -347,14 +451,14 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
     }
 
     @Override
-    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+    public void onSongQueued(Song song, AudioTrack track, Member member, int queuePosition) {
         updateQueue();
         server.getBroadcastOperations().sendEvent(SERVER_QUEUE_UPDATE, queue);
         server.getBroadcastOperations().sendEvent(SERVER_MANUAL_SONG_QUEUED, new SongInfo(song));
     }
 
     @Override
-    public void onNetworkSongQueueError(NetworkSong song, AudioTrack track, Member member, NetworkSongError error) {
+    public void onSongQueueError(Song song, AudioTrack track, Member member, NetworkSongError error) {
 
         var id = member.getUser().getId();
 
@@ -392,21 +496,20 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
         Song s = track.getUserData(Song.class);
 
         var start = System.currentTimeMillis() - track.getPosition();
-        var end = start + track.getDuration();
 
         var orch = Radio.getInstance().getOrchestrator();
 
         boolean paused = orch.getPlayer() != null && orch.getPlayer().isPaused();
 
         if (s.getType() != SongType.SONG) {
-            currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, end, false, suggestedBy);
+            currentSongInfo = new SongInfo("95 Degrees Radio", "", albumArtUrl, start, track.getDuration(), false, suggestedBy);
         } else if (s instanceof DatabaseSong) {
             var ds = (DatabaseSong) s;
 
-            currentSongInfo = new SongInfo(ds, albumArtUrl, start, end, suggestedBy);
+            currentSongInfo = new SongInfo(ds, albumArtUrl, start, track.getDuration(), suggestedBy);
 
         } else {
-            currentSongInfo = new SongInfo(track.getInfo().title, track.getInfo().author, albumArtUrl, start, end, false, suggestedBy);
+            currentSongInfo = new SongInfo(s.getTitle(), s.getArtist(), albumArtUrl, start, track.getDuration(), false, suggestedBy);
         }
 
         updateQueue();
@@ -476,5 +579,10 @@ public class RPCSocketManager implements RadioService, SongEventListener, EventL
                 es.getKey().sendEvent(SERVER_ACHIEVEMENT, new AchievementInfo(achievement));
             }
         }
+    }
+
+    public void sendLyricsUpdate(LiveLyrics lyrics) {
+        currentLyrics = lyrics;
+        server.getBroadcastOperations().sendEvent(SERVER_LYRICS, lyrics);
     }
 }

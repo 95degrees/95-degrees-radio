@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Rank;
 import me.voidinvoid.discordmusic.utils.Songs;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 public class PlaySongCommand extends Command {
 
     PlaySongCommand() {
-        super("play-song", "Plays a song in the current playlist", "<song#>", ChannelScope.DJ_CHAT);
+        super("play-song", "Plays a song in the current playlist", "<song#>", Rank.DJ);
     }
 
     @Override

@@ -4,11 +4,12 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.tasks.RadioTaskComposition;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class RunTaskCommand extends Command {
 
     RunTaskCommand() {
-        super("run-task", "Manually runs a task", "<task#>", ChannelScope.DJ_CHAT);
+        super("run-task", "Manually runs a task", "<task#>", Rank.DJ);
     }
 
     @Override

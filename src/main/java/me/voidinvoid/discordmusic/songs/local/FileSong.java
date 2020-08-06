@@ -2,12 +2,16 @@ package me.voidinvoid.discordmusic.songs.local;
 
 import com.mpatric.mp3agic.ID3v2;
 import com.mpatric.mp3agic.Mp3File;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongQueue;
 import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.UserSuggestable;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
+import me.voidinvoid.discordmusic.utils.cache.CachedUser;
+import net.dv8tion.jda.api.entities.User;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -16,21 +20,25 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileSong extends Song {
+public class FileSong extends Song implements UserSuggestable {
 
     private Path file;
+    private CachedUser suggestedBy;
     private AlbumArt albumArt;
+
+    private AudioTrack track;
 
     private String mp3Title, mp3Artist;
 
-    public FileSong(SongType type, Path file) {
-        this(type, file, null);
+    public FileSong(SongType type, Path file, User suggestedBy) {
+        this(type, file, suggestedBy, null);
     }
 
-    public FileSong(SongType type, Path file, SongQueue songQueue) {
+    public FileSong(SongType type, Path file, User suggestedBy, SongQueue songQueue) {
         super(type);
 
         this.file = file;
+        this.suggestedBy = suggestedBy == null ? null : new CachedUser(suggestedBy);
         this.setQueue(songQueue);
 
         try {
@@ -42,22 +50,40 @@ public class FileSong extends Song {
                 mp3Title = tag.getTitle();
                 mp3Artist = tag.getArtist();
 
-                if (art == null) return;
+                if (art != null) {
+                    String mime = tag.getAlbumImageMimeType().replace("image/", "");
+                    BufferedImage artImg = AlbumArtUtils.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
 
-                String mime = tag.getAlbumImageMimeType().replace("image/", "");
-                BufferedImage artImg = AlbumArtUtils.scaleAlbumArt(ImageIO.read(new ByteArrayInputStream(art)));
+                    var ap = Files.createTempFile("albumart-", "." + mime);
 
-                var ap = Files.createTempFile("albumart-", "." + mime);
+                    albumArt = new LocalAlbumArt(ap);
 
-                albumArt = new LocalAlbumArt(ap);
+                    File af = ap.toFile();
+                    af.deleteOnExit();
 
-                File af = ap.toFile();
-                af.deleteOnExit();
-
-                ImageIO.write(artImg, mime, af);
+                    ImageIO.write(artImg, mime, af);
+                }
             }
         } catch (Exception ignored) {
         }
+
+        if (mp3Title == null) {
+            mp3Title = "Untitled upload";
+        }
+
+        if (mp3Artist == null) {
+            mp3Artist = "Unknown artist";
+        }
+    }
+
+    @Override
+    public AudioTrack getTrack() {
+        return track;
+    }
+
+    public FileSong setTrack(AudioTrack track) {
+        this.track = track;
+        return this;
     }
 
     @Override
@@ -91,5 +117,15 @@ public class FileSong extends Song {
     @Override
     public boolean isPersistent() {
         return true;
+    }
+
+    @Override
+    public boolean isSuggestion() {
+        return suggestedBy != null;
+    }
+
+    @Override
+    public User getSuggestedBy() {
+        return suggestedBy == null ? null : suggestedBy.get();
     }
 }

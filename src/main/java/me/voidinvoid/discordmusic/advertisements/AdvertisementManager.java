@@ -9,7 +9,7 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -21,7 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AdvertisementManager implements RadioService, SongEventListener {
+public class AdvertisementManager implements RadioService, RadioEventListener {
 
     private static final String AD_LOG_PREFIX = ConsoleColor.CYAN_BACKGROUND + " Adverts ";
     private static final Gson GSON = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();

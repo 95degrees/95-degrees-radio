@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -10,7 +11,7 @@ import java.util.stream.Collectors;
 public class ServicesCommand extends Command {
 
     ServicesCommand() {
-        super("radio-services", "List or reload radio services", "<list|reload ...>", ChannelScope.DJ_CHAT, "rs");
+        super("services", "List or reload radio services", "<list|reload ...>", Rank.STAFF, "s");
     }
 
     @Override

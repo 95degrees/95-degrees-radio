@@ -6,7 +6,7 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.economy.Transaction;
 import me.voidinvoid.discordmusic.economy.TransactionType;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.notifications.Notification;
@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Deprecated //old coin system
-public class CoinCreditorManager implements RadioService, EventListener, SongEventListener {
+public class CoinCreditorManager implements RadioService, EventListener, RadioEventListener {
 
     private VoiceChannel voiceChannel;
     private TextChannel textChannel;

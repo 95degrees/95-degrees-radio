@@ -3,11 +3,12 @@ package me.voidinvoid.discordmusic.commands;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class QuizSocketServerKeyCommand extends Command {
 
     QuizSocketServerKeyCommand() {
-        super("quiz-key", "Outputs a key to use when using the quiz manager dashboard", null, ChannelScope.DJ_CHAT);
+        super("quiz-key", "Outputs a key to use when using the quiz manager dashboard", null, Rank.STAFF);
     }
 
     @Override

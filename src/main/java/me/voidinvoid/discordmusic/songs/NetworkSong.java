@@ -7,12 +7,13 @@ import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.utils.Service;
+import me.voidinvoid.discordmusic.utils.cache.CachedUser;
 import net.dv8tion.jda.api.entities.User;
 
-public class NetworkSong extends Song implements SpotifyTrackHolder {
+public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggestable {
 
     private String url;
-    private User suggestedBy;
+    private CachedUser suggestedBy;
     private AudioTrack track;
     private Track spotifyTrack;
 
@@ -22,7 +23,7 @@ public class NetworkSong extends Song implements SpotifyTrackHolder {
         super(type);
 
         this.url = track.getInfo().uri;
-        this.suggestedBy = suggestedBy;
+        this.suggestedBy = suggestedBy == null ? null : new CachedUser(suggestedBy);
         this.track = track;
         track.setUserData(this);
 
@@ -33,12 +34,12 @@ public class NetworkSong extends Song implements SpotifyTrackHolder {
 
     @Override
     public String getTitle() {
-        return track.getInfo().title;
+        return spotifyTrack == null ? track.getInfo().title : spotifyTrack.getName();
     }
 
     @Override
     public String getArtist() {
-        return track.getInfo().author;
+        return spotifyTrack == null || spotifyTrack.getArtists().length == 0 ? track.getInfo().author : spotifyTrack.getArtists()[0].getName();
     }
 
     @Override
@@ -92,7 +93,13 @@ public class NetworkSong extends Song implements SpotifyTrackHolder {
         return false;
     }
 
+    @Override
+    public boolean isSuggestion() {
+        return suggestedBy != null;
+    }
+
+    @Override
     public User getSuggestedBy() {
-        return suggestedBy;
+        return suggestedBy == null ? null : suggestedBy.get();
     }
 }

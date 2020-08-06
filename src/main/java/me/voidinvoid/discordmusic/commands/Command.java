@@ -1,29 +1,29 @@
 package me.voidinvoid.discordmusic.commands;
 
-import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 abstract class Command {
 
-    public static final String COMMAND_PREFIX = "!";
+    public static final String COMMAND_PREFIX = "r!";
 
     private final String name;
     private final String description;
     private final String usageMessage;
-    private final ChannelScope scope;
+    private final Rank rank;
     private final boolean allowConsole;
     private final String[] aliases;
 
-    Command(String name, String description, String usageMessage, ChannelScope scope, String... aliases) {
+    Command(String name, String description, String usageMessage, Rank rank, String... aliases) {
 
-        this(name, description, usageMessage, scope, true, aliases);
+        this(name, description, usageMessage, rank, true, aliases);
     }
 
-    Command(String name, String description, String usageMessage, ChannelScope scope, boolean allowConsole, String... aliases) {
+    Command(String name, String description, String usageMessage, Rank rank, boolean allowConsole, String... aliases) {
 
         this.name = name;
         this.description = description;
         this.usageMessage = usageMessage;
-        this.scope = scope;
+        this.rank = rank == null ? Rank.NORMAL : rank;
         this.allowConsole = allowConsole;
         this.aliases = aliases;
     }
@@ -40,8 +40,8 @@ abstract class Command {
         return usageMessage;
     }
 
-    public ChannelScope getScope() {
-        return scope;
+    public Rank getRank() {
+        return rank;
     }
 
     public boolean isAllowConsole() {

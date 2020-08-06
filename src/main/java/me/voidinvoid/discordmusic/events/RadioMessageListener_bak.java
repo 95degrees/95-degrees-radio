@@ -2,6 +2,7 @@ package me.voidinvoid.discordmusic.events;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.wrapper.spotify.model_objects.specification.Track;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
@@ -11,51 +12,43 @@ import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
-import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.*;
-import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.ReactionListener;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.EventListener;
 
+import javax.annotation.Nonnull;
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class RadioMessageListener implements RadioService, RadioEventListener {
+public class RadioMessageListener_bak implements RadioService, RadioEventListener, EventListener {
 
     private TextChannel textChannel;
     private ScheduledExecutorService updaterExecutor;
+
+    private Message activeTitleArtMessage;
+    private Message activeProgressMessage;
+    private CompletableFuture currentEdit;
+
+    private String mostRecentMessageId;
 
     private String previousLyric;
     private boolean lyricChangeFlag;
 
     private long nextForcedUpdate;
 
-    private List<CachedChannel<TextChannel>> statusChannels;
-
-    private List<PersistentMessage> statusMessages;
-    private String lastStatusDescription;
-
-    private PersistentMessageManager persistentMessageManager;
-
     @Override
     public void onLoad() {
         textChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
-
-        persistentMessageManager = Service.of(PersistentMessageManager.class);
-
-        statusMessages = new ArrayList<>();
-        statusChannels = new ArrayList<>();
-
-        statusChannels.add(new CachedChannel<>(textChannel));
 
         if (updaterExecutor != null) {
             updaterExecutor.shutdown();
@@ -64,23 +57,53 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
         updaterExecutor = Executors.newScheduledThreadPool(1);
 
         updaterExecutor.scheduleAtFixedRate(() -> {
-            var prog = generateProgressMessage();
+            if (activeProgressMessage != null /*&& (currentEdit == null || currentEdit.isDone())*/) {
+                var prog = generateProgressMessage();
 
-            if (prog == null) return;
+                if (nextForcedUpdate > System.currentTimeMillis() && !lyricChangeFlag) return;
 
-            if (nextForcedUpdate > System.currentTimeMillis() && !lyricChangeFlag) return; //don't need to update yet
+                if (prog != null && Objects.equals(activeProgressMessage.getEmbeds().get(0).getDescription(), prog.getDescription()))
+                    return;
 
-            if (Objects.equals(lastStatusDescription, prog.getDescription()))
-                return; //we're identical to previous message - don't update
+                if (mostRecentMessageId != null && !mostRecentMessageId.equals(activeProgressMessage.getId())) {
+                    activeProgressMessage.delete().queue();
 
-            for (var message : statusMessages) {
-                persistentMessageManager.editMessage(message, prog);
+                    activeProgressMessage = null;
+                    currentEdit = null;
+
+                    if (prog != null) {
+                        textChannel.sendMessage(prog).queue(m -> activeProgressMessage = m);
+
+                        lyricChangeFlag = false;
+                        nextForcedUpdate = System.currentTimeMillis() + 2000;
+                    }
+
+                    return;
+                }
+
+                if (prog != null) {
+                    currentEdit = activeProgressMessage.editMessage(prog).submit();
+
+                    lyricChangeFlag = false;
+                    nextForcedUpdate = System.currentTimeMillis() + 2000;
+                }
             }
-
-            lyricChangeFlag = false;
-            nextForcedUpdate = System.currentTimeMillis() + 2000;
-
         }, 2000, 200, TimeUnit.MILLISECONDS);
+    }
+
+    @Override
+    public void onShutdown() {
+        if (activeProgressMessage != null) {
+            activeProgressMessage.delete().queue();
+        }
+    }
+
+    private void appendSpotifyTrackDetails(EmbedBuilder builder, Track track) {
+        if (track == null) return;
+
+        builder.clearFields();
+        builder.addField("[Spotify] **" + track.getName() + "**",
+                track.getArtists()[0].getName() + "\n ", false);
     }
 
     @Override
@@ -90,16 +113,55 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
         EmbedBuilder embed = new EmbedBuilder()
                 .setColor(new Color(230, 230, 230))
                 .setTitle("Now Playing")
-                .addField(song.getTitle(), song.getArtist(), false);
+                .addField(song.getTitle(), song.getArtist(), false)
+                .addField("Skip Requests (todo)", "0/0", false);
+        // .setTimestamp(OffsetDateTime.now());
+        // .setTimestamp(new Date().toInstant());
 
         if (song instanceof NetworkSong) {
             NetworkSong ns = (NetworkSong) song;
             if (ns.getSuggestedBy() != null) {
                 embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
             }
+
+            /*if (ns.getSpotifyTrack() == null) {
+                System.out.println("searching spotify!!");
+                Service.of(SpotifyManager.class).searchTrack(track.getInfo().title)
+                        .whenComplete((t, e) -> {
+                            ns.setSpotifyTrack(t); //TODO this should be done on track creation
+                            appendSpotifyTrackDetails(embed, ns.getSpotifyTrack());
+                            System.out.println("appened deets! track: " + t);
+                            embedReady.complete(embed);
+                        });
+            } else {
+                System.out.println("aaa");
+                embedReady.complete(embed);
+            }*/
         }
 
+        /*if (song instanceof SpotifyTrackHolder) {
+            var sh = (SpotifyTrackHolder) song;
+
+            if (sh.getSpotifyTrack() != null) {
+                System.out.println("im a track holder :) track: " + ((SpotifyTrackHolder) song).getSpotifyTrack());
+                appendSpotifyTrackDetails(embed, ((SpotifyTrackHolder) song).getSpotifyTrack());
+            }
+        }
+
+        embedReady.complete(embed);*/
+
+        /*
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Now Playing")
+                .setColor(new Color(230, 230, 230))
+                .addField("Title", song instanceof DatabaseSong ? ((DatabaseSong) song).getTitle() : track.getInfo().title, false)
+                .addField(song instanceof NetworkSong ? "Uploader" : "Artist", song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() : track.getInfo().author, false)
+                .setTimestamp(new Date().toInstant());*/
+
+
+        System.out.println("ready!!");
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue(m -> {
+            activeTitleArtMessage = m;
+
             RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
 
             if (srv != null && song.getAlbumArt() instanceof LocalAlbumArt) {
@@ -138,20 +200,9 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
 
         var prog = generateProgressMessage();
         if (prog != null) {
-            for (var channel : statusChannels) {
-                persistentMessageManager.persist(channel.get().sendMessage(prog)).thenAccept(m -> statusMessages.add(m));
-            }
-            lastStatusDescription = prog.getDescription();
-        }
-    }
-
-    public void displayMessageUpdates(TextChannel channel) {
-        statusChannels.add(new CachedChannel<>(channel));
-
-        var prog = generateProgressMessage();
-        if (prog != null) {
-            persistentMessageManager.persist(channel.sendMessage(prog)).thenAccept(m -> statusMessages.add(m));
-            lastStatusDescription = prog.getDescription();
+            textChannel.sendMessage(prog).queue(m -> {
+                activeProgressMessage = m;
+            });
         }
     }
 
@@ -202,9 +253,8 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
                     eb.addField("Skip Requests", skipStatus, true);
                 }
 
-                eb.setColor(Colors.ACCENT_MAIN); //todo diff colour maybe?
-                //var colour = (int) (progPercent * 255);
-                //eb.setColor(new Color(colour, colour, colour));
+                var colour = (int) (progPercent * 255);
+                eb.setColor(new Color(colour, colour, colour));
 
                 var lyrics = Service.of(LiveLyricsManager.class).getActiveSongLyrics();
                 if (lyrics != null) { //add 200ms to account for lag
@@ -233,12 +283,13 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
-        statusMessages.forEach(m -> persistentMessageManager.deleteMessage(m));
-        statusMessages.clear();
+        if (activeProgressMessage != null) activeProgressMessage.delete().queue();
+        activeProgressMessage = null;
+        currentEdit = null;
     }
 
-    @Override
-    public void onSongQueueError(Song song, AudioTrack track, Member member, NetworkSongError error) {
+    //@Override
+    public void onSongQueueErroro(NetworkSong song, AudioTrack track, Member member, NetworkSongError error) {
         EmbedBuilder embed = new EmbedBuilder()
                 .setTitle("Song Queue")
                 .setDescription(error.getErrorMessage())
@@ -256,21 +307,31 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
     }
 
     @Override
-    public void onSongQueued(Song song, AudioTrack track, Member member, int queuePosition) {
+    public void onSongQueued(Song song, AudioTrack track, Member member, int queuePosition) {/*
         if (member == null || !Radio.getInstance().getOrchestrator().areSuggestionsEnabled()) return;
         User user = member.getUser();
+
+        var title = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getName() : track.getInfo().title;
+        var artist = song.getSpotifyTrack() != null ? song.getSpotifyTrack().getArtists()[0].getName() : track.getInfo().uri;
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")
                 .setColor(new Color(230, 230, 230))
-                .addField(song.getTitle(), song.getArtist(), true)
+                .addField("Title", title, true)
+                .addField(song.getSpotifyTrack() != null ? "Artist" : "URL", artist, true)
                 .addField("Queue Position", "#" + (queuePosition + 1), false)
+                .setTimestamp(OffsetDateTime.now())
                 .setFooter(user.getName(), user.getAvatarUrl());
 
-        if (song instanceof SpotifyTrackHolder && ((SpotifyTrackHolder) song).getSpotifyTrack() != null) {
-            embed.addField("Links", Formatting.maskLink(SpotifyManager.SPOTIFY_TRACK_URL + ((SpotifyTrackHolder) song).getSpotifyTrack().getId(), "Spotify"), true);
-        }
+        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();*/
+    }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();
+    @Override
+    public void onEvent(@Nonnull GenericEvent ev) {
+        if (ev instanceof GuildMessageReceivedEvent) {
+            if (((GuildMessageReceivedEvent) ev).getChannel().equals(textChannel)) {
+                mostRecentMessageId = ((GuildMessageReceivedEvent) ev).getMessageId();
+            }
+        }
     }
 }

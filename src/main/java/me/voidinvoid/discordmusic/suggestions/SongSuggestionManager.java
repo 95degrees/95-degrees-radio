@@ -6,6 +6,9 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.songs.QueueOption;
+import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
@@ -20,8 +23,10 @@ import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEve
 import net.dv8tion.jda.api.hooks.EventListener;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class SongSuggestionManager implements RadioService, EventListener {
 
@@ -35,7 +40,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
             if (!ChannelScope.RADIO_AND_DJ_CHAT.check(e.getChannel())) return;
             if (e.getAuthor().isBot()) return;
 
-            addSuggestion(e.getMessage().getContentRaw(), e.getMessage(), e.getChannel(), e.getMember(), false, SuggestionQueueMode.NORMAL);
+            addSuggestion(e.getMessage().getContentRaw(), e.getMessage(), e.getChannel(), e.getMember(), false, true, SuggestionQueueMode.NORMAL);
         } else if (ev instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent e = (GuildMessageReactionAddEvent) ev;
 
@@ -48,7 +53,9 @@ public class SongSuggestionManager implements RadioService, EventListener {
         }
     }
 
-    public void addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, SuggestionQueueMode queueMode) {
+    public CompletableFuture<Boolean> addSuggestion(String identifier, Message suggestionMessage, TextChannel channel, Member member, boolean notifyOnFailure, boolean autoSelectFirstEntry, SuggestionQueueMode queueMode) {
+
+        var future = new CompletableFuture<Boolean>(); //returns true if we locate the song, NOT if it was queued successfully, mainly for rpc feedback
 
         var sm = Service.of(SpotifyManager.class);
         var find = sm.findTrack(identifier);
@@ -58,22 +65,49 @@ public class SongSuggestionManager implements RadioService, EventListener {
                 if (t != null) {
                     sm.fetchLavaTrack(t).thenAccept(s -> {
                         if (s != null) {
-                            suggestionMessage.delete().reason("Song suggestion URL").queue();
+                            if (suggestionMessage != null) {
+                                suggestionMessage.delete().reason("Song suggestion URL").queue();
+                            }
 
-                            Radio.getInstance().getOrchestrator().addNetworkTrack(member, s, false, false, false, nt -> nt.setSpotifyTrack(t), null);
+                            var song = new NetworkSong(SongType.SONG, s, member == null ? null : member.getUser());
+                            song.setSpotifyTrack(t);
+
+                            Radio.getInstance().getOrchestrator().queueSuggestion(song);
+
+                            future.complete(true);
+                        } else {
+                            future.complete(false);
                         }
                     });
                 }
             });
 
-            return;
+            return future;
+        }
+
+        var opts = new ArrayList<QueueOption>();
+
+        if (channel == null || ChannelScope.DJ_CHAT.check(channel)) {
+            opts.add(QueueOption.BYPASS_ERRORS);
+        }
+
+        if (queueMode == SuggestionQueueMode.PLAY_INSTANTLY) {
+            opts.add(QueueOption.PLAY_INSTANTLY);
+        } else if (queueMode == SuggestionQueueMode.PUSH_TO_START) {
+            opts.add(QueueOption.PUSH_TO_START);
         }
 
         Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                Radio.getInstance().getOrchestrator().addNetworkTrack(member, track, channel == null || ChannelScope.DJ_CHAT.check(channel), queueMode == SuggestionQueueMode.PLAY_INSTANTLY, queueMode == SuggestionQueueMode.PUSH_TO_START);
-                if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
+                var song = new NetworkSong(SongType.SONG, track, member == null ? null : member.getUser());
+                Radio.getInstance().getOrchestrator().queueSuggestion(song, opts.toArray(new QueueOption[]{}));
+
+                if (suggestionMessage != null) {
+                    suggestionMessage.delete().reason("Song suggestion URL").queue();
+                }
+
+                future.complete(true);
             }
 
             @Override
@@ -89,29 +123,45 @@ public class SongSuggestionManager implements RadioService, EventListener {
                                 .setDescription("No song results found for your search. Some songs were found but were too long to be included")
                                 .build()).queue();
                     }
+
+                    future.complete(false);
+                } else if (autoSelectFirstEntry) {
+                    var song = new NetworkSong(SongType.SONG, search.getPlaylist().get(0), member.getUser());
+                    Radio.getInstance().getOrchestrator().queueSuggestion(song, opts.toArray(new QueueOption[]{}));
+                    future.complete(true);
                 } else {
                     search.sendMessage(channel).whenComplete((m, e) -> searches.put(m.getId(), search));
+                    future.complete(true);
                 }
 
-                if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
+                if (suggestionMessage != null) {
+                    suggestionMessage.delete().reason("Song suggestion URL").queue();
+                }
             }
 
             @Override
             public void noMatches() {
-                if (notifyOnFailure) {
+                if (notifyOnFailure && channel != null) {
                     channel.sendMessage(new EmbedBuilder()
                             .setTitle("Search Failure")
                             .setColor(Colors.ACCENT_ERROR)
                             .setDescription("No song results found for your search")
                             .build()).queue();
 
-                    if (suggestionMessage != null) suggestionMessage.delete().reason("Song suggestion URL").queue();
+                    if (suggestionMessage != null) {
+                        suggestionMessage.delete().reason("Song suggestion URL").queue();
+                    }
                 }
+
+                future.complete(false);
             }
 
             @Override
             public void loadFailed(FriendlyException e) {
+                future.complete(false);
             }
         });
+
+        return future;
     }
 }

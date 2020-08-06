@@ -86,19 +86,27 @@ public abstract class SongQueue extends AudioEventAdapter {
         return queue.size() == 0 ? null : queue.get(RANDOM.nextInt(queue.size()));
     }
 
-    public boolean remove(NetworkSong song) {
+    public boolean remove(Song song) {
+        if (!(song instanceof UserSuggestable)) {
+            return false;
+        }
+
         queueCache = null;
         return queue.remove(song);
     }
 
-    public int addNetworkSong(NetworkSong song) {
+    public int addSuggestion(Song song) {
+        if (!(song instanceof UserSuggestable)) {
+            return -1;
+        }
+
         queueCache = null;
 
         song.setQueue(this);
 
-        int pos = 0; //push the song to the bottom of all network songs but above regular songs
+        int pos = 0; //push the song to the bottom of all suggestions but above regular songs
         for (Song s : queue) {
-            if (!(s instanceof NetworkSong)) break;
+            if (!(s instanceof UserSuggestable)) break;
 
             pos++;
         }
@@ -107,8 +115,8 @@ public abstract class SongQueue extends AudioEventAdapter {
         return pos;
     }
 
-    public void addNetworkSongs(List<NetworkSong> songs) {
-        songs.forEach(this::addNetworkSong);
+    public void addSuggestions(List<Song> songs) {
+        songs.forEach(this::addSuggestion);
     }
 
     public List<Song> getQueue() {
@@ -164,12 +172,12 @@ public abstract class SongQueue extends AudioEventAdapter {
         return queueCache = res.substring(0, Math.min(res.length(), 1900));
     }
 
-    public List<NetworkSong> getNetworkSongs() {
-        return queue.stream().filter(NetworkSong.class::isInstance).map(NetworkSong.class::cast).collect(Collectors.toList());
+    public List<Song> getSuggestions() {
+        return queue.stream().filter(UserSuggestable.class::isInstance).collect(Collectors.toList());
     }
 
-    public List<NetworkSong> clearNetworkSongs() {
-        List<NetworkSong> songs = getNetworkSongs();
+    public List<Song> clearSuggestions() {
+        List<Song> songs = getSuggestions();
         queue.removeAll(songs);
 
         return songs;
@@ -184,7 +192,7 @@ public abstract class SongQueue extends AudioEventAdapter {
         if (song.getQueue() != this) return;
 
         queue.remove(song);
-        queue.add(getNetworkSongs().size(), song);
+        queue.add(getSuggestions().size(), song);
 
         queueCache = null;
     }

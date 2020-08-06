@@ -8,11 +8,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
+import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
 import org.bson.Document;
@@ -29,16 +29,19 @@ import java.util.concurrent.CompletableFuture;
 
 import static com.mongodb.client.model.Filters.eq;
 
-public class LiveLyricsManager implements RadioService, SongEventListener {
+public class LiveLyricsManager implements RadioService, RadioEventListener {
 
     private DatabaseManager databaseManager;
+    private RPCSocketManager socketManager;
+
     private MongoCollection<Document> lyrics;
-    private boolean enabled;
+    private boolean enabled = true;
     private LiveLyrics activeSongLyrics;
 
     @Override
     public void onLoad() {
         databaseManager = Service.of(DatabaseManager.class);
+        socketManager = Service.of(RPCSocketManager.class);
 
         lyrics = databaseManager.getCollection("lyrics");
     }
@@ -66,8 +69,11 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
         fetchLyrics(song, track).whenComplete((l, e) -> {
             var ct = Radio.getInstance().getOrchestrator().getPlayer().getPlayingTrack();
 
-            if (l != null && track.equals(ct)) {
-                activeSongLyrics = l;
+            if (track.equals(ct)) {
+                socketManager.sendLyricsUpdate(l);
+                if (l != null) {
+                    activeSongLyrics = l;
+                }
                 log("ACTIVE SONG LYRICS: " + activeSongLyrics);
             }
         });
@@ -100,11 +106,13 @@ public class LiveLyricsManager implements RadioService, SongEventListener {
 
         if (song instanceof NetworkSong) {
             var ns = (NetworkSong) song;
+            if (ns.getSpotifyTrack() != null) {
 
-            title = Songs.deyoutubeifySong(title);
+                title = Songs.deyoutubeifySong(title);
 
-            artist = artist.toLowerCase()
-                    .replaceAll("vevo", "");
+                artist = artist.toLowerCase()
+                        .replaceAll("vevo", "");
+            }
         }
 
         var cm = new CookieManager();

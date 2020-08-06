@@ -31,7 +31,7 @@ public class PlaySongTask extends RadioTaskExecutor {
         if (!(playlist instanceof RadioPlaylist)) return;
 
         if (!jingle && params.get("remote", Boolean.class)) {
-            Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion(song, null, null, null, false, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
+            Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion(song, null, null, null, false, true, force ? SuggestionQueueMode.PLAY_INSTANTLY : SuggestionQueueMode.PUSH_TO_START);
             return;
         }
 

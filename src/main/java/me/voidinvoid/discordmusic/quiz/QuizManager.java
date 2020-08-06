@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -35,7 +35,7 @@ import java.util.*;
  * This code was developed by VoidInVoid / Exfusion
  * 2018
  */
-public class QuizManager implements RadioService, SongEventListener, EventListener {
+public class QuizManager implements RadioService, RadioEventListener, EventListener {
 
     private static Gson GSON = new GsonBuilder().create();
 
@@ -76,13 +76,13 @@ public class QuizManager implements RadioService, SongEventListener, EventListen
 
         try {
             Path soundsRoot = quizRoot.resolve("Sounds");
-            questionCountdownSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("countdown.mp3"));
-            answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3"));
-            answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3"));
-            answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3"));
-            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3"));
-            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3"));
-            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3"));
+            questionCountdownSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("countdown.mp3"), null);
+            answerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer.mp3"), null);
+            answerCorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-correct.mp3"), null);
+            answerIncorrectSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("answer-incorrect.mp3"), null);
+            waitingSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("waiting.mp3"), null);
+            winnerSuspenseSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner-suspense.mp3"), null);
+            winnerSong = new FileSong(SongType.QUIZ, soundsRoot.resolve("winner.mp3"), null);
 
             Files.list(quizRoot).filter(p -> !Files.isDirectory(p)).forEach(q -> {
                 QuizPlaylist playlist = loadQuiz(q);

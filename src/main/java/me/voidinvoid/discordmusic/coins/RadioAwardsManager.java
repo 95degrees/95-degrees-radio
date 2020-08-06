@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * © 2020
  */
 
-public class RadioAwardsManager implements RadioService, SongEventListener, EventListener {
+public class RadioAwardsManager implements RadioService, RadioEventListener, EventListener {
 
     private static final String REWARDS_LOG_PREFIX = ConsoleColor.BLUE_BACKGROUND_BRIGHT + " Awards ";
 
@@ -66,7 +66,7 @@ public class RadioAwardsManager implements RadioService, SongEventListener, Even
         rewardSongs = new ArrayList<>();
 
         for (var identifier : RadioConfig.config.locations.rewardIdentifiers) {
-            Radio.getInstance().getOrchestrator().createNetworkTrack(SongType.REWARD, identifier, n -> rewardSongs.add(n));
+            Radio.getInstance().getOrchestrator().createNetworkSong(SongType.REWARD, identifier).thenAccept(n -> rewardSongs.add(n));
         }
     }
 

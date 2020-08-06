@@ -29,7 +29,7 @@ public class LocalSongQueue extends SongQueue {
         try {
             return Files.walk(directory, 1)
                     .filter(f -> !Files.isDirectory(f))
-                    .map(f -> new FileSong(getQueueType(), f, this)).collect(Collectors.toList());
+                    .map(f -> new FileSong(getQueueType(), f, null, this)).collect(Collectors.toList());
 
         } catch (Exception ex) {
             System.err.println("Error fetching songs for playlist");

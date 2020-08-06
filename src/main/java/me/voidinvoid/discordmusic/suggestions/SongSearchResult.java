@@ -3,9 +3,12 @@ package me.voidinvoid.discordmusic.suggestions;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.LevelExtras;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
+import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.songs.QueueOption;
+import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
@@ -46,6 +49,10 @@ public class SongSearchResult {
         }
 
         if (playlist.size() > MAX_SEARCH_RESULTS) playlist = playlist.subList(0, MAX_SEARCH_RESULTS);
+    }
+
+    public List<AudioTrack> getPlaylist() {
+        return playlist;
     }
 
     public int getResultCount() {
@@ -97,7 +104,9 @@ public class SongSearchResult {
                     AudioTrack track = playlist.get(index);
                     e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
 
-                    Radio.getInstance().getOrchestrator().addNetworkTrack(e.getMember(), track, e.getChannel().getId().equals(RadioConfig.config.channels.djChat), false, false);
+                    var song = new NetworkSong(SongType.SONG, track, user);
+                    Radio.getInstance().getOrchestrator().queueSuggestion(song, ChannelScope.DJ_CHAT.check(e.getChannel()) ? new QueueOption[]{QueueOption.BYPASS_ERRORS} : new QueueOption[]{});
+
                     return true;
                 } catch (Exception ex) {
                     System.out.println("Error handling search reaction event");

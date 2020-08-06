@@ -14,31 +14,31 @@ public class SongInfo {
     public String artist;
     public String albumArtUrl;
     public long startTime;
-    public long endTime;
+    public long duration;
     public boolean canBeRated = false;
 
     public UserInfo suggestedBy;
 
-    public SongInfo(String name, String artist, String albumArtUrl, long startTime, long endTime, boolean canBeRated, User suggestedBy) {
+    public SongInfo(String name, String artist, String albumArtUrl, long startTime, long duration, boolean canBeRated, User suggestedBy) {
 
         this.name = name;
         this.artist = artist;
         this.albumArtUrl = albumArtUrl;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.duration = duration;
 
         this.canBeRated = canBeRated;
 
         if (suggestedBy != null) this.suggestedBy = new UserInfo(suggestedBy);
     }
 
-    public SongInfo(DatabaseSong song, String albumArtUrl, long startTime, long endTime, User suggestedBy) {
+    public SongInfo(DatabaseSong song, String albumArtUrl, long startTime, long duration, User suggestedBy) {
 
         this.name = song.getTitle();
         this.artist = song.getArtist();
         this.albumArtUrl = albumArtUrl;
         this.startTime = startTime;
-        this.endTime = endTime;
+        this.duration = duration;
 
         this.canBeRated = true;
 
@@ -48,7 +48,7 @@ public class SongInfo {
     public SongInfo(Song song) {
 
         this.startTime = -1;
-        this.endTime = -1;
+        this.duration = 0;
 
         if (song.getType() != SongType.SONG) {
             this.name = "95 Degrees Radio";

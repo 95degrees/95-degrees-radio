@@ -8,10 +8,9 @@ import java.util.concurrent.TimeUnit;
 public class LiveLyrics {
 
     public static final LyricLine EMPTY_LINE = new LyricLine(0, "...");
-
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("mm:ss.SS");
 
-    private List<LyricLine> lines = new ArrayList<>();
+    public List<LyricLine> lines = new ArrayList<>();
 
     //[00:01.53] Derulo\n[00:02.67] Whine fa me, darlin' (Oh yeah)\n[00:03.97] Way you move ya spine is alarmin' (oh yeah)\n
 

@@ -1,6 +1,7 @@
 package me.voidinvoid.discordmusic.continuity;
 
-import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.UserSuggestable;
 
 /**
  * This code was developed by VoidInVoid / Exfusion
@@ -11,8 +12,8 @@ public class ContinuitySuggestionData {
     private String user;
     private String identifier;
 
-    public ContinuitySuggestionData(NetworkSong song) {
-        user = song.getSuggestedBy() == null ? null : song.getSuggestedBy().getId();
+    public ContinuitySuggestionData(Song song) {
+        user = song instanceof UserSuggestable && ((UserSuggestable) song).getSuggestedBy() != null ? ((UserSuggestable) song).getSuggestedBy().getId() : null;
         identifier = song.getLavaIdentifier();
     }
 

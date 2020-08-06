@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Rank;
 import me.voidinvoid.discordmusic.utils.Songs;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 public class QueueSongCommand extends Command {
 
     QueueSongCommand() {
-        super("queue-song", "Moves a song to the front of the queue (after network songs)", "<song#>", ChannelScope.DJ_CHAT);
+        super("queue-song", "Moves a song to the front of the queue (after network songs)", "<song#>", Rank.DJ);
     }
 
     @Override

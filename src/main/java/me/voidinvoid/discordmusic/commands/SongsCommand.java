@@ -4,11 +4,12 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class SongsCommand extends Command {
 
     SongsCommand() {
-        super("songs", "Lists all songs and their IDs", "[page#]", ChannelScope.DJ_CHAT);
+        super("songs", "Lists all songs and their IDs", "[page#]", Rank.DJ);
     }
 
     @Override

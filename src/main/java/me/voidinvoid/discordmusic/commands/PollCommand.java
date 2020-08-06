@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Rank;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -15,7 +16,7 @@ import java.util.stream.IntStream;
 public class PollCommand extends Command {
 
     PollCommand() {
-        super("radio-poll", "Creates a poll in the text channel", "<poll description ...>,[option a...]|[option b...] ...", ChannelScope.DJ_CHAT);
+        super("poll", "Creates a poll in the text channel", "<poll description ...>,[option a...]|[option b...] ...", Rank.DJ);
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.time.OffsetDateTime;
  * This code was developed by VoidInVoid / Exfusion
  * 2019
  */
-public class SuggestionPrivateMessageManager implements RadioService, SongEventListener {
+public class SuggestionPrivateMessageManager implements RadioService, RadioEventListener {
 
     private VoiceChannel voiceChannel;
 

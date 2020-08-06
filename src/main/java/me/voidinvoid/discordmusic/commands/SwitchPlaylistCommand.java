@@ -4,6 +4,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 public class SwitchPlaylistCommand extends Command {
 
     SwitchPlaylistCommand() {
-        super("switch-playlist", "Switches to a playlist (based on folder name)", "<name>", ChannelScope.DJ_CHAT);
+        super("playlist", "Switches to a playlist (based on folder name)", "<name>", Rank.DJ);
     }
 
     @Override

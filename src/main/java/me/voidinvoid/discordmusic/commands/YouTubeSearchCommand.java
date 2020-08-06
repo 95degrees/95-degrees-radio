@@ -10,8 +10,11 @@ import net.dv8tion.jda.api.entities.TextChannel;
 
 public class YouTubeSearchCommand extends Command {
 
-    YouTubeSearchCommand() {
-        super("play", "Searches for a specified song on YouTube", "<search ...>", ChannelScope.RADIO_AND_DJ_CHAT, false, "search");
+    private final boolean autoSelectFirst;
+
+    YouTubeSearchCommand(String name, String description, boolean autoSelectFirst, String... aliases) {
+        super(name, description, "<search ...>", null, false, aliases);
+        this.autoSelectFirst = autoSelectFirst;
     }
 
     @Override
@@ -28,6 +31,6 @@ public class YouTubeSearchCommand extends Command {
             return;
         }
 
-        Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion("ytsearch:" + data.getArgsString(), data.getRawMessage(), (TextChannel) data.getTextChannel(), data.getMember(), true, SuggestionQueueMode.NORMAL);
+        Radio.getInstance().getService(SongSuggestionManager.class).addSuggestion("ytsearch:" + data.getArgsString(), data.getRawMessage(), (TextChannel) data.getTextChannel(), data.getMember(), true, autoSelectFirst, SuggestionQueueMode.NORMAL);
     }
 }

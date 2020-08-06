@@ -34,7 +34,7 @@ public class ContinuityManager implements RadioService { //TODO
             state.put("current_song", orch.getCurrentSong());
 
             RadioPlaylist p = (RadioPlaylist) orch.getActivePlaylist();
-            state.put("queue", p.getSongs().getNetworkSongs().stream().map(ContinuitySuggestionData::new).collect(Collectors.toList()));
+            state.put("queue", p.getSongs().getSuggestions().stream().map(ContinuitySuggestionData::new).collect(Collectors.toList()));
         }
 
         db.getCollection("internal");

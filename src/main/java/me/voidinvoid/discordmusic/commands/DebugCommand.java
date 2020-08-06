@@ -2,8 +2,9 @@ package me.voidinvoid.discordmusic.commands;
 
 import com.sedmelluq.discord.lavaplayer.tools.PlayerLibrary;
 import me.voidinvoid.discordmusic.Radio;
+import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.coins.RadioAwardsManager;
-import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.events.RadioMessageListener;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
@@ -11,9 +12,10 @@ import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
 import me.voidinvoid.discordmusic.quiz.QuizManager;
 import me.voidinvoid.discordmusic.restream.RadioRestreamManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
-import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.JDAInfo;
+import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -22,7 +24,7 @@ import java.util.stream.Collectors;
 public class DebugCommand extends Command {
 
     DebugCommand() {
-        super("radio-debug", "Runs debug actions", null, RadioConfig.config.debug ? ChannelScope.RADIO_AND_DJ_CHAT : ChannelScope.DJ_CHAT);
+        super("debug", "Runs debug actions", null, Rank.STAFF);
     }
 
     @Override
@@ -83,6 +85,13 @@ public class DebugCommand extends Command {
         }),
         VERSIONS(d -> {
             d.success("Version info:\nJDA: " + JDAInfo.VERSION + "\nLavaplayer: " + PlayerLibrary.VERSION);
+        }),
+        DOWNLOAD(d -> {
+            Service.of(YouTubeCacheManager.class).loadOrCache(d.getArgs()[1]);
+            d.success("Check console for progress");
+        }),
+        RESTREAM_TEXT(d -> {
+            Service.of(RadioMessageListener.class).displayMessageUpdates((TextChannel) d.getTextChannel());
         });
 
         private Consumer<CommandData> action;

@@ -2,11 +2,12 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class RestartRadioCommand extends Command {
 
     RestartRadioCommand() {
-        super("restart-radio", "Restarts the radio", null, ChannelScope.DJ_CHAT);
+        super("restart", "Restarts the radio", null, Rank.STAFF);
     }
 
     @Override

@@ -4,6 +4,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Rank;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -13,7 +14,7 @@ import java.time.OffsetDateTime;
 public class AnnounceCommand extends Command {
 
     AnnounceCommand() {
-        super("radio-announce", "Announces a message to radio and DJ channels", "[hex colour] <announcement ...>", ChannelScope.DJ_CHAT);
+        super("announce", "Announces a message to radio and DJ channels", "[hex colour] <announcement ...>", Rank.DJ);
     }
 
     @Override

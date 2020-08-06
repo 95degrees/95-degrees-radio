@@ -28,6 +28,11 @@ public class SpotifySong extends Song implements SpotifyTrackHolder {
     }
 
     @Override
+    public void setSpotifyTrack(Track track) {
+        //do nothing, don't want our track touched >:D
+    }
+
+    @Override
     public String getInternalName() {
         return spotifyTrack.getId();
     }

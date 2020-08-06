@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 import me.voidinvoid.discordmusic.utils.Songs;
 
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.stream.Collectors;
 public class FindSongCommand extends Command {
 
     FindSongCommand() {
-        super("find-song", "Searches for a local song", "<song-name ...>", ChannelScope.DJ_CHAT);
+        super("find-song", "Searches for a local song", "<song-name ...>", Rank.DJ);
     }
 
     @Override

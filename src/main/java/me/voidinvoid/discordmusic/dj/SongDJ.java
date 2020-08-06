@@ -7,12 +7,9 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.actions.*;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.quiz.QuizPlaylist;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
-import me.voidinvoid.discordmusic.songs.Playlist;
-import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.utils.*;
@@ -35,10 +32,10 @@ import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SongDJ implements RadioService, SongEventListener, EventListener {
+public class SongDJ implements RadioService, RadioEventListener, EventListener {
 
     private final List<DJAction> actions = new ArrayList<>();
-    private final Map<String, NetworkSong> queueDeletionMessages = new HashMap<>();
+    private final Map<String, Song> queueDeletionMessages = new HashMap<>();
     private CachedChannel<TextChannel> djChannel, radioChannel;
     private AudioTrack activeTrack;
 
@@ -70,7 +67,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         radioChannel = new CachedChannel<>(RadioConfig.config.channels.radioChat);
     }
 
-    public void removeSongFromQueue(Message m, NetworkSong song) {
+    public void removeSongFromQueue(Message m, Song song) {
 
         song.getQueue().remove(song);
 
@@ -83,8 +80,9 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
                 .addField("URL", song.getTrack().getInfo().uri, true)
                 .setTimestamp(new Date().toInstant());
 
-        if (song.getSuggestedBy() != null) {
-            embed.setFooter(song.getSuggestedBy().getName(), song.getSuggestedBy().getAvatarUrl());
+        var suggestedBy = song instanceof UserSuggestable ? ((UserSuggestable) song).getSuggestedBy() : null;
+        if (suggestedBy != null) {
+            embed.setFooter(suggestedBy.getName(), suggestedBy.getAvatarUrl());
         }
 
         AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get()).queue(); //TODO split into another event? and remove via orchestrator
@@ -168,9 +166,10 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
                 .setColor(player.isPaused() ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN)
                 .setTimestamp(OffsetDateTime.now());
 
-        if (song instanceof NetworkSong) {
-            embed.addField("Title", Formatting.escape(track.getInfo().title), true);
-            embed.addField("Uploader", Formatting.escape(track.getInfo().author), true);
+        embed.addField("Title", Formatting.escape(song.getTitle()), true);
+        embed.addField("Artist", Formatting.escape(song.getArtist()), true);
+
+        if (song instanceof UserSuggestable && ((UserSuggestable) song).isSuggestion()) { //TODO this all needs sorting with suggested songs......
             embed.addField("URL", Formatting.escape(song.getInternalName()), true);
 
             NetworkSong ns = (NetworkSong) song;
@@ -181,16 +180,11 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         } else if (song instanceof DatabaseSong) {
             DatabaseSong ds = (DatabaseSong) song;
 
-            embed.addField("Title", Formatting.escape(ds.getTitle()), true);
-            embed.addField("Artist", Formatting.escape(ds.getArtist()), true);
-            //embed.addField("MBID", ds.getMbId() == null ? "Unknown" : Formatting.escape(ds.getMbId()), true);
             embed.setFooter("(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(ds.getInternalName()));
 
         } else if (song instanceof FileSong) {
 
             if (song.getType() == SongType.SONG) {
-                embed.addField("Title", Formatting.escape(song.getTitle()), true);
-                embed.addField("Artist", Formatting.escape(song.getArtist()), true);
                 embed.setFooter("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getInternalName()));
             }
 
@@ -251,12 +245,13 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
     }
 
     @Override
-    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+    public void onSongQueued(Song song, AudioTrack track, Member member, int queuePosition) {
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Added song to the queue")
                 .setColor(new Color(230, 230, 230))
-                .addField("Title", track.getInfo().title, true)
-                .addField("URL", track.getInfo().uri, true)
+                .addField("Title", song.getTitle(), true)
+                .addField("Artist", song.getArtist(), true)
+                .addField("Identifier", track.getIdentifier(), true)
                 .addField("Queue Position", "#" + (queuePosition + 1), false)
                 .setTimestamp(OffsetDateTime.now());
 
@@ -268,7 +263,7 @@ public class SongDJ implements RadioService, SongEventListener, EventListener {
         MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
 
         AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get()).queue(m -> {
-            m.addReaction("❌").queue();
+            m.addReaction(Emoji.CROSS.getEmote()).queue();
             queueDeletionMessages.put(m.getId(), song);
             mr.registerCallback(m.getId(), e -> removeSongFromQueue(m, song));
         });

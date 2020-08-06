@@ -8,9 +8,9 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.economy.Transaction;
 import me.voidinvoid.discordmusic.economy.TransactionType;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Service;
@@ -29,7 +29,7 @@ import static com.mongodb.client.model.Filters.eq;
  * This code was developed by VoidInVoid / Exfusion
  * 2019
  */
-public class AchievementManager implements RadioService, SongEventListener {
+public class AchievementManager implements RadioService, RadioEventListener {
 
     @SuppressWarnings("unchecked")
     public void rewardAchievement(User user, Achievement achievement) {
@@ -61,7 +61,7 @@ public class AchievementManager implements RadioService, SongEventListener {
     }
 
     @Override
-    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+    public void onSongQueued(Song song, AudioTrack track, Member member, int queuePosition) {
         if (track.getIdentifier().endsWith("dQw4w9WgXcQ") && member != null) {
             rewardAchievement(member.getUser(), Achievement.RICKROLL);
         }

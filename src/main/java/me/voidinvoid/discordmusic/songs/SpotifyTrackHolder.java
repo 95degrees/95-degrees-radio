@@ -4,5 +4,7 @@ import com.wrapper.spotify.model_objects.specification.Track;
 
 public interface SpotifyTrackHolder {
 
-    public Track getSpotifyTrack();
+    Track getSpotifyTrack();
+
+    void setSpotifyTrack(Track track);
 }

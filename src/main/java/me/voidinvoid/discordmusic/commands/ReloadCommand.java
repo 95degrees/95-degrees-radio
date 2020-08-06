@@ -2,11 +2,12 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class ReloadCommand extends Command {
 
     ReloadCommand() {
-        super("reload", "Reloads playlists. Use !rs to reload other services", null, ChannelScope.DJ_CHAT);
+        super("reload", "Reloads playlists. Use !rs to reload other services", null, Rank.DJ);
     }
 
     @Override

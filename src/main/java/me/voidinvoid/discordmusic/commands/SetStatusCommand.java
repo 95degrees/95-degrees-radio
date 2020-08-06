@@ -2,12 +2,13 @@ package me.voidinvoid.discordmusic.commands;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 import net.dv8tion.jda.api.entities.Activity;
 
 public class SetStatusCommand extends Command {
 
     SetStatusCommand() {
-        super("radio-status", "Sets the status of the Discord bot", "<status ...>", ChannelScope.DJ_CHAT);
+        super("status", "Sets the status of the Discord bot", "<status ...>", Rank.DJ);
     }
 
     @Override

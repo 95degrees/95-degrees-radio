@@ -27,7 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PlaylistTesterListener implements RadioService, SongEventListener, EventListener {
+public class PlaylistTesterListener implements RadioService, RadioEventListener, EventListener {
 
     private static final String VALID_REACTION = "✅", INVALID_REACTION = "❌";
 

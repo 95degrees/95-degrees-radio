@@ -12,7 +12,7 @@ public class CommandListCommand extends Command {
     private final List<Command> commands;
 
     CommandListCommand(List<Command> commands) {
-        super("radio-commands", "Lists all commands", null, ChannelScope.RADIO_AND_DJ_CHAT, "rc");
+        super("commands", "Lists all commands", null, null, "c");
         this.commands = commands;
     }
 
@@ -20,7 +20,7 @@ public class CommandListCommand extends Command {
     public void invoke(CommandData data) {
         StringBuilder sb = new StringBuilder(Emoji.RADIO + " | **95 Degrees Radio Commands**\n");
 
-        String cmds = commands.stream().filter(cmd -> (data.isConsole() || cmd.getScope().check((GuildChannel) data.getTextChannel()))).map(cmd -> "\t`" + (data.isConsole() ? "" : Command.COMMAND_PREFIX) + cmd.getName() + (cmd.getUsageMessage() == null ? "" : " " + cmd.getUsageMessage()) + "` - " + cmd.getDescription()).collect(Collectors.joining("\n"));
+        String cmds = commands.stream().filter(cmd -> (data.isConsole() || cmd.getRank().hasRank(data.getMember()))).map(cmd -> "\t`" + (data.isConsole() ? "" : Command.COMMAND_PREFIX) + cmd.getName() + (cmd.getUsageMessage() == null ? "" : " " + cmd.getUsageMessage()) + "` - " + cmd.getDescription()).collect(Collectors.joining("\n"));
 
         sb.append(cmds);
 

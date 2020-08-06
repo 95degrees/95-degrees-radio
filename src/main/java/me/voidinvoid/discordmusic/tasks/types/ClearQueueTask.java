@@ -12,6 +12,6 @@ public class ClearQueueTask extends RadioTaskExecutor {
     public void runTask(SongOrchestrator orch, ParameterList params) {
         Playlist playlist = orch.getActivePlaylist();
         if (!(playlist instanceof RadioPlaylist)) return;
-        ((RadioPlaylist) playlist).getSongs().clearNetworkSongs();
+        ((RadioPlaylist) playlist).getSongs().clearSuggestions();
     }
 }

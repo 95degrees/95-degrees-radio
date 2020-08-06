@@ -49,9 +49,7 @@ public class Advertisement {
     }
 
     public void generateSong() {
-        Radio.getInstance().getOrchestrator().createNetworkTrack(SongType.ADVERTISEMENT, identifier, n -> {
-            song = n;
-        });
+        Radio.getInstance().getOrchestrator().createNetworkSong(SongType.ADVERTISEMENT, identifier).thenAccept(s -> song = s);
     }
 
     public EmbedBuilder constructAdvertMessage() {

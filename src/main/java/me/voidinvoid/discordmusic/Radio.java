@@ -10,7 +10,7 @@ import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
 import me.voidinvoid.discordmusic.events.RadioMessageListener;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.events.SuggestionPrivateMessageManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
@@ -31,6 +31,7 @@ import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 import me.voidinvoid.discordmusic.utils.Emoji;
+import me.voidinvoid.discordmusic.utils.PersistentMessageManager;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
@@ -155,7 +156,7 @@ public class Radio implements EventListener {
         registerService(databaseManager);
         registerService(new SpotifyManager());
 
-        orchestrator = new SongOrchestrator(this, config);
+        orchestrator = new SongOrchestrator(this);
 
         orchestrator.loadPlaylists();
 
@@ -175,6 +176,7 @@ public class Radio implements EventListener {
         registerService(new NotificationManager());
         //registerService(new TickerManager());
         registerService(new SongDJ());
+        registerService(new PersistentMessageManager());
         registerService(new RadioMessageListener());
         registerService(new QuizManager());
         registerService(new CoinCreditorManager());
@@ -222,8 +224,8 @@ public class Radio implements EventListener {
 
         radioServices.put(service.getClass(), service);
 
-        if (service instanceof SongEventListener)
-            orchestrator.registerSongEventListener(((SongEventListener) service));
+        if (service instanceof RadioEventListener)
+            orchestrator.registerSongEventListener(((RadioEventListener) service));
         if (service instanceof EventListener) jda.addEventListener(service);
 
         try {

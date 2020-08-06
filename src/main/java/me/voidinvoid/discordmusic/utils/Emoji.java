@@ -2,6 +2,16 @@ package me.voidinvoid.discordmusic.utils;
 
 import me.voidinvoid.discordmusic.Radio;
 import net.dv8tion.jda.api.entities.Emote;
+import net.dv8tion.jda.api.entities.Icon;
+import net.dv8tion.jda.api.entities.User;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.geom.Ellipse2D;
+import java.awt.image.BufferedImage;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.Set;
 
 /**
  * Guardian - 29/07/2019
@@ -114,6 +124,81 @@ public final class Emoji {
     @Override
     public String toString() {
         return emote.getAsMention();
+    }
+
+    public static Emoji getOrCreateUserEmoji(User user, Set<String> requiredIds) {
+        var guild = Radio.getInstance().getJda().getGuildById("734895274043899944"); //user icon emoji server
+
+        if (guild == null) {
+            return null;
+        }
+
+        var emotes = guild.getEmotesByName(user.getId(), true);
+
+        if (!emotes.isEmpty()) {
+            return new Emoji(emotes.get(0));
+        }
+
+        if (guild.getEmotes().size() >= guild.getMaxEmotes()) { //we need to delete some, but make sure we dont delete any from the required ids set
+            var toRemove = guild.getEmotes().stream().filter(e -> requiredIds != null && !requiredIds.contains(e.getName())).findAny().orElse(null);
+
+            if (toRemove != null) {
+                System.out.println("Deleting " + toRemove + " emoji to make space!");
+                toRemove.delete().queue();
+            } else {
+                System.out.println("Couldn't make any space for emoji!");
+                return null;
+            }
+        }
+
+        var image = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        var gfx = image.createGraphics();
+
+        try {
+            var url = new URL(user.getEffectiveAvatarUrl() + "?size=64");
+            var avatar = ImageIO.read(url);
+
+            var circle = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+
+            var g2 = circle.createGraphics();
+            g2.drawImage(avatar, 0, 0, 64, 64, null);
+
+            gfx.drawImage(createCircleCrop(avatar), 0, 0, 64, 64, null);
+
+            gfx.dispose();
+
+            var f = Files.createTempFile("avatar", ".png").toFile();
+            ImageIO.write(image, "png", f);
+
+            var emote = guild.createEmote(user.getId(), Icon.from(f)).complete();
+
+            if (emote != null) {
+                return new Emoji(emote);
+            }
+
+        } catch (Exception ex) {
+            System.out.println("Error downloading user avatar!");
+            ex.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private static BufferedImage createCircleCrop(BufferedImage image) {
+        var out = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        var gfx = out.createGraphics();
+
+        gfx.setComposite(AlphaComposite.Src);
+        gfx.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        gfx.setColor(Color.WHITE);
+        gfx.fill(new Ellipse2D.Double(0, 0, image.getWidth(), image.getHeight()));
+
+        gfx.setComposite(AlphaComposite.SrcAtop);
+        gfx.drawImage(image, 0, 0, null);
+
+        gfx.dispose();
+
+        return out;
     }
 }
 

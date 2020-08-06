@@ -4,11 +4,12 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class ShuffleCommand extends Command {
 
     ShuffleCommand() {
-        super("shuffle", "Shuffles all songs in the current playlist", null, ChannelScope.DJ_CHAT);
+        super("shuffle", "Shuffles all songs in the current playlist", null, Rank.DJ);
     }
 
     @Override

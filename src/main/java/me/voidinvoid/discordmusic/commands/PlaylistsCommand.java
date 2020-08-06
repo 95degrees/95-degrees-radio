@@ -6,13 +6,14 @@ import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.local.LocalRadioPlaylist;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 import java.util.stream.Collectors;
 
 public class PlaylistsCommand extends Command {
 
     PlaylistsCommand() {
-        super("playlists", "Lists all playlists", null, ChannelScope.DJ_CHAT);
+        super("playlists", "Lists all playlists", null, Rank.DJ);
     }
 
     @Override

@@ -4,11 +4,12 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.tasks.RadioTaskComposition;
 import me.voidinvoid.discordmusic.tasks.TaskManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class CancelTaskCommand extends Command {
 
     CancelTaskCommand() {
-        super("cancel-task", "Cancels the next execution of a task", "<task#>", ChannelScope.DJ_CHAT);
+        super("cancel-task", "Cancels the next execution of a task", "<task#>", Rank.DJ);
     }
 
     @Override

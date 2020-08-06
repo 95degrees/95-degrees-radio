@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 import org.bson.Document;
 
 import javax.imageio.ImageIO;
@@ -23,7 +24,7 @@ import static com.mongodb.client.model.Filters.eq;
 public class AddSongCommand extends Command {
 
     AddSongCommand() {
-        super("add-song", "Adds a song to a radio playlist", "<playlist|source> <playlist/source name> <url> <title>;<artist>;<album art>[;<mbid>]", ChannelScope.DJ_CHAT);
+        super("add-song", "Adds a song to a radio playlist", "<playlist|source> <playlist/source name> <url> <title>;<artist>;<album art>[;<mbid>]", Rank.DJ);
     }
 
     @Override

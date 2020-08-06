@@ -68,7 +68,7 @@ public class QuizPlaylist extends Playlist {
 
         for (QuizQuestion c : quiz.getQuestions()) {
             if (c.getAudioUrl() != null) {
-                Radio.getInstance().getOrchestrator().createNetworkTrack(SongType.QUIZ, c.getAudioUrl(), s -> songTracks.put(c, s));
+                Radio.getInstance().getOrchestrator().createNetworkSong(SongType.QUIZ, c.getAudioUrl()).thenAccept(s -> songTracks.put(c, s));
             }
         }
     }

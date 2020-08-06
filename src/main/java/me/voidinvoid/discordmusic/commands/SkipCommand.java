@@ -16,7 +16,7 @@ import java.util.Map;
 public class SkipCommand extends Command {
 
     SkipCommand() {
-        super("skip", "Skips the currently playing track", null, ChannelScope.RADIO_AND_DJ_CHAT);
+        super("skip", "Skips the currently playing track", null, null);
     }
 
     private Map<String, Long> skipCooldowns = new HashMap<>();

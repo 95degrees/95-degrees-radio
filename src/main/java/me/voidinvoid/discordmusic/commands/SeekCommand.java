@@ -4,11 +4,12 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Formatting;
+import me.voidinvoid.discordmusic.utils.Rank;
 
 public class SeekCommand extends Command {
 
     SeekCommand() {
-        super("seek", "Seeks the current song to a specified position (in seconds)", "<seconds>", ChannelScope.DJ_CHAT);
+        super("seek", "Seeks the current song to a specified position (in seconds)", "<seconds>", Rank.DJ);
     }
 
     @Override

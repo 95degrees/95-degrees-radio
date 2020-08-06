@@ -6,6 +6,7 @@ import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.songs.SpotifySong;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
+import me.voidinvoid.discordmusic.utils.Rank;
 import me.voidinvoid.discordmusic.utils.Songs;
 import org.bson.Document;
 
@@ -17,7 +18,7 @@ import static com.mongodb.client.model.Filters.eq;
 public class SongRatingsCommand extends Command {
 
     SongRatingsCommand() {
-        super("ratings", "Lists the ratings for the currently playing song or all songs", "[all]", ChannelScope.DJ_CHAT);
+        super("ratings", "Lists the ratings for the currently playing song or all songs", "[all]", Rank.DJ);
     }
 
     @SuppressWarnings("unchecked")

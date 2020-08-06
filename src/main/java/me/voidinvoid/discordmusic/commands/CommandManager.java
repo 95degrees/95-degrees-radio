@@ -19,7 +19,8 @@ public class CommandManager implements RadioService, EventListener {
 
     public CommandManager() {
         register(new QueueCommand());
-        register(new YouTubeSearchCommand());
+        register(new YouTubeSearchCommand("play", "Plays the first YouTube result for the specified query", true, "p"));
+        register(new YouTubeSearchCommand("search", "Searches YouTube for the specified query", false, "s"));
         register(new PlaylistsCommand());
         register(new PlaySongCommand());
         register(new SeekCommand());
@@ -87,8 +88,6 @@ public class CommandManager implements RadioService, EventListener {
             String id = e.getChannel().getId();
             String msg = e.getMessage().getContentRaw();
 
-            if (!id.equals(RadioConfig.config.channels.djChat) && !id.equals(RadioConfig.config.channels.radioChat))
-                return;
             if (!msg.startsWith(Command.COMMAND_PREFIX) || msg.length() == Command.COMMAND_PREFIX.length()) return;
 
             String fullCmd = msg.contains(" ") ? msg.substring(0, msg.indexOf(" ")) : msg;
@@ -96,7 +95,7 @@ public class CommandManager implements RadioService, EventListener {
 
             commands.stream()
                     .filter(c -> c.getName().equalsIgnoreCase(cmd) || Arrays.stream(c.getAliases()).anyMatch(a -> a.equalsIgnoreCase(cmd))) //check cmd name and aliases
-                    .filter(c -> c.getScope().check(e.getChannel())) //check if allowed to run in this channel
+                    .filter(c -> c.getRank().hasRank(e.getMember())) //check if user has permission
                     .findFirst()
                     .ifPresent(c -> c.invoke(new CommandData(e.getMember(), e.getChannel(), e.getMessage(), c, cmd))); //invokes cmd if matched
         }

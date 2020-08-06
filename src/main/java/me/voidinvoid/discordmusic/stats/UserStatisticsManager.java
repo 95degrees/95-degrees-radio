@@ -6,8 +6,8 @@ import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.events.SongEventListener;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
+import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.Member;
@@ -27,7 +27,7 @@ import static com.mongodb.client.model.Filters.eq;
  * This code was developed by VoidInVoid / Exfusion
  * 2019
  */
-public class UserStatisticsManager implements RadioService, SongEventListener {
+public class UserStatisticsManager implements RadioService, RadioEventListener {
 
     private MongoCollection<Document> users;
     private TextChannel leaderboardChannel;
@@ -163,7 +163,7 @@ public class UserStatisticsManager implements RadioService, SongEventListener {
     }
 
     @Override
-    public void onNetworkSongQueued(NetworkSong song, AudioTrack track, Member member, int queuePosition) {
+    public void onSongQueued(Song song, AudioTrack track, Member member, int queuePosition) {
         if (member == null || member.getUser().isBot()) return;
 
         addStatistic(member.getUser(), Statistic.SONGS_SUGGESTED, 1);

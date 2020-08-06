@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.events.SongEventListener;
+import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
@@ -15,7 +15,7 @@ import net.dv8tion.jda.api.entities.Activity;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StatusManager implements RadioService, SongEventListener {
+public class StatusManager implements RadioService, RadioEventListener {
 
     private Map<Song, String> songStatusOverrides = new HashMap<>();
 
