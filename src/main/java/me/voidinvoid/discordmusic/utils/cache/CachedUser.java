@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.entities.User;
 
 import java.util.Objects;
 
-public class CachedUser implements ICached {
+public class CachedUser implements ICached<User> {
 
     private String userId;
 

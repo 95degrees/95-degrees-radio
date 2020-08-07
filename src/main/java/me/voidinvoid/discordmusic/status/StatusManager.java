@@ -6,9 +6,9 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
+import me.voidinvoid.discordmusic.songs.UserSuggestable;
+import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 
@@ -45,7 +45,7 @@ public class StatusManager implements RadioService, RadioEventListener {
             if (track.getInfo().isStream) {
                 jda.getPresence().setActivity(Activity.streaming(track.getInfo().title, track.getInfo().uri));
             } else {
-                jda.getPresence().setActivity(Activity.playing(song instanceof DatabaseSong ? ((DatabaseSong) song).getArtist() + " - " + ((DatabaseSong) song).getTitle() : song instanceof NetworkSong ? track.getInfo().title : (track.getInfo().author + " - " + track.getInfo().title)));
+                jda.getPresence().setActivity(Activity.listening(song instanceof UserSuggestable ? song.getTitle() : Songs.titleArtist(song)));
             }
         }
     }
@@ -54,9 +54,7 @@ public class StatusManager implements RadioService, RadioEventListener {
     public void onTrackStopped() {
         if (Radio.getInstance().getOrchestrator().getActivePlaylist().getStatusOverrideMessage() == null) { //normally for scheduled playlists
             jda.getPresence().setActivity(null);
-
         }
-
     }
 
     public void addSongOverride(Song song, String message) {

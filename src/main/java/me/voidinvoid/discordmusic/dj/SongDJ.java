@@ -124,7 +124,7 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
         if (Radio.getInstance().getOrchestrator().getActivePlaylist() instanceof QuizPlaylist)
             return; //no quiz stuff here
 
-        if (song instanceof NetworkSong) {
+        if (song instanceof UserSuggestable) {
             for (String id : queueDeletionMessages.keySet()) {
                 if (queueDeletionMessages.get(id).equals(song)) {
                     MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
@@ -172,9 +172,9 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
         if (song instanceof UserSuggestable && ((UserSuggestable) song).isSuggestion()) { //TODO this all needs sorting with suggested songs......
             embed.addField("URL", Formatting.escape(song.getInternalName()), true);
 
-            NetworkSong ns = (NetworkSong) song;
-            if (ns.getSuggestedBy() != null) {
-                embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
+            var s = (UserSuggestable) song;
+            if (s.getSuggestedBy() != null) {
+                embed.setFooter("Song suggested by " + s.getSuggestedBy().getName(), s.getSuggestedBy().getAvatarUrl());
             }
 
         } else if (song instanceof DatabaseSong) {

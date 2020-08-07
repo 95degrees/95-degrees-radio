@@ -9,6 +9,7 @@ import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.songs.UserSuggestable;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
@@ -33,24 +34,23 @@ public class SuggestionPrivateMessageManager implements RadioService, RadioEvent
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        if (song instanceof NetworkSong) {
-            var ns = (NetworkSong) song;
-
-            if (ns.getSuggestedBy() != null) {
-                if (voiceChannel.getMembers().stream().noneMatch(m -> m.getUser().getId().equals(ns.getSuggestedBy().getId()))) { //user not in vc
+        if (song instanceof UserSuggestable) {
+            var s = (UserSuggestable) song;
+            if (s.getSuggestedBy() != null) {
+                if (voiceChannel.getMembers().stream().noneMatch(m -> m.getUser().getId().equals(s.getSuggestedBy().getId()))) { //user not in vc
                     var am = Service.of(AchievementManager.class);
 
-                    if (am != null) am.rewardAchievement(ns.getSuggestedBy(), Achievement.LEAVE_AFTER_SUGGESTION);
+                    if (am != null) am.rewardAchievement(s.getSuggestedBy(), Achievement.LEAVE_AFTER_SUGGESTION);
 
                     MessageEmbed pm = new EmbedBuilder()
                             .setTitle("Song Suggestion Reminder")
-                            .setDescription(Songs.titleArtist(ns) + " is now playing on 95 Degrees Radio!")
+                            .setDescription(Songs.titleArtist(song) + " is now playing on 95 Degrees Radio!")
                             .setTimestamp(OffsetDateTime.now())
                             .setColor(Colors.ACCENT_MAIN)
                             .setFooter("🔔 Suggestion reminder", null)
                             .build();
 
-                    ns.getSuggestedBy().openPrivateChannel().queue(c -> c.sendMessage(pm).queue());
+                    s.getSuggestedBy().openPrivateChannel().queue(c -> c.sendMessage(pm).queue());
                 }
             }
         }

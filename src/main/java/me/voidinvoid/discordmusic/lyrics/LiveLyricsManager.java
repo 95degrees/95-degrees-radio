@@ -10,9 +10,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
-import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongType;
+import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
 import org.bson.Document;
@@ -104,9 +102,9 @@ public class LiveLyricsManager implements RadioService, RadioEventListener {
         var title = song.getTitle();
         var artist = song.getArtist();
 
-        if (song instanceof NetworkSong) {
-            var ns = (NetworkSong) song;
-            if (ns.getSpotifyTrack() != null) {
+        if (song instanceof SpotifyTrackHolder) {
+            var s = (SpotifyTrackHolder) song;
+            if (s.getSpotifyTrack() == null) {
 
                 title = Songs.deyoutubeifySong(title);
 

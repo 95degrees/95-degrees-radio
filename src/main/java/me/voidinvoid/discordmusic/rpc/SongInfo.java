@@ -1,9 +1,6 @@
 package me.voidinvoid.discordmusic.rpc;
 
-import me.voidinvoid.discordmusic.songs.NetworkSong;
-import me.voidinvoid.discordmusic.songs.Song;
-import me.voidinvoid.discordmusic.songs.SongType;
-import me.voidinvoid.discordmusic.songs.SpotifySong;
+import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import net.dv8tion.jda.api.entities.User;
@@ -59,11 +56,10 @@ public class SongInfo {
             this.artist = song.getArtist();
         }
 
-        if (song instanceof NetworkSong) {
-            var ns = (NetworkSong) song;
-
-            if (ns.getSuggestedBy() != null) {
-                this.suggestedBy = new UserInfo(ns.getSuggestedBy());
+        if (song instanceof UserSuggestable) {
+            var s = (UserSuggestable) song;
+            if (s.getSuggestedBy() != null) {
+                this.suggestedBy = new UserInfo(s.getSuggestedBy());
             }
         }
 

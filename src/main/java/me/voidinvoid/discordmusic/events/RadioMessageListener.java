@@ -9,16 +9,18 @@ import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
 import me.voidinvoid.discordmusic.ratings.Rating;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
-import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
+import me.voidinvoid.discordmusic.songs.UserSuggestable;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
-import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.utils.*;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.ReactionListener;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
@@ -87,15 +89,17 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!song.getType().useAnnouncement()) return;
 
+        var links = Songs.getLinksMasked(song);
+
         EmbedBuilder embed = new EmbedBuilder()
                 .setColor(new Color(230, 230, 230))
                 .setTitle("Now Playing")
-                .addField(song.getTitle(), song.getArtist(), false);
+                .addField(song.getTitle(), song.getArtist() + (links.isBlank() ? "" : "\n\n" + Emoji.LINK + Emoji.DIVIDER_SMALL + links), false);
 
-        if (song instanceof NetworkSong) {
-            NetworkSong ns = (NetworkSong) song;
-            if (ns.getSuggestedBy() != null) {
-                embed.setFooter(ns.getSuggestedBy().getName(), ns.getSuggestedBy().getAvatarUrl());
+        if (song instanceof UserSuggestable) {
+            var s = (UserSuggestable) song;
+            if (s.getSuggestedBy() != null) {
+                embed.setFooter("Song suggestion by " + s.getSuggestedBy().getName(), s.getSuggestedBy().getAvatarUrl());
             }
         }
 
@@ -103,7 +107,7 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
             RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
 
             if (srv != null && song.getAlbumArt() instanceof LocalAlbumArt) {
-                srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
+                srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof UserSuggestable ? ((UserSuggestable) song).getSuggestedBy() : null);
             }
 
             var rl = new ReactionListener(m, true);
@@ -268,7 +272,8 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
                 .setFooter(user.getName(), user.getAvatarUrl());
 
         if (song instanceof SpotifyTrackHolder && ((SpotifyTrackHolder) song).getSpotifyTrack() != null) {
-            embed.addField("Links", Formatting.maskLink(SpotifyManager.SPOTIFY_TRACK_URL + ((SpotifyTrackHolder) song).getSpotifyTrack().getId(), "Spotify"), true);
+            var links = Songs.getLinksMasked(song);
+            embed.addField("Links", links, true);
         }
 
         AlbumArtUtils.attachAlbumArt(embed, song, textChannel).queue();

@@ -54,6 +54,10 @@ public final class Emoji {
     public static Emoji PLAY;
     public static Emoji PAUSE;
 
+    public static Emoji YOUTUBE;
+    public static Emoji SPOTIFY;
+    public static Emoji LINK;
+
     public static Emoji SEEK_BAR_LEFT_BORDER;
     public static Emoji SEEK_BAR_RIGHT_BORDER;
     public static Emoji SEEK_BAR_MID_INCOMPLETE;
@@ -101,6 +105,10 @@ public final class Emoji {
 
         PLAY = new Emoji(g.getEmoteById("717119119572598857"));
         PAUSE = new Emoji(g.getEmoteById("717119119484256307"));
+
+        YOUTUBE = new Emoji(g.getEmoteById("741101530853277806"));
+        SPOTIFY = new Emoji(g.getEmoteById("741101567817547826"));
+        LINK = new Emoji(g.getEmoteById("741104025977487370"));
 
         SEEK_BAR_LEFT_BORDER = new Emoji(g.getEmoteById("718559656078868570"));
         SEEK_BAR_RIGHT_BORDER = new Emoji(g.getEmoteById("718559452642410586"));

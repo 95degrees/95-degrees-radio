@@ -426,7 +426,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         //if (!(song.getAlbumArt() instanceof RemoteAlbumArt)) return;
-        updateSongInfo(track, song.getAlbumArt() instanceof RemoteAlbumArt ? ((RemoteAlbumArt) song.getAlbumArt()).getUrl() : null, song instanceof NetworkSong ? ((NetworkSong) song).getSuggestedBy() : null);
+        updateSongInfo(track, song.getAlbumArt() instanceof RemoteAlbumArt ? ((RemoteAlbumArt) song.getAlbumArt()).getUrl() : null, song instanceof UserSuggestable ? ((UserSuggestable) song).getSuggestedBy() : null);
         sendLyricsUpdate(null);
     }
 

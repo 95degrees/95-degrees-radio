@@ -28,6 +28,8 @@ public class RadioRestreamManager implements RadioService {
     private JDA jda;
     private boolean ready = false;
 
+    private String voiceChannel;
+
     @Override
     public String getLogPrefix() {
         return RESTREAM_LOG_PREFIX;
@@ -90,6 +92,8 @@ public class RadioRestreamManager implements RadioService {
 
         audioManager.setSendingHandler(new AudioPlayerSendHandler.RestreamAudioPlayerSendHandler(Radio.getInstance().getOrchestrator().getAudioSendHandler()));
         audioManager.openAudioConnection(vc);
+
+        this.voiceChannel = voiceChannel;
     }
 
     public void leaveVoice(String guild) { //use string because we want a guild for our jda instance
@@ -102,6 +106,12 @@ public class RadioRestreamManager implements RadioService {
         }
 
         g.getAudioManager().closeAudioConnection();
+
+        this.voiceChannel = null;
+    }
+
+    public String getVoiceChannel() {
+        return voiceChannel;
     }
 
     @Override

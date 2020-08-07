@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.entities.Role;
 
 import java.util.Objects;
 
-public class CachedRole implements ICached {
+public class CachedRole implements ICached<Role> {
 
     private String roleId;
 

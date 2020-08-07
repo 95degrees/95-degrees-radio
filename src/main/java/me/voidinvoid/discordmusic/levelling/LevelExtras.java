@@ -9,6 +9,7 @@ public enum LevelExtras {
 
     MAX_SUGGESTION_LENGTH(RadioConfig.config.orchestration.maxSongLength, "Max suggested song length", o -> Formatting.getFormattedMsTimeLabelled((long) (int) o)),
     MAX_SUGGESTIONS_IN_QUEUE(RadioConfig.config.orchestration.userQueueLimit, "Suggestion queue limit", Object::toString),
+    @Deprecated
     SKIP_SONGS_WHEN_ALONE(false, "Skipping songs when alone in the radio", o -> (boolean) o ? "Enabled" : "Disabled");
 
     private final Object originalValue;

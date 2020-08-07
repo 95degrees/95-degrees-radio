@@ -43,7 +43,7 @@ public abstract class SongQueue extends AudioEventAdapter {
             List<Song> allSongs = new ArrayList<>();
 
             if (queue != null) { //when updating the queue, re-add the network songs...
-                allSongs = queue.stream().filter(s -> s instanceof NetworkSong).collect(Collectors.toList());
+                allSongs = queue.stream().filter(s -> s instanceof UserSuggestable).collect(Collectors.toList());
             }
 
             allSongs.addAll(l); //...and then add the rest of the songs to the queue (so network songs are first)
@@ -124,7 +124,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     }
 
     public List<Song> suggestionsBy(User user) {
-        return queue.stream().filter(s -> s instanceof NetworkSong && ((NetworkSong) s).getSuggestedBy().equals(user)).collect(Collectors.toList());
+        return queue.stream().filter(s -> s instanceof UserSuggestable && ((UserSuggestable) s).getSuggestedBy().equals(user)).collect(Collectors.toList());
     }
 
     public SongType getQueueType() {

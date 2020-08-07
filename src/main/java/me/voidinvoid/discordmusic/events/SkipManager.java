@@ -4,10 +4,12 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.activity.ListeningContext;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
+import me.voidinvoid.discordmusic.utils.cache.CachedMember;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
@@ -35,13 +37,13 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
     }
 
     private void calculateSkipThreshold() {
-        var members = radioChannel.get().getMembers().stream().map(ISnowflake::getId).collect(Collectors.toList());
+        var members = ListeningContext.ALL.getListeners();
         skipThreshold = (int) Math.ceil((members.size() - 1) * 0.5);
         //skipThreshold = 10;
 
         log("Current song skip threshold: " + skipThreshold);
 
-        skipRequests.removeIf(u -> !members.contains(u));
+        skipRequests.removeIf(u -> !members.contains(new CachedMember(u)));
 
         if (skipRequests.size() >= skipThreshold && skipRequests.size() > 0) {
             Radio.getInstance().getOrchestrator().playNextSong();

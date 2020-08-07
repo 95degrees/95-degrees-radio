@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.utils;
 
+import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -72,6 +73,7 @@ public class PersistentMessageManager implements RadioService, EventListener {
     @Override
     public void onEvent(@Nonnull GenericEvent ev) {
         if (ev instanceof GuildMessageReceivedEvent) {
+            var author = ((GuildMessageReceivedEvent) ev).getAuthor();
             var msg = ((GuildMessageReceivedEvent) ev).getMessage();
             var tc = ((GuildMessageReceivedEvent) ev).getChannel();
 
@@ -80,9 +82,13 @@ public class PersistentMessageManager implements RadioService, EventListener {
                     return;
                 }
 
+                if (msg.getContentRaw().equals(msg.getContentRaw()) && author.getId().equals(author.getJDA().getSelfUser().getId())) {
+                    return; //when we're updating the message, after HERE (line 91), this stops an infinite loop (since this new message gets picked up and deleted)
+                }
+
                 if (tc.getId().equals(pm.getChannel().getId())) { //we need to move the persistent message for this channel to the bottom
+                    var m = tc.sendMessage(pm.getMessageContent()).complete(); //HERE
                     tc.deleteMessageById(pm.getId()).queue();
-                    var m = tc.sendMessage(pm.getMessageContent()).complete();
                     pm.setId(m.getId());
                     return;
                 }

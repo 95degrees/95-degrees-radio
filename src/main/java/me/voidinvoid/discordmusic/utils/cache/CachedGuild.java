@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.entities.Guild;
 
 import java.util.Objects;
 
-public class CachedGuild implements ICached {
+public class CachedGuild implements ICached<Guild> {
 
     private String guildId;
 

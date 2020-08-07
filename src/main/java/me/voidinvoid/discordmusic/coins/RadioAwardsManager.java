@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.activity.ListeningContext;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
@@ -84,15 +85,11 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
         }
     }
 
-    private List<Member> getListening() {
-        return radioVoiceChannel.get().getMembers().stream().filter(m -> !m.getUser().isBot()).collect(Collectors.toList());
-    }
-
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (song.getType() != SongType.REWARD) return;
 
-        var reward = new Reward(getListening(), 1.0); //todo
+        var reward = new Reward(ListeningContext.ALL.getListeners(), 1.0); //todo
 
         radioTextChannel.get().sendMessage(
                 new EmbedBuilder()
@@ -105,7 +102,7 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
                     activeRewards.put(m.getId(), reward);
                     new ReactionListener(m, true).add("🎈", ev -> giveReward(ev.getMember(), reward));
 
-                    m.delete().queueAfter(3, TimeUnit.MINUTES); //todo make configurable?
+                    m.delete().queueAfter(1, TimeUnit.MINUTES); //todo make configurable?
                 }
         );
     }

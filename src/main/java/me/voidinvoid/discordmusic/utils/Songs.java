@@ -1,8 +1,15 @@
 package me.voidinvoid.discordmusic.utils;
 
+import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SpotifySong;
+import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
+import me.voidinvoid.discordmusic.spotify.SpotifyManager;
+
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public final class Songs {
 
@@ -35,5 +42,28 @@ public final class Songs {
 
     public static boolean isRatable(Song song) {
         return song instanceof DatabaseSong || song instanceof SpotifySong;
+    }
+
+    public static String getLinksMasked(Song song) {
+        return getLinks(song).entrySet().stream().map(l -> Formatting.maskLink(l.getValue(), l.getKey())).collect(Collectors.joining(" "));
+    }
+
+    public static Map<String, String> getLinks(Song song) {
+        var links = new TreeMap<String, String>();
+
+        if (song instanceof SpotifyTrackHolder) {
+            var st = ((SpotifyTrackHolder) song).getSpotifyTrack();
+
+            if (st != null) {
+                links.put(Emoji.SPOTIFY.toString(), SpotifyManager.SPOTIFY_TRACK_URL + st.getId());
+            }
+        }
+
+        if (song instanceof NetworkSong && song.getLavaIdentifier().contains("youtu.be/") || song.getLavaIdentifier().contains("youtube.com/watch?v=")) {
+            links.put(Emoji.YOUTUBE.toString(), song.getLavaIdentifier());
+        }
+        //TODO other links
+
+        return links;
     }
 }

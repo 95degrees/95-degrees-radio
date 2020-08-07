@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic.coins;
 
+import me.voidinvoid.discordmusic.utils.cache.CachedMember;
 import net.dv8tion.jda.api.entities.Member;
 
 import java.util.ArrayList;
@@ -14,18 +15,18 @@ import java.util.stream.Collectors;
 
 public class Reward {
 
-    private final List<String> eligibleMembers;
+    private final List<CachedMember> eligibleMembers;
     private final List<String> claimants = new ArrayList<>();
     private final double baseRewardMultiplier;
 
-    public Reward(List<Member> eligibleMembers, double baseRewardMultiplier) {
+    public Reward(List<CachedMember> eligibleMembers, double baseRewardMultiplier) {
 
-        this.eligibleMembers = eligibleMembers.stream().map(Member::getId).collect(Collectors.toList());
+        this.eligibleMembers = eligibleMembers;
         this.baseRewardMultiplier = baseRewardMultiplier;
     }
 
     public boolean isEligible(Member member) {
-        return eligibleMembers.contains(member.getUser().getId());
+        return eligibleMembers.contains(new CachedMember(member.getUser()));
     }
 
     public boolean hasAlreadyClaimed(Member member) {
