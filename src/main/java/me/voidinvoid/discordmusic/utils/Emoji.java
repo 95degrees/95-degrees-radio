@@ -11,6 +11,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.OffsetDateTime;
 import java.util.Set;
 
 /**
@@ -144,7 +145,13 @@ public final class Emoji {
         var emotes = guild.getEmotesByName(user.getId(), true);
 
         if (!emotes.isEmpty()) {
-            return new Emoji(emotes.get(0));
+            var emote = emotes.get(0);
+
+            if ((OffsetDateTime.now().toEpochSecond() - emote.getTimeCreated().toEpochSecond()) > 172800) { //invalidate every 2 days (for avatar updates)
+                emote.delete().queue();
+            } else {
+                return new Emoji(emote);
+            }
         }
 
         if (guild.getEmotes().size() >= guild.getMaxEmotes()) { //we need to delete some, but make sure we dont delete any from the required ids set

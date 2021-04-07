@@ -23,7 +23,7 @@ public class SkipCommand extends Command {
         }
 
         if (ListeningContext.ALL.hasListener(data.getMember())) {
-            Service.of(SkipManager.class).addSkipRequest(data.getMember().getUser());
+            Service.of(SkipManager.class).addSkipRequest(data.getMember().getUser(), null);
             return;
         }
 

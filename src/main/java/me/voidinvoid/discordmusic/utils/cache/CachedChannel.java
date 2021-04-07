@@ -29,6 +29,11 @@ public class CachedChannel<T extends GuildChannel> implements ICached<GuildChann
     }
 
     @Override
+    public boolean is(GuildChannel item) {
+        return item != null && item.getId().equals(channelId);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof CachedChannel && Objects.equals(channelId, ((CachedChannel<T>) obj).channelId);
     }

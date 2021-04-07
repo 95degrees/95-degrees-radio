@@ -51,9 +51,24 @@ public class DatabaseSongQueue extends SongQueue {
                     var sm = Service.of(SpotifyManager.class);
 
                     try {
-                        var spotifyPlaylist = sm.getSpotifyApi().getPlaylist(playlistName).build().execute();
+                        List<Song> tracks = new ArrayList<>();
 
-                        return Arrays.stream(spotifyPlaylist.getTracks().getItems()).map(t -> new SpotifySong(getQueueType(), (Track) t.getTrack()).setQueue(this));
+                        boolean moreTracks;
+                        int offset = 0;
+
+                        do {
+                            var spotifyPlaylist = sm.getSpotifyApi().getPlaylistsItems(playlistName).offset(offset).limit(100).build().execute();
+
+                            for (var track : spotifyPlaylist.getItems()) {
+                                tracks.add(new SpotifySong(getQueueType(), (Track) track.getTrack()).setQueue(this));
+                            }
+
+                            moreTracks = spotifyPlaylist.getNext() != null;
+                            offset += 100;
+
+                        } while (moreTracks);
+
+                        return tracks.stream();
                     } catch (Exception ex) {
                         System.out.println("Error loading songs from Spotify playlist");
                         ex.printStackTrace();

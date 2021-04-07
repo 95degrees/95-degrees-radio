@@ -65,6 +65,6 @@ public class SpotifySong extends Song implements SpotifyTrackHolder {
 
     @Override
     public boolean isPersistent() {
-        return false;
+        return true;
     }
 }

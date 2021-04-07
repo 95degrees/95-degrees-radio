@@ -5,6 +5,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.coins.RadioAwardsManager;
 import me.voidinvoid.discordmusic.events.RadioMessageListener;
+import me.voidinvoid.discordmusic.guardian.GuardianIntegrationManager;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
@@ -90,8 +91,8 @@ public class DebugCommand extends Command {
             Service.of(YouTubeCacheManager.class).loadOrCache(d.getArgs()[1]);
             d.success("Check console for progress");
         }),
-        RESTREAM_TEXT(d -> {
-            Service.of(RadioMessageListener.class).displayMessageUpdates((TextChannel) d.getTextChannel());
+        GUARDIAN_XP(d -> {
+            Service.of(GuardianIntegrationManager.class).addGuardianExperience(d.getMember().getId(), 100, d.getTextChannel().getId());
         });
 
         private Consumer<CommandData> action;

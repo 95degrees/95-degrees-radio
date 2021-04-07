@@ -42,6 +42,6 @@ public class QueueCommand extends Command {
             return;
         }
 
-        data.code(((RadioPlaylist) active).getSongs().getFormattedQueue());
+        data.embed(((RadioPlaylist) active).getSongs().getFormattedQueue());
     }
 }

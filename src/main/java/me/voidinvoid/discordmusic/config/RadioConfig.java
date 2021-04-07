@@ -21,8 +21,6 @@ public class RadioConfig {
     public boolean useAdverts;
     public boolean useSocketServer;
     public boolean useQuizSocketServer;
-    @Deprecated
-    public boolean liveFileUpdates;
 
     public Channels channels;
     public Locations locations;
@@ -36,7 +34,7 @@ public class RadioConfig {
     }
 
     public static class Channels {
-        public String voice, radioChat, djChat, leaderboards;
+        public String voice, radioChat, liveLyrics, djChat, leaderboards;
     }
 
     public static class Locations {
@@ -49,8 +47,6 @@ public class RadioConfig {
         public String tasks;
         @Deprecated
         public String adverts;
-        @Deprecated
-        public String recordings;
         public String songCache;
         public String[] rewardIdentifiers;
     }

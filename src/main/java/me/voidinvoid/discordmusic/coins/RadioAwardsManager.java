@@ -6,12 +6,16 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.activity.ListeningContext;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.economy.EconomyManager;
+import me.voidinvoid.discordmusic.economy.Transaction;
+import me.voidinvoid.discordmusic.economy.TransactionType;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
 import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.ReactionListener;
@@ -94,7 +98,7 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
         radioTextChannel.get().sendMessage(
                 new EmbedBuilder()
                         .setTitle("Radio Rewards")
-                        .setDescription("Thank you for listening to the 95 Degrees Radio! Click the button below to claim a personalised reward.")
+                        .setDescription("Thank you for listening to the 95 Degrees Radio! Click the button below to claim a reward.")
                         .setFooter("95 Degrees Radio", Radio.getInstance().getJda().getSelfUser().getEffectiveAvatarUrl())
                         .setColor(Colors.ACCENT_REWARD)
                         .build()).queue(m -> {
@@ -121,7 +125,11 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
                 msg.setDescription("You have already claimed this reward!").setColor(Colors.ACCENT_ERROR);
             } else {
                 reward.markClaimed(member);
-                msg.setDescription("You have claimed a reward of [REWARD HERE]!").setColor(Colors.ACCENT_REWARD);
+                var amount = 50; //todo varied rewards
+
+                Service.of(EconomyManager.class).makeTransaction(member, new Transaction(TransactionType.RADIO, amount));
+
+                msg.setDescription("You have claimed a reward of " + Emoji.DEGREECOIN + amount + "!").setColor(Colors.ACCENT_REWARD);
             }
 
             c.sendMessage(msg.build()).queue();

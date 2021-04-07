@@ -43,8 +43,7 @@ public class DatabaseSong extends Song {
         albumArtId = document.getString("albumArt");
 
         if (albumArtId != null) {
-            albumArt = new RemoteAlbumArt("https://partybox.xyz:9596/radio/albumart/" + albumArtId); //todo temp void.in.net doesnt work??
-            //albumArt = new RemoteAlbumArt("https://void.in.net/radio/albumart/" + albumArtId);
+            albumArt = new RemoteAlbumArt("https://void.in.net/radio/albumart/" + albumArtId);
             //albumArt = new LocalAlbumArt(Paths.get("/home/discord/radio_old/AlbumArt/Songs/" + albumArtId + ".png"));
         }
 

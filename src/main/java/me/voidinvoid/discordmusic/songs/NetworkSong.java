@@ -3,11 +3,13 @@ package me.voidinvoid.discordmusic.songs;
 import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.wrapper.spotify.model_objects.specification.Track;
+import me.voidinvoid.discordmusic.commands.slash.SlashCommandData;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.cache.CachedUser;
+import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.User;
 
 public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggestable {
@@ -16,14 +18,16 @@ public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggest
     private CachedUser suggestedBy;
     private AudioTrack track;
     private Track spotifyTrack;
+    private CommandHook slashCommandSource;
 
     private AlbumArt albumArt;
 
-    public NetworkSong(SongType type, AudioTrack track, User suggestedBy) {
+    public NetworkSong(SongType type, AudioTrack track, User suggestedBy, CommandHook slashCommandSource) {
         super(type);
 
         this.url = track.getInfo().uri;
         this.suggestedBy = suggestedBy == null ? null : new CachedUser(suggestedBy);
+        this.slashCommandSource = slashCommandSource;
         this.track = track;
         track.setUserData(this);
 
@@ -90,7 +94,7 @@ public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggest
 
     @Override
     public boolean isPersistent() {
-        return false;
+        return !isSuggestion();
     }
 
     @Override
@@ -101,5 +105,10 @@ public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggest
     @Override
     public User getSuggestedBy() {
         return suggestedBy == null ? null : suggestedBy.get();
+    }
+
+    @Override
+    public CommandHook getSlashCommandSource() {
+        return slashCommandSource;
     }
 }

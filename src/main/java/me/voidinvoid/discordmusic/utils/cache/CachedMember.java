@@ -34,6 +34,11 @@ public class CachedMember implements ICached<Member> {
     }
 
     @Override
+    public boolean is(Member item) {
+        return item != null && item.getId().equals(memberId);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof CachedMember && Objects.equals(memberId, ((CachedMember) obj).memberId);
     }

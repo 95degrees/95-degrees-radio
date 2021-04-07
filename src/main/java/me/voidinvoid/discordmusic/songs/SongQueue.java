@@ -1,9 +1,9 @@
 package me.voidinvoid.discordmusic.songs;
 
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
-import me.voidinvoid.discordmusic.utils.ConsoleColor;
-import me.voidinvoid.discordmusic.utils.Formatting;
-import me.voidinvoid.discordmusic.utils.Songs;
+import me.voidinvoid.discordmusic.utils.*;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
 
 import java.util.*;
@@ -20,7 +20,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     private SongType queueType;
     private boolean shuffleSongs;
 
-    private String queueCache;
+    private MessageEmbed queueCache;
 
     public SongQueue(Playlist playlist, SongType queueType, boolean shuffleSongs) {
         this.playlist = playlist;
@@ -33,7 +33,7 @@ public abstract class SongQueue extends AudioEventAdapter {
         files.whenComplete((l, e) -> {
             if (l == null) return;
 
-            System.out.println(ConsoleColor.BLUE_BACKGROUND + " PLAYLIST " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in playlist " + (playlist == null ? "<null>" : playlist.getName()));
+            System.out.println(ConsoleColor.BLUE_BACKGROUND + " Playlist " + ConsoleColor.RESET_SPACE + "Found " + l.size() + " songs in " + queueType.getDisplayName() + " queue for playlist " + (playlist == null ? "<null>" : playlist.getName()));
 
             List<Song> songMap = new ArrayList<>(l); //a clone
             songMap.sort(Comparator.comparing(Song::getLavaIdentifier)); //probably not needed but just in-case
@@ -155,21 +155,34 @@ public abstract class SongQueue extends AudioEventAdapter {
         return res.substring(0, Math.min(res.length(), 1980));
     }
 
-    public String getFormattedQueue() {
+    public MessageEmbed getFormattedQueue() {
         if (queueCache != null) return queueCache;
 
-        StringBuilder output = new StringBuilder("[Song Queue]\n\n");
+        var embed = new EmbedBuilder().setTitle("Song Queue").setColor(Colors.ACCENT_MAIN);
+
+        StringBuilder output = new StringBuilder();
 
         int i = 0;
         for (Song s : queue) {
             i++;
-            output.append(i).append(i < 10 ? " " : "").append(": ").append(Songs.titleArtist(s)).append("\n");
+            var suggestedBy = s instanceof UserSuggestable ? ((UserSuggestable) s).getSuggestedBy() : null;
+            var userIcon = "";
+
+            if (suggestedBy != null) {
+                var e = Emoji.getOrCreateUserEmoji(suggestedBy, null);
+
+                if (e != null) {
+                    userIcon = " " + e.toString() + " ";
+                }
+            }
+
+            output.append("**").append("#").append(i).append("** - ").append(userIcon).append(Formatting.escape(Songs.titleArtist(s))).append("\n");
 
             if (i >= 10) break;
         }
 
         String res = output.toString();
-        return queueCache = res.substring(0, Math.min(res.length(), 1900));
+        return queueCache = embed.setDescription(res.substring(0, Math.min(res.length(), 2048))).build();
     }
 
     public List<Song> getSuggestions() {

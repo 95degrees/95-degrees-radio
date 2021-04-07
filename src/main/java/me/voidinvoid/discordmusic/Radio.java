@@ -5,13 +5,12 @@ import me.voidinvoid.discordmusic.cache.YouTubeCacheManager;
 import me.voidinvoid.discordmusic.coins.CoinCreditorManager;
 import me.voidinvoid.discordmusic.coins.RadioAwardsManager;
 import me.voidinvoid.discordmusic.commands.CommandManager;
+import me.voidinvoid.discordmusic.commands.slash.SlashCommandManager;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.dj.SongDJ;
-import me.voidinvoid.discordmusic.events.PlaylistTesterListener;
-import me.voidinvoid.discordmusic.events.RadioMessageListener;
-import me.voidinvoid.discordmusic.events.RadioEventListener;
-import me.voidinvoid.discordmusic.events.SuggestionPrivateMessageManager;
+import me.voidinvoid.discordmusic.events.*;
+import me.voidinvoid.discordmusic.guardian.GuardianIntegrationManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.LevellingManager;
 import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
@@ -44,6 +43,8 @@ import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.managers.AudioManager;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
@@ -122,7 +123,7 @@ public class Radio implements EventListener {
         this.databaseManager = databaseManager;
 
         try {
-            jda = JDABuilder.createDefault(config.botToken).addEventListeners(this).build();
+            jda = JDABuilder.createDefault(config.botToken).enableIntents(GatewayIntent.GUILD_PRESENCES).enableCache(CacheFlag.ACTIVITY).addEventListeners(this).build();
 
             if (config.useStatus) jda.getPresence().setActivity(null);
         } catch (LoginException e) {
@@ -194,6 +195,9 @@ public class Radio implements EventListener {
         registerService(new RadioRestreamManager());
         registerService(new RadioAwardsManager());
         registerService(new LiveLyricsManager());
+        registerService(new GuardianIntegrationManager());
+        registerService(new SkipManager());
+        registerService(new SlashCommandManager());
 
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();

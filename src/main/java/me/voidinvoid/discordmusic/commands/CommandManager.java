@@ -19,8 +19,6 @@ public class CommandManager implements RadioService, EventListener {
 
     public CommandManager() {
         register(new QueueCommand());
-        register(new YouTubeSearchCommand("play", "Plays the first YouTube result for the specified query", true, "p"));
-        register(new YouTubeSearchCommand("search", "Searches YouTube for the specified query", false, "s"));
         register(new PlaylistsCommand());
         register(new PlaySongCommand());
         register(new SeekCommand());
@@ -35,6 +33,7 @@ public class CommandManager implements RadioService, EventListener {
         register(new AnnounceCommand());
         //register(new KaraokeCommand());
         register(new TasksCommand());
+        register(new SetSpotifyMappingCommand());
         register(new AdvertisementCommand());
         register(new PollCommand());
         register(new SongRatingsCommand());
@@ -63,7 +62,7 @@ public class CommandManager implements RadioService, EventListener {
                             .orElse(null);
 
                     if (match == null) {
-                        log("Unknown command. Use 'radio-commands' to list commands");
+                        log("Unknown command. Use 'c' to list commands");
                     } else if (!match.isAllowConsole()) {
                         log("This command doesn't support being ran from the console");
                     } else {

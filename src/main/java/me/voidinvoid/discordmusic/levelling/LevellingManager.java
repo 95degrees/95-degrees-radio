@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
-
+@Deprecated
 public class LevellingManager implements RadioService, EventListener {
 
     private ScheduledExecutorService executor;

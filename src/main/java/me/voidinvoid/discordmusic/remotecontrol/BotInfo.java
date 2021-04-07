@@ -1,5 +1,7 @@
 package me.voidinvoid.discordmusic.remotecontrol;
 
+import me.voidinvoid.discordmusic.Radio;
+
 import java.util.UUID;
 
 public class BotInfo {
@@ -15,5 +17,10 @@ public class BotInfo {
         this.instanceId = instanceId;
         this.version = version;
         this.iconUrl = iconUrl;
+    }
+
+    public static BotInfo get() {
+        var self = Radio.getInstance().getJda().getSelfUser();
+        return new BotInfo(self.getName(), Radio.configName, "1.0", self.getEffectiveAvatarUrl());
     }
 }

@@ -2,8 +2,10 @@ package me.voidinvoid.discordmusic.songs.albumart;
 
 import me.voidinvoid.discordmusic.Radio;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.requests.restaction.InteractionWebhookAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
 import javax.annotation.CheckReturnValue;
@@ -40,5 +42,16 @@ public class LocalAlbumArt extends AlbumArt {
 
         embed.setThumbnail("attachment://" + path.getFileName().toString());
         return existingMessage.editMessage(embed.build());
+    }
+
+    @Override
+    public InteractionWebhookAction attachAlbumArtToCommandHook(EmbedBuilder embed, CommandHook interactionHook) {
+        if (!Files.exists(path)) {
+            System.out.println("Warning: invalid album art file: " + path);
+            return Radio.getInstance().getService(AlbumArtManager.class).getFallbackAlbumArt().attachAlbumArtToCommandHook(embed, interactionHook);
+        }
+
+        embed.setThumbnail("attachment://" + path.getFileName().toString());
+        return interactionHook.editOriginal(embed.build());
     }
 }

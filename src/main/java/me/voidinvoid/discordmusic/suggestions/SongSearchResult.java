@@ -13,6 +13,7 @@ import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -59,7 +60,7 @@ public class SongSearchResult {
         return playlist.size();
     }
 
-    public CompletableFuture<Message> sendMessage(TextChannel channel) {
+    public CompletableFuture<Message> sendMessage(CommandHook hook) {
         int amount = playlist.size();
 
         EmbedBuilder embed = new EmbedBuilder()
@@ -81,7 +82,7 @@ public class SongSearchResult {
 
         embed.addField("", emojiBuilder.toString(), false);
 
-        CompletableFuture<Message> future = CompletableFuture.supplyAsync(() -> channel.sendMessage(embed.build()).complete());
+        CompletableFuture<Message> future = hook.editOriginal(embed.build()).submit();
 
         future.whenComplete((m, e) -> {
             for (int ix = 0; ix < amount; ix++) {
@@ -104,7 +105,7 @@ public class SongSearchResult {
                     AudioTrack track = playlist.get(index);
                     e.getChannel().deleteMessageById(e.getMessageIdLong()).reason("Search result selected").queue();
 
-                    var song = new NetworkSong(SongType.SONG, track, user);
+                    var song = new NetworkSong(SongType.SONG, track, user, null);
                     Radio.getInstance().getOrchestrator().queueSuggestion(song, ChannelScope.DJ_CHAT.check(e.getChannel()) ? new QueueOption[]{QueueOption.BYPASS_ERRORS} : new QueueOption[]{});
 
                     return true;

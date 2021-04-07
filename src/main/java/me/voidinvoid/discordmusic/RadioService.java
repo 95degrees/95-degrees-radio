@@ -3,6 +3,8 @@ package me.voidinvoid.discordmusic;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
 
+import java.time.OffsetDateTime;
+
 public interface RadioService {
 
     default boolean canRun(RadioConfig config) {
@@ -14,7 +16,7 @@ public interface RadioService {
     }
 
     default void log(Object msg) {
-        System.out.println(getLogPrefix() + ConsoleColor.RESET_SPACE + msg);
+        System.out.println(ConsoleColor.WHITE + ConsoleColor.FORMATTER.format(OffsetDateTime.now()) + ConsoleColor.RESET_SPACE + getLogPrefix() + ConsoleColor.RESET_SPACE + msg);
     }
 
     default void warn(Object msg) {

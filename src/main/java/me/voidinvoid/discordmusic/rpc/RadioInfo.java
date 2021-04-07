@@ -10,8 +10,9 @@ public class RadioInfo {
     public List<SongInfo> queue;
     public List<UpcomingEvent> events;
     public boolean paused;
+    public int volume;
 
-    public RadioInfo(String inviteLink, List<UserInfo> listeners, SongInfo song, List<SongInfo> queue, List<UpcomingEvent> events, boolean paused) {
+    public RadioInfo(String inviteLink, List<UserInfo> listeners, SongInfo song, List<SongInfo> queue, List<UpcomingEvent> events, boolean paused, int volume) {
 
         this.inviteLink = inviteLink;
         this.listeners = listeners;
@@ -19,5 +20,6 @@ public class RadioInfo {
         this.queue = queue;
         this.events = events;
         this.paused = paused;
+        this.volume = volume;
     }
 }

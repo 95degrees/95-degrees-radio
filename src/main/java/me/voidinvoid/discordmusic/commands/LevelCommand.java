@@ -7,7 +7,7 @@ import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Rank;
 import net.dv8tion.jda.api.EmbedBuilder;
-
+@Deprecated
 public class LevelCommand extends Command {
 
     LevelCommand() {

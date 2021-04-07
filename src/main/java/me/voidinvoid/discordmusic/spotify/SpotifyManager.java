@@ -74,7 +74,7 @@ public class SpotifyManager implements RadioService {
                         log("found track, queueing!!!");
                         var spotifyTrack = (Track) track.getTrack();
                         fetchLavaTrack(spotifyTrack).thenAccept(s -> {
-                            var song = new NetworkSong(SongType.SONG, s, null);
+                            var song = new NetworkSong(SongType.SONG, s, null, null);
                             Radio.getInstance().getOrchestrator().queueSuggestion(song);
                         });
                     }

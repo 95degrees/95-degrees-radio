@@ -1,6 +1,11 @@
 package me.voidinvoid.discordmusic.utils;
 
+import java.time.format.DateTimeFormatter;
+
 public final class ConsoleColor {
+
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+
     // Reset
     public static final String RESET = "\033[0m";  // Text Reset
     public static final String RESET_SPACE = RESET + " ";

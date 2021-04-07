@@ -28,6 +28,11 @@ public class CachedGuild implements ICached<Guild> {
     }
 
     @Override
+    public boolean is(Guild item) {
+        return item != null && item.getId().equals(guildId);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof CachedGuild && Objects.equals(guildId, ((CachedGuild) obj).guildId);
     }

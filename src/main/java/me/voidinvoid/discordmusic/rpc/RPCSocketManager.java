@@ -66,6 +66,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
     public static final String CLIENT_CONTROL_PAUSE_AFTER_SONG = "dj_pause_after_song";
     public static final String CLIENT_CONTROL_PLAY_JINGLE = "dj_jingle";
     public static final String CLIENT_CONTROL_QUEUE_AD = "dj_ad";
+    public static final String CLIENT_CONTROL_SET_VOLUME = "dj_volume";
     public static final String CLIENT_CONTROL_TOGGLE_SUGGESTIONS = "dj_toggle_suggestions";
     public static final String CLIENT_CONTROL_CANCEL_UPCOMING_EVENT = "dj_cancel_upcoming_event";
 
@@ -75,6 +76,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
     public static final String SERVER_SONG_SEEK = "song_seek";
     public static final String SERVER_SONG_PAUSE = "song_pause";
     public static final String SERVER_SONG_UPDATE = "song_update";
+    public static final String SERVER_VOLUME = "volume";
     public static final String SERVER_RADIO_STATUS = "status";
     public static final String SERVER_RADIO_LISTENERS = "listeners";
     public static final String SERVER_COINS = "coins";
@@ -174,7 +176,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
             });
 
             server.addEventListener(CLIENT_REQUEST_STATUS, Object.class, (c, o, ack) -> {
-                RadioInfo info = new RadioInfo(RadioConfig.config.voiceInviteLink, listeners, currentSongInfo, queue, upcomingEvents, Radio.getInstance().getOrchestrator().getPlayer().isPaused());
+                RadioInfo info = new RadioInfo(RadioConfig.config.voiceInviteLink, listeners, currentSongInfo, queue, upcomingEvents, Radio.getInstance().getOrchestrator().getPlayer().isPaused(), Radio.getInstance().getOrchestrator().getPlayer().getVolume());
 
                 c.sendEvent(SERVER_RADIO_STATUS, info);
                 c.sendEvent(SERVER_LYRICS, currentLyrics);
@@ -209,7 +211,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                 if (id == null) return;
 
                 Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
-                var future = Service.of(SongSuggestionManager.class).addSuggestion(url, null, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), id, true, true, SuggestionQueueMode.NORMAL);
+                var future = Service.of(SongSuggestionManager.class).addSuggestion(url, null, id, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), true, true, SuggestionQueueMode.NORMAL);
 
                 future.thenAccept(res -> {
                    if (!res) {
@@ -240,7 +242,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                         }
 
                         if (s != null) {
-                            Radio.getInstance().getOrchestrator().queueSuggestion(new NetworkSong(SongType.SONG, s, id.getUser())).whenComplete((song, ex) -> {
+                            Radio.getInstance().getOrchestrator().queueSuggestion(new NetworkSong(SongType.SONG, s, id.getUser(), null)).whenComplete((song, ex) -> {
                                 if (ex == null) {
                                     c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("Song queue", Songs.titleArtist(song)));
                                 } else {
@@ -396,6 +398,20 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                 }
             });
 
+            server.addEventListener(CLIENT_CONTROL_SET_VOLUME, Integer.class, (c, vol, ack) -> { //TODO
+                var mb = identities.get(c);
+
+                if (mb == null || !djChannel.canTalk(mb) || upcomingEvents == null) return;
+
+                vol = Math.max(0, Math.min(1000, vol));
+
+                log("Setting volume: " + vol);
+
+                Radio.getInstance().getOrchestrator().getPlayer().setVolume(vol);
+
+                server.getBroadcastOperations().sendEvent(SERVER_VOLUME, vol);
+            });
+
             server.startAsync();
         }
 
@@ -459,6 +475,9 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
 
     @Override
     public void onSongQueueError(Song song, AudioTrack track, Member member, NetworkSongError error) {
+        if (member == null) {
+            return;
+        }
 
         var id = member.getUser().getId();
 

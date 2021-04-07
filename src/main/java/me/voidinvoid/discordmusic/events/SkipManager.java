@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.activity.ListeningContext;
+import me.voidinvoid.discordmusic.commands.slash.SlashCommandData;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.utils.Emoji;
@@ -56,9 +57,17 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
         return skipThreshold;
     }
 
-    public int addSkipRequest(User user) {
+    public int addSkipRequest(User user, SlashCommandData interaction) {
+
+        var skipRequested = true;
+
         if (!skipRequests.add(user.getId())) {
             skipRequests.remove(user.getId()); //un-toggle
+            skipRequested = false;
+        }
+
+        if (interaction != null) {
+            interaction.sendMessage("⏩ Skip request " + (skipRequested ? "added" : "removed"), true);
         }
 
         var req = skipRequests.size();

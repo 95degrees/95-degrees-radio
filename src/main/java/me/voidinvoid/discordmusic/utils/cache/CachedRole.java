@@ -28,6 +28,11 @@ public class CachedRole implements ICached<Role> {
     }
 
     @Override
+    public boolean is(Role item) {
+        return item != null && item.getId().equals(roleId);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof CachedRole && Objects.equals(roleId, ((CachedRole) obj).roleId);
     }

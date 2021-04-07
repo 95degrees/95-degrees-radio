@@ -55,8 +55,6 @@ public class ReactionListener {
 
         reaction = reaction.trim();
 
-        System.out.println("REACTION: '" + reaction + "'");
-
         if (reaction.contains(":")) { //probably a custom emoji
             var colonSplit = reaction.split(":");
             System.out.println("split: " + colonSplit.length);

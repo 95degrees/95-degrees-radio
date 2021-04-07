@@ -10,6 +10,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
+import me.voidinvoid.discordmusic.remotecontrol.BotInfo;
 import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -193,6 +194,10 @@ public class QuizManager implements RadioService, RadioEventListener, EventListe
                     Radio.getInstance().getOrchestrator().playNextSong();
                 }
             }
+        });
+
+        server.addEventListener("status", Object.class, (c, o, ack) -> {
+            c.sendEvent("status", BotInfo.get());
         });
 
         server.startAsync();

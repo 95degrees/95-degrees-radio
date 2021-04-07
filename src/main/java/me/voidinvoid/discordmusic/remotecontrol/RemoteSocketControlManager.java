@@ -17,7 +17,7 @@ public class RemoteSocketControlManager implements RadioService {
 
     @Override
     public void onLoad() {
-        info = new BotInfo("Radio", Radio.configName, "1.0", Radio.getInstance().getJda().getSelfUser().getEffectiveAvatarUrl());
+        info = BotInfo.get();
 
         try {
             socket = IO.socket("http://51.15.48.213:9525");
@@ -63,6 +63,9 @@ public class RemoteSocketControlManager implements RadioService {
 
     @Override
     public void onShutdown() {
-        if (socket != null) socket.disconnect();
+        if (socket != null) {
+            socket.disconnect();
+            socket = null;
+        }
     }
 }

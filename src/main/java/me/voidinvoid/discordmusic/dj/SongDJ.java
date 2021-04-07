@@ -170,30 +170,20 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
         embed.addField("Artist", Formatting.escape(song.getArtist()), true);
 
         if (song instanceof UserSuggestable && ((UserSuggestable) song).isSuggestion()) { //TODO this all needs sorting with suggested songs......
-            embed.addField("URL", Formatting.escape(song.getInternalName()), true);
 
             var s = (UserSuggestable) song;
             if (s.getSuggestedBy() != null) {
                 embed.setFooter("Song suggested by " + s.getSuggestedBy().getName(), s.getSuggestedBy().getAvatarUrl());
             }
 
-        } else if (song instanceof DatabaseSong) {
-            DatabaseSong ds = (DatabaseSong) song;
-
-            embed.setFooter("(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(ds.getInternalName()));
-
-        } else if (song instanceof FileSong) {
-
-            if (song.getType() == SongType.SONG) {
-                embed.setFooter("File Path", "(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getInternalName()));
-            }
-
-        } else {
-            embed.addField("Unknown Track Details", "😢", false);
+        } else if (song.getType() == SongType.SONG) {
+            embed.setFooter("(#" + (song.getQueue().getSongMap().indexOf(song) + 1) + " in playlist) " + Formatting.escape(song.getInternalName()));
         }
 
         embed.addField("Next Jingle", timeUntilJingle == 0 ? "After this " + Formatting.getSongType(track) : "After " + (timeUntilJingle + 1) + " more songs", false);
-        embed.addField("", "[Control Panel Help](https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png)", false);
+
+        var links = Songs.getLinksMasked(song);
+        embed.addField("", (links.isBlank() ? "" : Emoji.LINK.toString() + Emoji.DIVIDER_SMALL + links + Emoji.DIVIDER_SMALL) + Formatting.maskLink("https://cdn.discordapp.com/attachments/505174503752728597/537699389255450624/unknown.png", "Help"), false);
 
         return AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get());
     }

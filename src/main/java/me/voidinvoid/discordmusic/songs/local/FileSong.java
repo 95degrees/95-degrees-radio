@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.cache.CachedUser;
+import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.User;
 
 import javax.imageio.ImageIO;
@@ -25,21 +26,23 @@ public class FileSong extends Song implements UserSuggestable {
     private Path file;
     private CachedUser suggestedBy;
     private AlbumArt albumArt;
+    private CommandHook slashCommandSource;
 
     private AudioTrack track;
 
     private String mp3Title, mp3Artist;
 
     public FileSong(SongType type, Path file, User suggestedBy) {
-        this(type, file, suggestedBy, null);
+        this(type, file, suggestedBy, null, null);
     }
 
-    public FileSong(SongType type, Path file, User suggestedBy, SongQueue songQueue) {
+    public FileSong(SongType type, Path file, User suggestedBy, SongQueue songQueue, CommandHook slashCommandSource) {
         super(type);
 
         this.file = file;
         this.suggestedBy = suggestedBy == null ? null : new CachedUser(suggestedBy);
         this.setQueue(songQueue);
+        this.slashCommandSource = slashCommandSource;
 
         try {
             Mp3File song = new Mp3File(file);
@@ -116,7 +119,7 @@ public class FileSong extends Song implements UserSuggestable {
 
     @Override
     public boolean isPersistent() {
-        return true;
+        return suggestedBy != null;
     }
 
     @Override
@@ -127,5 +130,10 @@ public class FileSong extends Song implements UserSuggestable {
     @Override
     public User getSuggestedBy() {
         return suggestedBy == null ? null : suggestedBy.get();
+    }
+
+    @Override
+    public CommandHook getSlashCommandSource() {
+        return slashCommandSource;
     }
 }
