@@ -8,8 +8,12 @@ import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.utils.Colors;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import me.voidinvoid.discordmusic.utils.Service;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
@@ -52,41 +56,61 @@ public class UserStatisticsManager implements RadioService, RadioEventListener {
 
         if (lb == null || !stat.isCreateLeaderboard()) return;
 
-        StringBuilder sb = new StringBuilder("```Radio ").append(stat.getDisplayName()).append(" - 📅 Resets Weekly\n");
-        sb.append("Rank   Username                        ").append(stat.getStatName()).append("\n\n");
+        var eb = new EmbedBuilder();
 
-        int pos = 1;
+        eb.setColor(Colors.ACCENT_MAIN);
+        eb.setThumbnail(Radio.getInstance().getJda().getSelfUser().getAvatarUrl());
+        eb.setTitle("Radio " + stat.getDisplayName() + " Weekly Leaderboard");
+
+        var sb = eb.getDescriptionBuilder();
+
+        int position = 1;
 
         for (var record : lb) {
-            var mb = Radio.getInstance().getGuild().getMemberById(record.getUser());
-            if (mb == null || record.getValue() == 0) continue;
+            if (record.getValue() == 0) continue;
+            var mb = Radio.getInstance().getGuild().retrieveMemberById(record.getUser()).onErrorMap(m -> null).complete();
 
-            sb.append("#");
-            if (pos < 10) sb.append(" ");
-            sb.append(" ");
-            sb.append(pos);
-            sb.append(" ║ ");
-            sb.append(Formatting.padString(mb.getUser().getAsTag(), 30));
-            sb.append("║ ");
+            if (mb == null) continue;
+
+            sb.append("`#");
+            if (position < 10) {
+                sb.append("  ");
+            } else if (position < 100) {
+                sb.append(" ");
+            }
+            sb.append(position);
+            sb.append("` ");
+
+            if (position == 1) {
+                sb.append(Emoji.TROPHY_GOLD);
+            } else if (position == 2) {
+                sb.append(Emoji.TROPHY_SILVER);
+            } else if (position == 3) {
+                sb.append(Emoji.TROPHY_BRONZE);
+            } else {
+                sb.append(Emoji.DIVIDER_SMALL);
+            }
+
+            sb.append(" `");
             sb.append(stat.format(record.getValue()));
+            sb.append("` ");
+            sb.append(Formatting.escape(mb.getUser().getAsTag()));
             sb.append("\n");
 
-            pos++;
+            position++;
 
-            if (pos > 10) break;
+            if (position > 10) break;
         }
 
-        sb.append("```");
-
-        var code = sb.toString();
+        var embed = eb.build();
 
         if (leaderboardMessage == null) {
-            leaderboardChannel.sendMessage(code).queue(m -> {
+            leaderboardChannel.sendMessage(embed).queue(m -> {
                 leaderboardMessage = m;
                 Service.of(DatabaseManager.class).updateInternalDocument(new Document("$set", new Document("leaderboardMessageId", m.getId())));
             });
         } else {
-            leaderboardMessage.editMessage(code).queue();
+            leaderboardMessage.editMessage(" ").override(true).embed(embed).queue();
         }
     }
 

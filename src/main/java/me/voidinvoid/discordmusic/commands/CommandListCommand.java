@@ -20,7 +20,7 @@ public class CommandListCommand extends Command {
 
     @Override
     public void invoke(CommandData data) {
-        var embed = new EmbedBuilder().setTitle(Emoji.RADIO + " 95 Degrees Radio Commands").setColor(Colors.ACCENT_MAIN);
+        var embed = new EmbedBuilder().setTitle("95 Degrees Radio Commands").setColor(Colors.ACCENT_MAIN);
 
         String cmds = commands.stream().filter(cmd -> (data.isConsole() || cmd.getRank().hasRank(data.getMember()))).map(cmd -> "\t`" + (data.isConsole() ? "" : Command.COMMAND_PREFIX) + cmd.getName() + (cmd.getUsageMessage() == null ? "" : " " + cmd.getUsageMessage()) + "` - " + cmd.getDescription()).collect(Collectors.joining("\n"));
 

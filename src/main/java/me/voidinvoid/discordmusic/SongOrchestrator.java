@@ -1,5 +1,6 @@
 package me.voidinvoid.discordmusic;
 
+import com.github.natanbc.lavadsp.timescale.TimescalePcmAudioFilter;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -20,7 +21,9 @@ import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
 import me.voidinvoid.discordmusic.events.NetworkSongException;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
-import me.voidinvoid.discordmusic.levelling.*;
+import me.voidinvoid.discordmusic.levelling.Achievement;
+import me.voidinvoid.discordmusic.levelling.AchievementManager;
+import me.voidinvoid.discordmusic.sfx.SoundEffectsManager;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.songs.database.DatabaseRadioPlaylist;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
@@ -45,12 +48,18 @@ import java.util.stream.Collectors;
 
 public class SongOrchestrator extends AudioEventAdapter implements RadioService {
 
+    public static long MAX_SONG_LENGTH = 8 * 60 * 1000; //8 mins
+    public static int MAX_CONCURRENT_SUGGESTIONS = 5; //can queue 5 songs at once
+
     private List<Playlist> playlists;
     private Playlist activePlaylist;
     private int timeUntilJingle = 0;
     private DefaultAudioPlayerManager manager;
     private AudioPlayer player;
     private AudioPlayerSendHandler audioSendHandler;
+    private TimescalePcmAudioFilter timescaleFilter;
+    private float timescale = 1.0f;
+    private float pitch = 1.0f;
 
     private boolean pausePending;
 
@@ -71,6 +80,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         jda = radio.getJda();
 
         manager = new DefaultAudioPlayerManager();
+        manager.getConfiguration().setFilterHotSwapEnabled(true);
 
         AudioSourceManagers.registerLocalSource(manager);
         AudioSourceManagers.registerRemoteSources(manager);
@@ -80,6 +90,11 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
                 .forSource(youtube).setup();
 
         player = manager.createPlayer();
+        player.setFilterFactory((track, format, filter) -> {
+            timescaleFilter = new TimescalePcmAudioFilter(filter, format.channelCount, format.sampleRate);
+            timescaleFilter.setSpeed(timescale).setPitch(pitch);
+            return List.of(timescaleFilter);
+        });
         player.addListener(this);
 
         audioSendHandler = new AudioPlayerSendHandler(player);
@@ -147,6 +162,20 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         return player;
     }
 
+    public void setTimescale(float timescale) {
+        this.timescale = timescale;
+        if (timescaleFilter != null) {
+            timescaleFilter.setSpeed(timescale);
+        }
+    }
+
+    public void setPitch(float pitch) {
+        this.pitch = pitch;
+        if (timescaleFilter != null) {
+            timescaleFilter.setPitch(pitch);
+        }
+    }
+
     public Song getCurrentSong() {
         return player.getPlayingTrack() == null ? null : player.getPlayingTrack().getUserData(Song.class);
     }
@@ -191,11 +220,16 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     }
 
     public void playNextSong() {
-        playNextSong(false, true);
+        playNextSong(false, true, false);
     }
 
-    public void playNextSong(boolean skipJingle, boolean decrementJingleCounter) {
+    public void playNextSong(boolean skipJingle, boolean decrementJingleCounter, boolean playSkipSfx) {
         if (activePlaylist == null) return;
+
+        if (playSkipSfx) {
+            player.playTrack(Service.of(SoundEffectsManager.class).SWOOSH_SOUND_EFFECT.makeClone());
+            return;
+        }
 
         if (pausePending) {
             pausePending = false;
@@ -279,12 +313,12 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
             public void noMatches() {
                 log("No match found for file");
-                playNextSong(false, false);
+                playNextSong(false, false, false);
             }
 
             public void loadFailed(FriendlyException e) {
                 log("Load failed for " + song.getLavaIdentifier() + ": " + e.getMessage());
-                playNextSong(false, false);
+                playNextSong(false, false, false);
 
                 radioEventListeners.forEach(l -> {
                     try {
@@ -322,6 +356,10 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     public void onTrackStart(AudioPlayer player, AudioTrack track) {
         final Song song = track.getUserData(Song.class);
 
+        if (song == null) {
+            return;
+        }
+
         radioEventListeners.forEach(l -> {
             try {
                 l.onSongStart(song, track, player, timeUntilJingle);
@@ -336,14 +374,17 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     public void onTrackEnd(AudioPlayer player, AudioTrack track, AudioTrackEndReason endReason) {
         if (endReason.mayStartNext || endReason == AudioTrackEndReason.REPLACED) {
             Song song = track.getUserData(Song.class);
-            radioEventListeners.forEach(l -> {
-                try {
-                    l.onSongEnd(song, track);
-                } catch (Exception ex) {
-                    log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
-                    ex.printStackTrace();
-                }
-            });
+
+            if (song != null) {
+                radioEventListeners.forEach(l -> {
+                    try {
+                        l.onSongEnd(song, track);
+                    } catch (Exception ex) {
+                        log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
+                        ex.printStackTrace();
+                    }
+                });
+            }
         }
 
         if (endReason.mayStartNext) {
@@ -353,7 +394,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
     @Override
     public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
-        playNextSong(false, false);
+        playNextSong(false, false, false);
     }
 
     @Override
@@ -431,26 +472,14 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
         if (!opts.contains(QueueOption.BYPASS_ERRORS)) {
             final NetworkSongError error;
 
-            long maxLength = RadioConfig.config.orchestration.maxSongLength;
-            int maxSuggestions = RadioConfig.config.orchestration.userQueueLimit;
-
-            LevellingManager lm = Radio.getInstance().getService(LevellingManager.class);
-            if (lm != null && member != null) {
-                AppliedLevelExtra a = lm.getLatestExtra(member.getUser(), LevelExtras.MAX_SUGGESTION_LENGTH);
-                if (a != null) maxLength = (long) a.getValue();
-
-                a = lm.getLatestExtra(member.getUser(), LevelExtras.MAX_SUGGESTIONS_IN_QUEUE);
-                if (a != null) maxSuggestions = (int) a.getValue();
-            }
-
             if (!suggestionsEnabled) {
                 error = NetworkSongError.SONG_SUGGESTIONS_DISABLED;
-            } else if (member != null && sp.getSongs().suggestionsBy(member.getUser()).size() >= maxSuggestions) {
+            } else if (sp.getSongs().suggestionsBy(member == null ? null : member.getUser()).size() >= MAX_CONCURRENT_SUGGESTIONS) {
                 error = NetworkSongError.QUEUE_LIMIT_REACHED;
             } else if (song.getTrack().getInfo().isStream) {
                 error = NetworkSongError.IS_STREAM;
-            } else if (song.getTrack().getDuration() > maxLength) {
-                if (member != null && song.getTrack().getDuration() - maxLength <= 1000) {
+            } else if (song.getTrack().getDuration() > MAX_SONG_LENGTH) {
+                if (member != null && song.getTrack().getDuration() - MAX_SONG_LENGTH <= 1000) {
                     Radio.getInstance().getService(AchievementManager.class).rewardAchievement(member.getUser(), Achievement.OVER_LENGTH_LIMIT);
                 }
                 error = NetworkSongError.EXCEEDS_LENGTH_LIMIT;
@@ -511,7 +540,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             if (opts.contains(QueueOption.PLAY_INSTANTLY)) {
                 player.setPaused(false);
                 player.stopTrack();
-                playNextSong(true, false);
+                playNextSong(true, false, false);
             }
 
             log("Network track is in the queue: #" + (index + 1));

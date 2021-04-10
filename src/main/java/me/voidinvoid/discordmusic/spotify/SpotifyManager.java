@@ -68,13 +68,16 @@ public class SpotifyManager implements RadioService {
                 if (playlist == null) return;
 
                 var tracks = playlist.getTracks().getItems();
+                var now = lastCollaborativePlaylistCheck.toInstant();
+                lastCollaborativePlaylistCheck = OffsetDateTime.now();
 
                 for (var track : tracks) {
-                    if (track.getAddedAt().toInstant().isAfter(lastCollaborativePlaylistCheck.toInstant())) {
+                    if (track.getAddedAt().toInstant().isAfter(now)) {
                         log("found track, queueing!!!");
                         var spotifyTrack = (Track) track.getTrack();
                         fetchLavaTrack(spotifyTrack).thenAccept(s -> {
-                            var song = new NetworkSong(SongType.SONG, s, null, null);
+                            var song = new NetworkSong(SongType.SONG, s, Radio.getInstance().getJda().getSelfUser(), null);
+                            song.setSpotifyTrack(spotifyTrack);
                             Radio.getInstance().getOrchestrator().queueSuggestion(song);
                         });
                     }
@@ -83,8 +86,6 @@ public class SpotifyManager implements RadioService {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-
-            lastCollaborativePlaylistCheck = OffsetDateTime.now();
 
         }, 10, 3, TimeUnit.SECONDS);
     }

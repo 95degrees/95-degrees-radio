@@ -3,6 +3,7 @@ package me.voidinvoid.discordmusic.dj.actions;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
+import me.voidinvoid.discordmusic.utils.Emoji;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 

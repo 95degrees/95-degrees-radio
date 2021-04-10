@@ -63,7 +63,9 @@ public class RadioConfig {
 
     public static class Orchestration {
         public int jingleFrequency;
+        @Deprecated
         public long maxSongLength;
+        @Deprecated
         public int userQueueLimit;
     }
 

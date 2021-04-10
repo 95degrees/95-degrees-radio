@@ -93,7 +93,7 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
                 }
             }
 
-            rl.add("⏩", ev -> {
+            rl.add(Emoji.SKIP.getEmote(), ev -> {
                 ev.setCancelled(true);
 
                 var sm = Service.of(SkipManager.class);
@@ -133,7 +133,10 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
 
             if (slash != null) {
                 AlbumArtUtils.attachAlbumArtToCommandHook(embed, song, slash).queue();
-                return;
+
+                if (slash.getEvent().getChannel().getId().equals(textChannel.getId())) {
+                    return; //if we're not in #radio, send it there too
+                }
             }
         }
 
@@ -167,7 +170,10 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
 
             if (slash != null) {
                 AlbumArtUtils.attachAlbumArtToCommandHook(embed, song, slash).queue();
-                return;
+
+                if (slash.getEvent().getChannel().getId().equals(textChannel.getId())) {
+                    return; //if we're not in #radio, send it there too
+                }
             }
         }
 

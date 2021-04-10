@@ -8,10 +8,13 @@ import me.voidinvoid.discordmusic.activity.ListeningContext;
 import me.voidinvoid.discordmusic.commands.slash.SlashCommandData;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.songs.Song;
+import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.cache.CachedMember;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.ISnowflake;
+import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
@@ -21,6 +24,7 @@ import net.dv8tion.jda.api.hooks.EventListener;
 import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class SkipManager implements RadioService, RadioEventListener, EventListener {
@@ -30,16 +34,16 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
     private Set<String> skipRequests = new HashSet<>();
     private String skipStatus;
 
-    private CachedChannel<VoiceChannel> radioChannel;
+    private CachedChannel<TextChannel> radioTextChannel;
 
     @Override
     public void onLoad() {
-        radioChannel = new CachedChannel<>(RadioConfig.config.channels.voice);
+        radioTextChannel = new CachedChannel<>(RadioConfig.config.channels.radioChat);
     }
 
     private void calculateSkipThreshold() {
         var members = ListeningContext.ALL.getListeners();
-        skipThreshold = (int) Math.ceil((members.size() - 1) * 0.5);
+        skipThreshold = (int) Math.ceil((members.size() - 1) * 0.5) + 1;
         //skipThreshold = 10;
 
         log("Current song skip threshold: " + skipThreshold);
@@ -47,7 +51,7 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
         skipRequests.removeIf(u -> !members.contains(new CachedMember(u)));
 
         if (skipRequests.size() >= skipThreshold && skipRequests.size() > 0) {
-            Radio.getInstance().getOrchestrator().playNextSong();
+            Radio.getInstance().getOrchestrator().playNextSong(false, true, true);
         }
 
         skipStatus = null;
@@ -66,12 +70,23 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
             skipRequested = false;
         }
 
-        if (interaction != null) {
-            interaction.sendMessage("⏩ Skip request " + (skipRequested ? "added" : "removed"), true);
-        }
+        skipStatus = null;
 
         var req = skipRequests.size();
         log("skip requests: " + skipRequests.size() + "/ " + skipThreshold);
+
+        var status = generateSkipStatus();
+        var embed = new EmbedBuilder().setColor(Colors.ACCENT_SKIP_REQUESTS).setTitle("⏩ Skip request " + (skipRequested ? "added" : "removed"));
+
+        if (status != null) {
+            embed.addField("Skip Requests", status, false);
+        }
+
+        if (interaction != null) {
+            interaction.getEvent().reply(embed.build()).queue(c -> c.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+        } else {
+            radioTextChannel.get().sendMessage(embed.build()).queue(m -> m.delete().queueAfter(5, TimeUnit.SECONDS));
+        }
 
         calculateSkipThreshold();
 
@@ -81,8 +96,8 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
     public String generateSkipStatus() {
         if (skipStatus != null) {
             return skipStatus;
-
         }
+
         if (skipRequests.isEmpty()) {
             return null;
         }

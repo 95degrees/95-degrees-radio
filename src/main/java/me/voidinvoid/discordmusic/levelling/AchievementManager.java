@@ -43,7 +43,7 @@ public class AchievementManager implements RadioService, RadioEventListener {
             TextChannel c = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.radioChat);
 
             c.sendMessage(new MessageBuilder("🎉 " + user.getAsMention()).setEmbed(new EmbedBuilder()
-                    .setTitle(Emoji.RADIO + " Achievement Unlocked")
+                    .setTitle("Radio Achievement Unlocked")
                     .setColor(Colors.ACCENT_ACHIEVEMENT)
                     .setThumbnail(RadioConfig.config.images.achievementLogo)
                     .setDescription(user.getAsMention() + " has unlocked an achievement!")

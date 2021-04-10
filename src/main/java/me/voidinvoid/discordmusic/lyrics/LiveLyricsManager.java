@@ -205,11 +205,17 @@ public class LiveLyricsManager implements RadioService, RadioEventListener {
                     var activeLine = activeSongLyrics.getCurrentLine(track.getPosition() + 200);
                     var activeLineIndex = activeSongLyrics.lines.indexOf(activeLine);
 
-                    for (int i = -1; i < 13; i++) { //TODO 2048 character check
+                    for (int i = -1; i < 13; i++) {
                         var lineNum = activeLineIndex + i;
                         LyricLine line = lineNum < 0 || lineNum >= activeSongLyrics.lines.size() ? null : activeSongLyrics.lines.get(lineNum);
 
-                        eb.appendDescription("\n" + (line == null ? Emoji.DIVIDER_SMALL : lineNum == activeLineIndex ? "➡ **" + Formatting.escape(line.getContent() + " ") + "**" : Emoji.DIVIDER_SMALL + " " + Formatting.escape(line.getContent())));
+                        var lineText = "\n" + (line == null ? Emoji.DIVIDER_SMALL : lineNum == activeLineIndex ? "➡ **" + Formatting.escape(line.getContent() + " ") + "**" : Emoji.DIVIDER_SMALL + " " + Formatting.escape(line.getContent()));
+
+                        if (eb.getDescriptionBuilder().length() + lineText.length() > 2048) {
+                            break;
+                        }
+
+                        eb.appendDescription(lineText);
                     }
 
                     if (!activeLine.equals(previousLyric)) {
@@ -267,107 +273,112 @@ public class LiveLyricsManager implements RadioService, RadioEventListener {
 
         var future = new CompletableFuture<LiveLyrics>();
 
-        var existingLyrics = lyrics.find(eq(song.getInternalName())).first();
-        if (existingLyrics != null) {
-            log("Lyrics already exist for " + song.getInternalName());
+        try {
+            var existingLyrics = lyrics.find(eq(song.getInternalName())).first();
+            if (existingLyrics != null) {
+                log("Lyrics already exist for " + song.getInternalName());
 
-            future.complete(new LiveLyrics(existingLyrics.getString("subtitles")));
-            return future;
-        }
-
-        if (!enabled) {
-            future.complete(null);
-            return future;
-        }
-
-        var title = song.getTitle();
-        var artist = song.getArtist();
-
-        if (song instanceof SpotifyTrackHolder) {
-            var s = (SpotifyTrackHolder) song;
-            if (s.getSpotifyTrack() == null) {
-
-                title = Songs.deyoutubeifySong(title);
-
-                artist = artist.toLowerCase()
-                        .replaceAll("vevo", "");
+                future.complete(new LiveLyrics(existingLyrics.getString("subtitles")));
+                return future;
             }
+
+            if (!enabled) {
+                future.complete(null);
+                return future;
+            }
+
+            var title = song.getTitle();
+            var artist = song.getArtist();
+
+            if (song instanceof SpotifyTrackHolder) {
+                var s = (SpotifyTrackHolder) song;
+                if (s.getSpotifyTrack() == null) {
+
+                    title = Songs.deyoutubeifySong(title);
+
+                    artist = artist.toLowerCase()
+                            .replaceAll("vevo", "");
+                }
+            }
+
+            var cm = new CookieManager();
+            cm.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+
+            var client = HttpClient.newBuilder().cookieHandler(cm).followRedirects(HttpClient.Redirect.NORMAL).build();
+
+            var request = HttpRequest.newBuilder(URI.create("https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get" +
+                    "?format=json" +
+                    "&namespace=lyrics_synched" +
+                    "&q_artist=" + URLEncoder.encode(artist, StandardCharsets.UTF_8) +
+                    "&q_duration=" + track.getDuration() / 1000 +
+                    "&q_track=" + URLEncoder.encode(title, StandardCharsets.UTF_8) +
+                    "&user_language=en" +
+                    "&app_id=web-desktop-app-v1.0" +
+                    "&usertoken=200531ee9b232f7d528447be1e137f066f836100534621b21c3027"))
+                    .header("cache-control", "no-cache")
+                    .header("accept", "*/*")
+                    .header("user-agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Musixmatch/3.14.4564-master.20200505002 Chrome/78.0.3904.130 Electron/7.1.5 Safari/537.36")
+                    .build();
+
+            client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .whenComplete((r, e) -> {
+                        if (e != null) {
+                            log("Exception fetching lyrics for " + song.getInternalName());
+                            e.printStackTrace();
+                            future.complete(null);
+                            return;
+                        }
+
+                        if (r.statusCode() != 200) {
+                            log("HTTP error (" + r.statusCode() + ") fetching lyrics for " + song.getInternalName() + ":\n" + r.body());
+                            future.complete(null);
+                            return;
+                        }
+
+                        try {
+                            var json = new Gson().fromJson(r.body(), JsonObject.class);
+
+                            var parent = json
+                                    .getAsJsonObject("message")
+                                    .getAsJsonObject("body")
+                                    .getAsJsonObject("macro_calls")
+                                    .getAsJsonObject("track.subtitles.get")
+                                    .getAsJsonObject("message")
+                                    .getAsJsonObject("body");
+
+                            var subtitleList = parent.getAsJsonArray("subtitle_list");
+
+                            if (subtitleList.size() == 0) {
+                                log("Subtitle list is empty!");
+                                future.complete(null);
+                                return;
+                            }
+
+                            var subtitles = subtitleList.get(0)
+                                    .getAsJsonObject()
+                                    .getAsJsonObject("subtitle")
+                                    .get("subtitle_body").getAsString();
+
+                            if (subtitles == null) {
+                                log("Subtitles are null!");
+                                future.complete(null);
+                                return;
+                            }
+
+                            log("Inserting...");
+                            lyrics.insertOne(new Document("_id", song.getInternalName()).append("subtitles", subtitles).append("rawJson", r.body()));
+
+                            log("Fetched lyrics successfully for " + song.getInternalName());
+                            future.complete(new LiveLyrics(subtitles));
+                        } catch (Exception ignored) {
+                            //ex.printStackTrace();
+                            future.complete(null);
+                        }
+                    });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            future.complete(null);
         }
-
-        var cm = new CookieManager();
-        cm.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
-
-        var client = HttpClient.newBuilder().cookieHandler(cm).followRedirects(HttpClient.Redirect.NORMAL).build();
-
-        var request = HttpRequest.newBuilder(URI.create("https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get" +
-                "?format=json" +
-                "&namespace=lyrics_synched" +
-                "&q_artist=" + URLEncoder.encode(artist, StandardCharsets.UTF_8) +
-                "&q_duration=" + track.getDuration() / 1000 +
-                "&q_track=" + URLEncoder.encode(title, StandardCharsets.UTF_8) +
-                "&user_language=en" +
-                "&app_id=web-desktop-app-v1.0" +
-                "&usertoken=200531ee9b232f7d528447be1e137f066f836100534621b21c3027"))
-                .header("cache-control", "no-cache")
-                .header("accept", "*/*")
-                .header("user-agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Musixmatch/3.14.4564-master.20200505002 Chrome/78.0.3904.130 Electron/7.1.5 Safari/537.36")
-                .build();
-
-        client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .whenComplete((r, e) -> {
-                    if (e != null) {
-                        log("Exception fetching lyrics for " + song.getInternalName());
-                        e.printStackTrace();
-                        future.complete(null);
-                        return;
-                    }
-
-                    if (r.statusCode() != 200) {
-                        log("HTTP error (" + r.statusCode() + ") fetching lyrics for " + song.getInternalName() + ":\n" + r.body());
-                        future.complete(null);
-                        return;
-                    }
-
-                    try {
-                        var json = new Gson().fromJson(r.body(), JsonObject.class);
-
-                        var parent = json
-                                .getAsJsonObject("message")
-                                .getAsJsonObject("body")
-                                .getAsJsonObject("macro_calls")
-                                .getAsJsonObject("track.subtitles.get")
-                                .getAsJsonObject("message")
-                                .getAsJsonObject("body");
-
-                        var subtitleList = parent.getAsJsonArray("subtitle_list");
-
-                        if (subtitleList.size() == 0) {
-                            log("Subtitle list is empty!");
-                            future.complete(null);
-                            return;
-                        }
-
-                        var subtitles = subtitleList.get(0)
-                                .getAsJsonObject()
-                                .getAsJsonObject("subtitle")
-                                .get("subtitle_body").getAsString();
-
-                        if (subtitles == null) {
-                            log("Subtitles are null!");
-                            future.complete(null);
-                            return;
-                        }
-
-                        log("Inserting...");
-                        lyrics.insertOne(new Document("_id", song.getInternalName()).append("subtitles", subtitles).append("rawJson", r.body()));
-
-                        log("Fetched lyrics successfully for " + song.getInternalName());
-                        future.complete(new LiveLyrics(subtitles));
-                    } catch (Exception ignored) {
-                        //ex.printStackTrace();
-                        future.complete(null);
-                    }
-                });
 
         return future;
     }

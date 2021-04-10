@@ -3,8 +3,8 @@ package me.voidinvoid.discordmusic.suggestions;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
-import me.voidinvoid.discordmusic.levelling.LevelExtras;
-import me.voidinvoid.discordmusic.levelling.LevellingManager;
+import me.voidinvoid.discordmusic.SongOrchestrator;
+import me.voidinvoid.discordmusic.levelling.ListeningTrackerManager;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.QueueOption;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -16,7 +16,6 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 
@@ -41,8 +40,8 @@ public class SongSearchResult {
         this.user = user;
 
         if (!bypassLengthLimit) {
-            var lm = Radio.getInstance().getService(LevellingManager.class);
-            var limit = (long) lm.getLatestExtra(user, LevelExtras.MAX_SUGGESTION_LENGTH).getValue();
+            var lm = Radio.getInstance().getService(ListeningTrackerManager.class);
+            var limit = SongOrchestrator.MAX_SONG_LENGTH;
 
             int prev = playlist.size();
             playlist = playlist.stream().filter(t -> t.getDuration() <= limit).collect(Collectors.toList());

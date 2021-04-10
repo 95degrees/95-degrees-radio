@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.activity.ListeningContext;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.Achievement;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
@@ -25,19 +26,12 @@ import java.time.OffsetDateTime;
  */
 public class SuggestionPrivateMessageManager implements RadioService, RadioEventListener {
 
-    private VoiceChannel voiceChannel;
-
-    @Override
-    public void onLoad() {
-        voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
-    }
-
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (song instanceof UserSuggestable) {
             var s = (UserSuggestable) song;
             if (s.getSuggestedBy() != null) {
-                if (voiceChannel.getMembers().stream().noneMatch(m -> m.getUser().getId().equals(s.getSuggestedBy().getId()))) { //user not in vc
+                if (!ListeningContext.ALL.hasListener(s.getSuggestedBy())) { //user not in vc
                     var am = Service.of(AchievementManager.class);
 
                     if (am != null) am.rewardAchievement(s.getSuggestedBy(), Achievement.LEAVE_AFTER_SUGGESTION);

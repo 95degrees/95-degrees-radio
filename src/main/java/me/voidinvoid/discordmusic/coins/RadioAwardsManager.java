@@ -10,6 +10,7 @@ import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.economy.Transaction;
 import me.voidinvoid.discordmusic.economy.TransactionType;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
+import me.voidinvoid.discordmusic.levelling.ListeningTrackerManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -44,6 +45,9 @@ import java.util.stream.Collectors;
 
 public class RadioAwardsManager implements RadioService, RadioEventListener, EventListener {
 
+    private static final int BASE_SONGS_PER_REWARD = 5; //both requirements must be met
+    private static final long BASE_DURATION_BETWEEN_REWARDS = 15 * 60 * 1000;
+
     private static final String REWARDS_LOG_PREFIX = ConsoleColor.BLUE_BACKGROUND_BRIGHT + " Awards ";
 
     private CachedChannel<TextChannel> radioTextChannel;
@@ -53,6 +57,9 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
 
     private Map<String, Reward> activeRewards = new HashMap<>();
 
+    private long nextRewardTimeMinimum = System.currentTimeMillis() + BASE_DURATION_BETWEEN_REWARDS;
+    private int songsUntilReward = BASE_SONGS_PER_REWARD;
+
     @Override
     public String getLogPrefix() {
         return REWARDS_LOG_PREFIX;
@@ -60,7 +67,7 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
 
     @Override
     public boolean canRun(RadioConfig config) {
-        return config.useCoinGain && config.debug;
+        return config.useCoinGain;
     }
 
     @Override
@@ -76,6 +83,8 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
     }
 
     public void pushAward() {
+        log("Attempting to queue reward...");
+
         if (rewardSongs.isEmpty()) {
             log("Warning: tried to queue a reward song but none are available!");
             return;
@@ -83,6 +92,7 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
 
         List<Song> awaitingSongs = Radio.getInstance().getOrchestrator().getAwaitingSpecialSongs();
         if (awaitingSongs.stream().noneMatch(s -> s.getType() == SongType.REWARD)) {
+            log("Added reward song to special queue");
             awaitingSongs.add(rewardSongs.get(ThreadLocalRandom.current().nextInt(rewardSongs.size()))); //random each time
 
             Service.of(RPCSocketManager.class).updateUpcomingEvents();
@@ -91,9 +101,24 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
-        if (song.getType() != SongType.REWARD) return;
+        if (song.getType() == SongType.SONG) {
+            songsUntilReward--;
+            log("Songs until reward: " + songsUntilReward + ", next reward time: " + nextRewardTimeMinimum + " (" + (nextRewardTimeMinimum - System.currentTimeMillis()) + "ms)");
+            if (songsUntilReward <= 0 && System.currentTimeMillis() > nextRewardTimeMinimum) {
+                log("Pushing award!");
+                pushAward();
+            }
+            return;
+        }
 
-        var reward = new Reward(ListeningContext.ALL.getListeners(), 1.0); //todo
+        if (song.getType() != SongType.REWARD) {
+            return;
+        }
+
+        nextRewardTimeMinimum = System.currentTimeMillis() + BASE_DURATION_BETWEEN_REWARDS;
+        songsUntilReward = BASE_SONGS_PER_REWARD;
+
+        var reward = new Reward(ListeningContext.ALL.getListeners(), Radio.getInstance().getOrchestrator().getActivePlaylist().getCoinMultiplier());
 
         radioTextChannel.get().sendMessage(
                 new EmbedBuilder()
@@ -106,7 +131,7 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
                     activeRewards.put(m.getId(), reward);
                     new ReactionListener(m, true).add("🎈", ev -> giveReward(ev.getMember(), reward));
 
-                    m.delete().queueAfter(1, TimeUnit.MINUTES); //todo make configurable?
+                    m.delete().submitAfter(1, TimeUnit.MINUTES).thenRun(() -> Service.of(ListeningTrackerManager.class).resetCurrentListeningDurations());
                 }
         );
     }
@@ -125,7 +150,7 @@ public class RadioAwardsManager implements RadioService, RadioEventListener, Eve
                 msg.setDescription("You have already claimed this reward!").setColor(Colors.ACCENT_ERROR);
             } else {
                 reward.markClaimed(member);
-                var amount = 50; //todo varied rewards
+                var amount = Service.of(ListeningTrackerManager.class).getCurrentListeningDuration(member);
 
                 Service.of(EconomyManager.class).makeTransaction(member, new Transaction(TransactionType.RADIO, amount));
 

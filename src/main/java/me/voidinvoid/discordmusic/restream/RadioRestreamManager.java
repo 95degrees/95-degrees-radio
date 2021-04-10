@@ -4,7 +4,9 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.audio.AudioPlayerSendHandler;
 import me.voidinvoid.discordmusic.config.RadioConfig;
+import me.voidinvoid.discordmusic.levelling.ListeningTrackerManager;
 import me.voidinvoid.discordmusic.utils.ConsoleColor;
+import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -76,8 +78,7 @@ public class RadioRestreamManager implements RadioService {
     public void joinVoiceChannel(String voiceChannel) { //use string because we want a voice channel for our jda instance
 
         if (!isConnected()) {
-            log("Warning: tried to join vc but not connected");
-            return;
+            connect();
         }
 
         var vc = jda.getVoiceChannelById(voiceChannel);
@@ -93,21 +94,43 @@ public class RadioRestreamManager implements RadioService {
         audioManager.setSendingHandler(new AudioPlayerSendHandler.RestreamAudioPlayerSendHandler(Radio.getInstance().getOrchestrator().getAudioSendHandler()));
         audioManager.openAudioConnection(vc);
 
+        var radioJdaVoice = Radio.getInstance().getJda().getVoiceChannelById(voiceChannel);
+
+        if (radioJdaVoice != null) {
+            for (var listener : radioJdaVoice.getMembers()) {
+                Service.of(ListeningTrackerManager.class).trackIfEligible(listener.getUser(), radioJdaVoice, listener.getVoiceState() == null || listener.getVoiceState().isDeafened());
+            }
+        }
+
         this.voiceChannel = voiceChannel;
     }
 
-    public void leaveVoice(String guild) { //use string because we want a guild for our jda instance
+    public boolean leaveVoice(String guild) { //use string because we want a guild for our jda instance
 
         var g = jda.getGuildById(guild);
 
         if (g == null) {
             log("Warning: attempted to find null guild " + guild);
-            return;
+            return false;
+        }
+
+        if (this.voiceChannel == null) {
+            return false;
         }
 
         g.getAudioManager().closeAudioConnection();
 
         this.voiceChannel = null;
+
+        var radioJdaVoice = Radio.getInstance().getJda().getVoiceChannelById(voiceChannel);
+
+        if (radioJdaVoice != null) {
+            for (var listener : radioJdaVoice.getMembers()) {
+                Service.of(ListeningTrackerManager.class).trackIfEligible(listener.getUser(), radioJdaVoice, listener.getVoiceState() == null || listener.getVoiceState().isDeafened());
+            }
+        }
+
+        return true;
     }
 
     public String getVoiceChannel() {

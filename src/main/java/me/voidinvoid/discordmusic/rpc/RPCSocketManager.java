@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.DatabaseManager;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
+import me.voidinvoid.discordmusic.activity.ListeningContext;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.NetworkSongError;
@@ -23,14 +24,13 @@ import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
+import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.Songs;
+import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.guild.voice.GenericGuildVoiceEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
+import net.dv8tion.jda.api.events.guild.voice.*;
 import net.dv8tion.jda.api.hooks.EventListener;
 
 import javax.annotation.Nonnull;
@@ -114,8 +114,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
 
     private Map<SocketIOClient, Member> identities;
 
-    private VoiceChannel voiceChannel;
-    private TextChannel djChannel;
+    private CachedChannel<TextChannel> djChannel;
     private Guild guild;
 
     private ScheduledExecutorService executorService;
@@ -129,13 +128,12 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
     public void onLoad() {
         executorService = Executors.newScheduledThreadPool(1);
 
-        voiceChannel = Radio.getInstance().getJda().getVoiceChannelById(RadioConfig.config.channels.voice);
-        djChannel = Radio.getInstance().getJda().getTextChannelById(RadioConfig.config.channels.djChat);
-        guild = voiceChannel.getGuild();
+        djChannel = new CachedChannel<>(RadioConfig.config.channels.djChat);
+        guild = djChannel.get().getGuild();
 
         identities = new HashMap<>();
 
-        listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList());
+        listeners = ListeningContext.ALL.getListeners().stream().map(m -> m.get().getUser()).map(UserInfo::new).collect(Collectors.toList());
 
         upcomingEvents = new ArrayList<>();
 
@@ -161,7 +159,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                 if (id == null) return;
 
                 try {
-                    var user = voiceChannel.getGuild().retrieveMemberById(id).onErrorMap(m -> null).complete();
+                    var user = guild.retrieveMemberById(id).onErrorMap(m -> null).complete();
 
                     if (user != null) {
                         identities.put(c, user);
@@ -211,7 +209,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                 if (id == null) return;
 
                 Service.of(AchievementManager.class).rewardAchievement(id.getUser(), Achievement.QUEUE_SONG_WITH_RPC);
-                var future = Service.of(SongSuggestionManager.class).addSuggestion(url, null, id, voiceChannel.getGuild().getTextChannelById(RadioConfig.config.channels.radioChat), true, true, SuggestionQueueMode.NORMAL);
+                var future = Service.of(SongSuggestionManager.class).addSuggestion(url, null, id, guild.getTextChannelById(RadioConfig.config.channels.radioChat), true, true, SuggestionQueueMode.NORMAL);
 
                 future.thenAccept(res -> {
                    if (!res) {
@@ -339,7 +337,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
 
                 var mb = identities.get(c);
 
-                if (mb == null || !djChannel.canTalk(mb)) return;
+                if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb)) return;
 
                 var p = Service.of(DatabaseManager.class).getCollection("playlists").find(eq(playlist)).first();
 
@@ -352,7 +350,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                 log("play22");
                 var mb = identities.get(c);
 
-                if (mb == null || !djChannel.canTalk(mb)) return;
+                if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb)) return;
 
                 log("CLIENT GET ALL PLAYLISTS!!");
 
@@ -374,7 +372,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
                 server.addEventListener(a.getSocketCode(), Object.class, (c, o, ack) -> {
                     var mb = identities.get(c);
 
-                    if (mb == null || !djChannel.canTalk(mb)) return;
+                    if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb)) return;
 
                     var result = Service.of(SongDJ.class).invokeAction(a, mb.getUser());
 
@@ -387,7 +385,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
             server.addEventListener(CLIENT_CONTROL_CANCEL_UPCOMING_EVENT, String.class, (c, evId, ack) -> {
                 var mb = identities.get(c);
 
-                if (mb == null || !djChannel.canTalk(mb) || upcomingEvents == null) return;
+                if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb) || upcomingEvents == null) return;
 
                 for (var ev : upcomingEvents) {
                     if (ev.id.equals(evId)) {
@@ -401,7 +399,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
             server.addEventListener(CLIENT_CONTROL_SET_VOLUME, Integer.class, (c, vol, ack) -> { //TODO
                 var mb = identities.get(c);
 
-                if (mb == null || !djChannel.canTalk(mb) || upcomingEvents == null) return;
+                if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb) || upcomingEvents == null) return;
 
                 vol = Math.max(0, Math.min(1000, vol));
 
@@ -495,13 +493,12 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
 
     @Override
     public void onEvent(@Nonnull GenericEvent ev) {
-        if (ev instanceof GuildVoiceJoinEvent || ev instanceof GuildVoiceMoveEvent || ev instanceof GuildVoiceLeaveEvent) {
+        if (ev instanceof GuildVoiceJoinEvent || ev instanceof GuildVoiceMoveEvent || ev instanceof GuildVoiceLeaveEvent || ev instanceof GuildVoiceDeafenEvent) {
             var e = (GenericGuildVoiceEvent) ev;
 
             if (!e.getGuild().equals(guild)) return;
-            if (((GenericGuildVoiceEvent) ev).getMember().getUser().isBot()) return;
 
-            listeners = voiceChannel.getMembers().stream().filter(m -> !m.getUser().isBot()).map(UserInfo::new).collect(Collectors.toList());
+            listeners = ListeningContext.ALL.getListeners().stream().map(m -> m.get().getUser()).map(UserInfo::new).collect(Collectors.toList());
 
             server.getAllClients().forEach(c -> c.sendEvent(SERVER_RADIO_LISTENERS, listeners));
         }
@@ -560,7 +557,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
         for (var client : server.getAllClients()) {
             var mb = identities.get(client);
 
-            if (mb == null || !djChannel.canTalk(mb)) continue;
+            if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb)) continue;
 
             client.sendEvent(SERVER_CONTROL_UPCOMING_EVENTS, evs);
         }
@@ -570,8 +567,8 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
         server.getBroadcastOperations().sendEvent(SERVER_COINS, new CoinsUpdateInfo(id, amount, totalTime));
     }
 
-    public void sendAnnouncement(String title, String message) {
-        server.getBroadcastOperations().sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo(title, message));
+    public void sendAnnouncement(String title, String message, int stayTime) {
+        server.getBroadcastOperations().sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo(title, message).setStayTime(stayTime));
     }
 
     public void updateQueue() {

@@ -2,10 +2,7 @@ package me.voidinvoid.discordmusic.commands.slash;
 
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.commands.slash.impl.PlaySongCommand;
-import me.voidinvoid.discordmusic.commands.slash.impl.QueueCommand;
-import me.voidinvoid.discordmusic.commands.slash.impl.SkipSongCommand;
-import me.voidinvoid.discordmusic.commands.slash.impl.SpotifyPresenceCopyCommand;
+import me.voidinvoid.discordmusic.commands.slash.impl.*;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
@@ -34,6 +31,7 @@ public class SlashCommandManager extends ListenerAdapter implements RadioService
         registerCommandHandler(new QueueCommand());
         registerCommandHandler(new SkipSongCommand());
         registerCommandHandler(new SpotifyPresenceCopyCommand());
+        registerCommandHandler(new RestreamCommand());
 
         registerCommands();
     }

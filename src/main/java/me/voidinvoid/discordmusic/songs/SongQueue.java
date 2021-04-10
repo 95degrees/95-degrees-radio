@@ -43,7 +43,7 @@ public abstract class SongQueue extends AudioEventAdapter {
             List<Song> allSongs = new ArrayList<>();
 
             if (queue != null) { //when updating the queue, re-add the network songs...
-                allSongs = queue.stream().filter(s -> s instanceof UserSuggestable).collect(Collectors.toList());
+                allSongs = getSuggestions();
             }
 
             allSongs.addAll(l); //...and then add the rest of the songs to the queue (so network songs are first)
@@ -87,7 +87,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     }
 
     public boolean remove(Song song) {
-        if (!(song instanceof UserSuggestable)) {
+        if (!(song instanceof UserSuggestable) || !((UserSuggestable) song).isSuggestion()) {
             return false;
         }
 
@@ -106,7 +106,7 @@ public abstract class SongQueue extends AudioEventAdapter {
 
         int pos = 0; //push the song to the bottom of all suggestions but above regular songs
         for (Song s : queue) {
-            if (!(s instanceof UserSuggestable)) break;
+            if (!(s instanceof UserSuggestable) || !((UserSuggestable) s).isSuggestion()) break;
 
             pos++;
         }
@@ -124,7 +124,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     }
 
     public List<Song> suggestionsBy(User user) {
-        return queue.stream().filter(s -> s instanceof UserSuggestable && ((UserSuggestable) s).getSuggestedBy().equals(user)).collect(Collectors.toList());
+        return queue.stream().filter(s -> s instanceof UserSuggestable && Objects.equals(((UserSuggestable) s).getSuggestedBy(), user)).collect(Collectors.toList());
     }
 
     public SongType getQueueType() {
@@ -186,7 +186,7 @@ public abstract class SongQueue extends AudioEventAdapter {
     }
 
     public List<Song> getSuggestions() {
-        return queue.stream().filter(UserSuggestable.class::isInstance).collect(Collectors.toList());
+        return queue.stream().filter(UserSuggestable.class::isInstance).filter(s -> ((UserSuggestable) s).isSuggestion()).collect(Collectors.toList());
     }
 
     public List<Song> clearSuggestions() {

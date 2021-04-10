@@ -42,7 +42,7 @@ public abstract class RadioPlaylist extends Playlist {
     }
 
     public boolean isDirectMessageNotifications() {
-        return getProperties().isTestingMode();
+        return getProperties().isDirectMessageNotifications();
     }
 
     @Override

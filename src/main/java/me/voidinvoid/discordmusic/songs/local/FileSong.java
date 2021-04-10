@@ -119,7 +119,7 @@ public class FileSong extends Song implements UserSuggestable {
 
     @Override
     public boolean isPersistent() {
-        return suggestedBy != null;
+        return suggestedBy == null;
     }
 
     @Override

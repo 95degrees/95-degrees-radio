@@ -6,7 +6,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
-import me.voidinvoid.discordmusic.commands.slash.SlashCommandData;
 import me.voidinvoid.discordmusic.songs.NetworkSong;
 import me.voidinvoid.discordmusic.songs.QueueOption;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -18,7 +17,6 @@ import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -37,14 +35,18 @@ public class SongSuggestionManager implements RadioService, EventListener {
 
     @Override
     public void onEvent(@Nonnull GenericEvent ev) {
-        /*if (ev instanceof GuildMessageReceivedEvent) {
+        if (ev instanceof GuildMessageReceivedEvent) {
             GuildMessageReceivedEvent e = (GuildMessageReceivedEvent) ev;
 
             if (!ChannelScope.RADIO_AND_DJ_CHAT.check(e.getChannel())) return;
             if (e.getAuthor().isBot()) return;
 
-            addSuggestion(e.getMessage().getContentRaw(), e.getMessage(), null, e.getChannel(), e.getMember(), false, true, SuggestionQueueMode.NORMAL);
-        } else */if (ev instanceof GuildMessageReactionAddEvent) {
+            addSuggestion(e.getMessage().getContentRaw(), null, e.getMember(), e.getChannel(), false, true, SuggestionQueueMode.NORMAL).thenAccept(located -> {
+                if (located) {
+                    e.getMessage().delete().reason("Radio song suggestion").queue();
+                }
+            });
+        } else if (ev instanceof GuildMessageReactionAddEvent) {
             GuildMessageReactionAddEvent e = (GuildMessageReactionAddEvent) ev;
 
             SongSearchResult search = searches.get(e.getMessageId());
@@ -74,7 +76,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
                                 hook = interaction.join();
                             }
 
-                            var song = new NetworkSong(SongType.SONG, s, member == null ? null : member.getUser(), hook);
+                            var song = new NetworkSong(SongType.SONG, s, member == null ? Radio.getInstance().getJda().getSelfUser() : member.getUser(), hook);
                             song.setSpotifyTrack(t);
 
                             Radio.getInstance().getOrchestrator().queueSuggestion(song);
@@ -105,7 +107,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
         Radio.getInstance().getOrchestrator().getAudioManager().loadItem(identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                var song = new NetworkSong(SongType.SONG, track, member == null ? null : member.getUser(), interaction == null ? null : interaction.join());
+                var song = new NetworkSong(SongType.SONG, track, member == null ? Radio.getInstance().getJda().getSelfUser() : member.getUser(), interaction == null ? null : interaction.join());
                 Radio.getInstance().getOrchestrator().queueSuggestion(song, opts.toArray(new QueueOption[]{}));
 
                 future.complete(true);
@@ -118,11 +120,19 @@ public class SongSuggestionManager implements RadioService, EventListener {
                 SongSearchResult search = new SongSearchResult(playlist, member.getUser(), ChannelScope.DJ_CHAT.check(channel));
                 if (search.getResultCount() == 0) {
                     if (notifyOnFailure) {
-                        channel.sendMessage(new EmbedBuilder()
+                        var embed = new EmbedBuilder()
                                 .setTitle(Emoji.CROSS + " Search Failure")
                                 .setColor(Colors.ACCENT_ERROR)
                                 .setDescription("No song results found for your search. Some songs were found but were too long to be included")
-                                .build()).queue();
+                                .build();
+
+                        if (interaction != null) {
+                            interaction.whenComplete((hook, throwable) -> {
+                                hook.editOriginal(embed).queue();
+                            });
+                        } else {
+                            channel.sendMessage(embed).queue();
+                        }
                     }
 
                     future.complete(false);
@@ -138,14 +148,20 @@ public class SongSuggestionManager implements RadioService, EventListener {
 
             @Override
             public void noMatches() {
-                if (notifyOnFailure && interaction != null) {
-                    interaction.whenComplete((hook, throwable) -> {
-                        hook.editOriginal(new EmbedBuilder()
-                                .setTitle(Emoji.CROSS + " Search Failure")
-                                .setColor(Colors.ACCENT_ERROR)
-                                .setDescription("No song results found for your search")
-                                .build()).queue();
-                    });
+                if (notifyOnFailure) {
+                    var embed = new EmbedBuilder()
+                            .setTitle(Emoji.CROSS + " Search Failure")
+                            .setColor(Colors.ACCENT_ERROR)
+                            .setDescription("No song results found for your search")
+                            .build();
+
+                    if (interaction != null) {
+                        interaction.whenComplete((hook, throwable) -> {
+                            hook.editOriginal(embed).queue();
+                        });
+                    } else if (channel != null) {
+                        channel.sendMessage(embed).queue();
+                    }
                 }
 
                 future.complete(false);

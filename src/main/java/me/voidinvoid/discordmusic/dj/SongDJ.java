@@ -10,8 +10,6 @@ import me.voidinvoid.discordmusic.dj.actions.*;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.quiz.QuizPlaylist;
 import me.voidinvoid.discordmusic.songs.*;
-import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
-import me.voidinvoid.discordmusic.songs.local.FileSong;
 import me.voidinvoid.discordmusic.utils.*;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
@@ -77,8 +75,11 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
                 .setDescription("Song has been removed from the queue")
                 .setColor(new Color(230, 230, 230))
                 .addField("Name", song.getTrack().getInfo().title, true)
-                .addField("URL", song.getTrack().getInfo().uri, true)
                 .setTimestamp(new Date().toInstant());
+
+        if (song instanceof NetworkSong) {
+            embed.addField("URL", song.getTrack().getInfo().uri, true);
+        }
 
         var suggestedBy = song instanceof UserSuggestable ? ((UserSuggestable) song).getSuggestedBy() : null;
         if (suggestedBy != null) {

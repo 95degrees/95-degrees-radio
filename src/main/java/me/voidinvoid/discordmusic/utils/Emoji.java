@@ -51,9 +51,13 @@ public final class Emoji {
     public static Emoji LOADING;
     public static Emoji DIVIDER;
     public static Emoji DIVIDER_SMALL;
+    public static Emoji TROPHY_BRONZE;
+    public static Emoji TROPHY_SILVER;
+    public static Emoji TROPHY_GOLD;
 
     public static Emoji PLAY;
     public static Emoji PAUSE;
+    public static Emoji SKIP;
 
     public static Emoji YOUTUBE;
     public static Emoji SPOTIFY;
@@ -103,9 +107,13 @@ public final class Emoji {
         LOADING = new Emoji(g.getEmoteById("624223121783652363"));
         DIVIDER = new Emoji(g.getEmoteById("710918643029901333"));
         DIVIDER_SMALL = new Emoji(g.getEmoteById("711631476718043136"));
+        TROPHY_BRONZE = new Emoji(g.getEmoteById("723940015901638696"));
+        TROPHY_SILVER = new Emoji(g.getEmoteById("723940016463544372"));
+        TROPHY_GOLD = new Emoji(g.getEmoteById("723940015704637493"));
 
         PLAY = new Emoji(g.getEmoteById("717119119572598857"));
         PAUSE = new Emoji(g.getEmoteById("717119119484256307"));
+        SKIP = new Emoji(g.getJDA().getEmoteById("830518629975195739"));
 
         YOUTUBE = new Emoji(g.getEmoteById("741101530853277806"));
         SPOTIFY = new Emoji(g.getEmoteById("741101567817547826"));
