@@ -7,8 +7,9 @@ import me.voidinvoid.discordmusic.commands.slash.SlashCommandHandler;
 import me.voidinvoid.discordmusic.songs.RadioPlaylist;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
-import net.dv8tion.jda.api.entities.Command;
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 
 public class PlaySongCommand implements SlashCommandHandler {
 
@@ -22,17 +23,17 @@ public class PlaySongCommand implements SlashCommandHandler {
 
         var track = data.getStringOption("track", null);
 
-        var hookFuture = data.getEvent().acknowledge().submit();
+        var hookFuture = data.getEvent().deferReply().submit();
 
         Radio.getInstance().getService(SongSuggestionManager.class)
                 .addSuggestion((track.startsWith("https://") || track.startsWith("http://") ? track : "ytsearch:" + track), hookFuture, data.getMember(), data.getEvent().getTextChannel(), true, data.getBooleanOption("autoselect", true), SuggestionQueueMode.NORMAL);
     }
 
     @Override
-    public CommandUpdateAction.CommandData getCommand() {
-        return new CommandUpdateAction.CommandData("play", "Plays the specified track")
-                .addOption(new CommandUpdateAction.OptionData(Command.OptionType.STRING, "track", "The name or URL of the track").setRequired(true))
-                .addOption(new CommandUpdateAction.OptionData(Command.OptionType.BOOLEAN, "autoselect", "Automatically select the first track if there are multiple matches").setRequired(false));
+    public CommandData getCommand() {
+        return new CommandData("play", "Plays the specified track")
+                .addOption(new OptionData(OptionType.STRING, "track", "The name or URL of the track").setRequired(true))
+                .addOption(new OptionData(OptionType.BOOLEAN, "autoselect", "Automatically select the first track if there are multiple matches").setRequired(false));
     }
 
     @Override

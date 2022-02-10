@@ -31,6 +31,7 @@ import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.guild.voice.*;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 
 import javax.annotation.Nonnull;
@@ -374,7 +375,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
 
                     if (mb == null || !ChannelScope.DJ_CHAT.hasAccess(mb)) return;
 
-                    var result = Service.of(SongDJ.class).invokeAction(a, mb.getUser());
+                    var result = Service.of(SongDJ.class).invokeAction(a, mb.getUser(), null);
 
                     if (result != null) {
                         c.sendEvent(SERVER_ANNOUNCEMENT, new AnnouncementInfo("DJ controls", result));
@@ -455,7 +456,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
     }
 
     @Override
-    public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
+    public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player, ButtonClickEvent source) {
         server.getBroadcastOperations().sendEvent(SERVER_SONG_PAUSE, paused);
     }
 
@@ -541,7 +542,7 @@ public class RPCSocketManager implements RadioService, RadioEventListener, Event
         var orch = Radio.getInstance().getOrchestrator();
 
         var pausePending = orch.isPausePending();
-        var jinglePending = orch.getTimeUntilJingle() == 0;
+        var jinglePending = orch.getTimeUntilJingle() == 0 && orch.getActivePlaylist() instanceof RadioPlaylist && ((RadioPlaylist) orch.getActivePlaylist()).isJinglesEnabled();
         var adPending = !orch.getAwaitingSpecialSongs().isEmpty() && orch.getAwaitingSpecialSongs().get(0).getType() == SongType.ADVERTISEMENT;
         var rewardPending = !orch.getAwaitingSpecialSongs().isEmpty() && orch.getAwaitingSpecialSongs().get(0).getType() == SongType.REWARD;
 

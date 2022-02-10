@@ -13,7 +13,7 @@ import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Formatting;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.commands.CommandHook;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -59,7 +59,7 @@ public class SongSearchResult {
         return playlist.size();
     }
 
-    public CompletableFuture<Message> sendMessage(CommandHook hook) {
+    public CompletableFuture<Message> sendMessage(InteractionHook hook) {
         int amount = playlist.size();
 
         EmbedBuilder embed = new EmbedBuilder()
@@ -81,7 +81,7 @@ public class SongSearchResult {
 
         embed.addField("", emojiBuilder.toString(), false);
 
-        CompletableFuture<Message> future = hook.editOriginal(embed.build()).submit();
+        CompletableFuture<Message> future = hook.editOriginalEmbeds(embed.build()).submit();
 
         future.whenComplete((m, e) -> {
             for (int ix = 0; ix < amount; ix++) {

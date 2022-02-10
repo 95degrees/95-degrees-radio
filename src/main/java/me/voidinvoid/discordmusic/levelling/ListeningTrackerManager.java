@@ -71,8 +71,8 @@ public class ListeningTrackerManager implements RadioService, EventListener {
                 Service.of(AchievementManager.class).rewardAchievement(user, Achievement.MUTE_RADIO);
             } else if (!listeningTracker.containsKey(user.getId())) {
                 listeningTracker.put(user.getId(), track(user));
-                return;
             }
+            return;
         }
 
         ScheduledFuture<?> s = listeningTracker.remove(user.getId());

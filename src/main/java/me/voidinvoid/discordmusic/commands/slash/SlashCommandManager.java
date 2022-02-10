@@ -7,6 +7,7 @@ import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +23,7 @@ import java.util.*;
 
 public class SlashCommandManager extends ListenerAdapter implements RadioService {
 
-    private Map<CommandUpdateAction.CommandData, SlashCommandHandler> commands = new HashMap<>();
+    private Map<CommandData, SlashCommandHandler> commands = new HashMap<>();
     private Map<List<String>, Method> handlers = new HashMap<>();
 
     @Override
@@ -38,7 +39,7 @@ public class SlashCommandManager extends ListenerAdapter implements RadioService
 
     public void registerCommandHandler(SlashCommandHandler handler) {
         var cmd = handler.getCommand();
-        var name = cmd.toData().getString("name");
+        var name = cmd.getName();
 
         commands.put(cmd, handler);
 
@@ -59,7 +60,7 @@ public class SlashCommandManager extends ListenerAdapter implements RadioService
         }
     }
 
-    public Map<CommandUpdateAction.CommandData, SlashCommandHandler> getCommands() {
+    public Map<CommandData, SlashCommandHandler> getCommands() {
         return commands;
     }
 
@@ -75,6 +76,13 @@ public class SlashCommandManager extends ListenerAdapter implements RadioService
         var command = commands.entrySet().stream().filter(c -> c.getKey().getName().equals(name)).map(Map.Entry::getValue).findFirst().orElse(null);
 
         if (command == null) {
+            log("No command for " + name + " command");
+            return;
+        }
+
+        var handler = commands.entrySet().stream().filter(en -> en.getKey().getName().equals(command.getCommand().getName())).map(Map.Entry::getValue).findFirst().orElse(null);
+
+        if (handler == null) {
             log("No command handler for " + name + " command");
             return;
         }

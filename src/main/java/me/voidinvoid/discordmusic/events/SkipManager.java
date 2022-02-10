@@ -83,7 +83,7 @@ public class SkipManager implements RadioService, RadioEventListener, EventListe
         }
 
         if (interaction != null) {
-            interaction.getEvent().reply(embed.build()).queue(c -> c.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
+            interaction.getEvent().replyEmbeds(embed.build()).queue(c -> c.deleteOriginal().queueAfter(5, TimeUnit.SECONDS));
         } else {
             radioTextChannel.get().sendMessage(embed.build()).queue(m -> m.delete().queueAfter(5, TimeUnit.SECONDS));
         }

@@ -4,11 +4,11 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.requests.restaction.InteractionWebhookAction;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageUpdateAction;
 
 import javax.annotation.CheckReturnValue;
 import java.awt.*;
@@ -41,11 +41,11 @@ public final class AlbumArtUtils {
     }
 
     @CheckReturnValue
-    public static InteractionWebhookAction attachAlbumArtToCommandHook(EmbedBuilder embed, Song song, CommandHook interactionHook) {
+    public static WebhookMessageUpdateAction<Message> attachAlbumArtToInteractionHook(EmbedBuilder embed, Song song, InteractionHook interactionHook) {
         var art = song.getAlbumArt();
         if (art == null) art = Radio.getInstance().getService(AlbumArtManager.class).getFallbackAlbumArt();
 
-        return art.attachAlbumArtToCommandHook(embed, interactionHook);
+        return art.attachAlbumArtToInteractionHook(embed, interactionHook);
     }
 
     public static BufferedImage scaleAlbumArt(BufferedImage img) {

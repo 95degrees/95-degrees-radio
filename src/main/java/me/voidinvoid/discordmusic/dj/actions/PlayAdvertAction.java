@@ -9,13 +9,14 @@ import me.voidinvoid.discordmusic.utils.Colors;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 
 import java.time.OffsetDateTime;
 
 public class PlayAdvertAction extends DJAction {
 
     public PlayAdvertAction() {
-        super("Queue Advert", "📰", RPCSocketManager.CLIENT_CONTROL_QUEUE_AD);
+        super("Queue Advert", "📰", RPCSocketManager.CLIENT_CONTROL_QUEUE_AD, 1);
     }
 
     @Override
@@ -24,7 +25,7 @@ public class PlayAdvertAction extends DJAction {
     }
 
     @Override
-    public String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker) {
+    public String invoke(SongOrchestrator orch, AudioTrack track, TextChannel djChannel, User invoker, ButtonClickEvent event) {
         Radio.getInstance().getService(AdvertisementManager.class).pushAdvertisement();
 
         djChannel.sendMessage(new EmbedBuilder()

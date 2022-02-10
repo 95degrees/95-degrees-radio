@@ -9,7 +9,7 @@ import me.voidinvoid.discordmusic.songs.albumart.AlbumArtManager;
 import me.voidinvoid.discordmusic.songs.albumart.RemoteAlbumArt;
 import me.voidinvoid.discordmusic.utils.Service;
 import me.voidinvoid.discordmusic.utils.cache.CachedUser;
-import net.dv8tion.jda.api.commands.CommandHook;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.entities.User;
 
 public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggestable {
@@ -18,11 +18,11 @@ public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggest
     private CachedUser suggestedBy;
     private AudioTrack track;
     private Track spotifyTrack;
-    private CommandHook slashCommandSource;
+    private InteractionHook slashCommandSource;
 
     private AlbumArt albumArt;
 
-    public NetworkSong(SongType type, AudioTrack track, User suggestedBy, CommandHook slashCommandSource) {
+    public NetworkSong(SongType type, AudioTrack track, User suggestedBy, InteractionHook slashCommandSource) {
         super(type);
 
         this.url = track.getInfo().uri;
@@ -108,7 +108,7 @@ public class NetworkSong extends Song implements SpotifyTrackHolder, UserSuggest
     }
 
     @Override
-    public CommandHook getSlashCommandSource() {
+    public InteractionHook getSlashCommandSource() {
         return slashCommandSource;
     }
 }

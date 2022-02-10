@@ -10,6 +10,7 @@ import me.voidinvoid.discordmusic.economy.EconomyManager;
 import me.voidinvoid.discordmusic.dj.SongDJ;
 import me.voidinvoid.discordmusic.events.*;
 import me.voidinvoid.discordmusic.guardian.GuardianIntegrationManager;
+import me.voidinvoid.discordmusic.interactions.ButtonManager;
 import me.voidinvoid.discordmusic.levelling.AchievementManager;
 import me.voidinvoid.discordmusic.levelling.ListeningTrackerManager;
 import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
@@ -35,16 +36,17 @@ import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.audio.SpeakingMode;
+import net.dv8tion.jda.api.audio.hooks.ConnectionListener;
+import net.dv8tion.jda.api.audio.hooks.ConnectionStatus;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.managers.AudioManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.security.auth.login.LoginException;
@@ -123,7 +125,7 @@ public class Radio implements EventListener {
         this.databaseManager = databaseManager;
 
         try {
-            jda = JDABuilder.createDefault(config.botToken).enableIntents(GatewayIntent.GUILD_PRESENCES).enableCache(CacheFlag.ACTIVITY).addEventListeners(this).build();
+            jda = JDABuilder.createDefault(config.botToken).enableIntents(GatewayIntent.GUILD_PRESENCES).enableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE).addEventListeners(this).build();
 
             if (config.useStatus) jda.getPresence().setActivity(null);
         } catch (LoginException e) {
@@ -167,6 +169,7 @@ public class Radio implements EventListener {
             msg.editMessage(loading.appendDescription("\n`Loading song event hooks...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
         registerService(new AlbumArtManager());
+        registerService(new ButtonManager());
         registerService(new MessageReactionCallbackManager());
         registerService(new SongRatingManager());
         registerService(new CommandManager());
@@ -175,7 +178,6 @@ public class Radio implements EventListener {
         registerService(new RPCSocketManager());
         registerService(new SongTriggerManager());
         registerService(new NotificationManager());
-        //registerService(new TickerManager());
         registerService(new SongDJ());
         registerService(new SoundEffectsManager());
         registerService(new PersistentMessageManager());
@@ -202,7 +204,34 @@ public class Radio implements EventListener {
         if (djChannel != null)
             msg.editMessage(loading.appendDescription("\n`Opening audio connection...`").setTimestamp(OffsetDateTime.now()).build()).queue();
 
-        AudioManager mgr = radioVoiceChannel.getGuild().getAudioManager();
+        for (var channel : guild.getChannels()) {
+            System.out.println("CHANNEL: " + channel.getId() + ", " + channel.getName() + ", " + channel.getType());
+        }
+
+        System.out.println("RADIO VC: " + radioVoiceChannel);
+        var stageVC = jda.getStageChannelById(config.channels.voice);
+        System.out.println("STAGE VC: " + stageVC);
+
+        AudioManager mgr = guild.getAudioManager();
+
+        mgr.setConnectionListener(new ConnectionListener() {
+            @Override
+            public void onPing(long l) {
+
+            }
+
+            @Override
+            public void onStatusChange(@NotNull ConnectionStatus status) {
+                if (status == ConnectionStatus.CONNECTED) {
+                    mgr.getGuild().requestToSpeak().queue();
+                }
+            }
+
+            @Override
+            public void onUserSpeaking(@NotNull User user, boolean b) {
+
+            }
+        });
 
         mgr.setSendingHandler(orchestrator.getAudioSendHandler());
         mgr.openAudioConnection(radioVoiceChannel);

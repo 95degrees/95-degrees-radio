@@ -16,7 +16,7 @@ public class SpotifySong extends Song implements SpotifyTrackHolder {
         super(songType);
 
         this.spotifyTrack = spotifyTrack;
-        this.identifier = Service.of(SpotifyManager.class).getIdentifier(spotifyTrack);
+        this.identifier = "https://www.youtube.com/watch?v=" + Service.of(SpotifyManager.class).getIdentifier(spotifyTrack);
 
         this.albumArt = spotifyTrack.getAlbum() == null || spotifyTrack.getAlbum().getImages() == null ?
                 null : new RemoteAlbumArt(spotifyTrack.getAlbum().getImages()[0].getUrl());

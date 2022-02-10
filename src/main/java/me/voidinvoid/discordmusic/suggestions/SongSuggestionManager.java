@@ -15,13 +15,13 @@ import me.voidinvoid.discordmusic.utils.Colors;
 import me.voidinvoid.discordmusic.utils.Emoji;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.commands.CommandHook;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
         }
     }
 
-    public CompletableFuture<Boolean> addSuggestion(String identifier, CompletableFuture<CommandHook> interaction, Member member, TextChannel channel, boolean notifyOnFailure, boolean autoSelectFirstEntry, SuggestionQueueMode queueMode) {
+    public CompletableFuture<Boolean> addSuggestion(String identifier, CompletableFuture<InteractionHook> interaction, Member member, TextChannel channel, boolean notifyOnFailure, boolean autoSelectFirstEntry, SuggestionQueueMode queueMode) {
 
         var future = new CompletableFuture<Boolean>(); //returns true if we locate the song, NOT if it was queued successfully, mainly for rpc feedback
 
@@ -70,7 +70,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
                 if (t != null) {
                     sm.fetchLavaTrack(t).thenAccept(s -> {
                         if (s != null) {
-                            CommandHook hook = null;
+                            InteractionHook hook = null;
 
                             if (interaction != null) {
                                 hook = interaction.join();
@@ -128,7 +128,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
 
                         if (interaction != null) {
                             interaction.whenComplete((hook, throwable) -> {
-                                hook.editOriginal(embed).queue();
+                                hook.editOriginalEmbeds(embed).queue();
                             });
                         } else {
                             channel.sendMessage(embed).queue();
@@ -157,7 +157,7 @@ public class SongSuggestionManager implements RadioService, EventListener {
 
                     if (interaction != null) {
                         interaction.whenComplete((hook, throwable) -> {
-                            hook.editOriginal(embed).queue();
+                            hook.editOriginalEmbeds(embed).queue();
                         });
                     } else if (channel != null) {
                         channel.sendMessage(embed).queue();

@@ -1,12 +1,12 @@
 package me.voidinvoid.discordmusic.commands.slash;
 
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 
 public interface SlashCommandHandler {
 
-    CommandUpdateAction.CommandData getCommand();
+    CommandData getCommand();
 
-    public default boolean requiresDjAccess() {
+    default boolean requiresDjAccess() {
         return false;
     }
 }

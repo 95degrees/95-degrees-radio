@@ -8,6 +8,7 @@ import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.dj.actions.*;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
+import me.voidinvoid.discordmusic.interactions.ButtonManager;
 import me.voidinvoid.discordmusic.quiz.QuizPlaylist;
 import me.voidinvoid.discordmusic.songs.*;
 import me.voidinvoid.discordmusic.utils.*;
@@ -18,19 +19,18 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.interactions.ActionRow;
+import net.dv8tion.jda.api.interactions.button.ButtonStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
-import javax.annotation.Nonnull;
 import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SongDJ implements RadioService, RadioEventListener, EventListener {
+public class SongDJ implements RadioService, RadioEventListener {
 
     private final List<DJAction> actions = new ArrayList<>();
     private final Map<String, Song> queueDeletionMessages = new HashMap<>();
@@ -69,7 +69,9 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
 
         song.getQueue().remove(song);
 
-        m.delete().reason("Network radio song suggestion removed").queue();
+        if (m != null) {
+            m.delete().reason("Network radio song suggestion removed").queue();
+        }
 
         EmbedBuilder embed = new EmbedBuilder().setTitle("Song Queue")
                 .setDescription("Song has been removed from the queue")
@@ -93,34 +95,24 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
         }
     }
 
-    @Override
-    public void onEvent(@Nonnull GenericEvent ev) { //todo use MessageReactionCallbackManager
-        if (ev instanceof MessageReactionAddEvent) {
-            MessageReactionAddEvent e = (MessageReactionAddEvent) ev;
+    public String invokeAction(DJAction action, User user, ButtonClickEvent event) {
+        var res = action.invoke(Radio.getInstance().getOrchestrator(), activeTrack, djChannel.get(), user, event);
 
-            if (e.getUser().isBot()) return;
-
-            if (currentMessage == null) return;
-
-            if (!e.getMessageId().equals(currentMessage.getId())) return;
-
-            String emote = e.getReaction().getReactionEmote().getName();
-
-            actions.stream().filter(r -> emote.equals(r.getEmoji()) && r.shouldShow(activeTrack)).findAny().ifPresent(r -> invokeAction(r, e.getUser()));
-
-            e.getReaction().removeReaction(e.getUser()).queue();
+        if (event != null && !event.isAcknowledged()) {
+            event.deferEdit().queue();
         }
-    }
 
-    public String invokeAction(DJAction action, User user) {
-        return action.invoke(Radio.getInstance().getOrchestrator(), activeTrack, djChannel.get(), user);
+        return res;
     }
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         activeTrack = track;
 
-        if (currentMessage != null) currentMessage.delete().queue();
+        if (currentMessage != null) {
+            currentMessage.delete().queue();
+            currentMessage = null;
+        }
 
         if (Radio.getInstance().getOrchestrator().getActivePlaylist() instanceof QuizPlaylist)
             return; //no quiz stuff here
@@ -137,12 +129,21 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
             }
         }
 
-        List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(track)).collect(Collectors.toList());
+        attachButtons(createMessage(song, track, player, timeUntilJingle)).queue(m -> currentMessage = m);
+    }
 
-        createMessage(song, track, player, timeUntilJingle).queue(m -> {
-            currentMessage = m;
-            availableActions.forEach(a -> m.addReaction(a.getEmoji()).queue());
-        });
+    public MessageAction attachButtons(MessageAction action) {
+        List<DJAction> availableActions = this.actions.stream().filter(r -> r.shouldShow(activeTrack)).collect(Collectors.toList());
+
+        var rowsToCreate = availableActions.stream().map(DJAction::getActionRowIndex).max(Integer::compareTo).orElse(0) + 1;
+        var rows = new ActionRow[rowsToCreate];
+
+        for (int i = 0; i < rowsToCreate; i++) {
+            int index = i;
+            rows[i] = ActionRow.of(availableActions.stream().filter(a -> a.getActionRowIndex() == index).map(a -> ButtonManager.of(ButtonStyle.SECONDARY, net.dv8tion.jda.api.entities.Emoji.ofUnicode(a.getEmoji()), e -> invokeAction(a, e.getEvent().getUser(), e.getEvent()))).collect(Collectors.toList()));
+        }
+
+        return action.setActionRows(rows);
     }
 
     @Override
@@ -154,9 +155,14 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
     }
 
     @Override
-    public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
+    public void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player, ButtonClickEvent source) {
         if (currentMessage != null) {
-            AlbumArtUtils.attachAlbumArtToEdit(new EmbedBuilder(currentMessage.getEmbeds().get(0)).setColor(paused ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN), song, currentMessage).queue(m -> currentMessage = m);
+            if (source == null) {
+                attachButtons(AlbumArtUtils.attachAlbumArtToEdit(new EmbedBuilder(currentMessage.getEmbeds().get(0)).setColor(paused ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN), song, currentMessage)).queue(m -> currentMessage = m);
+            } else {
+                source.deferEdit().setEmbeds(new EmbedBuilder(currentMessage.getEmbeds().get(0)).setColor(paused ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN).build()).queue();
+                //AlbumArtUtils.attachAlbumArtToInteractionHook(new EmbedBuilder(currentMessage.getEmbeds().get(0)).setColor(paused ? Colors.ACCENT_PAUSED : Colors.ACCENT_MAIN), song, source.getHook()).queue();
+            }
         }
     }
 
@@ -251,12 +257,6 @@ public class SongDJ implements RadioService, RadioEventListener, EventListener {
             embed.setFooter(user.getName(), user.getAvatarUrl());
         }
 
-        MessageReactionCallbackManager mr = Radio.getInstance().getService(MessageReactionCallbackManager.class);
-
-        AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get()).queue(m -> {
-            m.addReaction(Emoji.CROSS.getEmote()).queue();
-            queueDeletionMessages.put(m.getId(), song);
-            mr.registerCallback(m.getId(), e -> removeSongFromQueue(m, song));
-        });
+        AlbumArtUtils.attachAlbumArt(embed, song, djChannel.get()).setActionRows(ActionRow.of(ButtonManager.of(ButtonStyle.DANGER, "Remove", e -> removeSongFromQueue(e.getEvent().getMessage(), song)))).queue();
     }
 }

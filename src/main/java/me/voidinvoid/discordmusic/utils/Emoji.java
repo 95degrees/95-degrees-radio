@@ -138,6 +138,10 @@ public final class Emoji {
         return emote;
     }
 
+    public net.dv8tion.jda.api.entities.Emoji getJDAEmoji() {
+        return net.dv8tion.jda.api.entities.Emoji.ofEmote(emote);
+    }
+
     @Override
     public String toString() {
         return emote.getAsMention();
@@ -153,12 +157,17 @@ public final class Emoji {
         var emotes = guild.getEmotesByName(user.getId(), true);
 
         if (!emotes.isEmpty()) {
-            var emote = emotes.get(0);
+            Emoji validEmoji = null;
+            for (var emote : emotes) {
+                if ((OffsetDateTime.now().toEpochSecond() - emote.getTimeCreated().toEpochSecond()) > 172800) { //invalidate every 2 days (for avatar updates)
+                    emote.delete().queue();
+                } else {
+                    validEmoji = new Emoji(emote);
+                }
+            }
 
-            if ((OffsetDateTime.now().toEpochSecond() - emote.getTimeCreated().toEpochSecond()) > 172800) { //invalidate every 2 days (for avatar updates)
-                emote.delete().queue();
-            } else {
-                return new Emoji(emote);
+            if (validEmoji != null) {
+                return validEmoji;
             }
         }
 

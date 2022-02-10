@@ -6,7 +6,10 @@ import me.voidinvoid.discordmusic.songs.SpotifySong;
 import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
+import net.dv8tion.jda.api.interactions.button.Button;
 
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -45,22 +48,26 @@ public final class Songs {
     }
 
     public static String getLinksMasked(Song song) {
-        return getLinks(song).entrySet().stream().map(l -> Formatting.maskLink(l.getValue(), l.getKey())).collect(Collectors.joining(" "));
+        return getLinks(song).entrySet().stream().map(l -> Formatting.maskLink(l.getValue(), l.getKey().toString())).collect(Collectors.joining(" "));
     }
 
-    public static Map<String, String> getLinks(Song song) {
-        var links = new TreeMap<String, String>();
+    public static List<Button> getLinksAsButtons(Song song) {
+        return getLinks(song).entrySet().stream().map(l -> Button.link(l.getValue(), l.getKey().getJDAEmoji())).collect(Collectors.toList());
+    }
+
+    public static Map<Emoji, String> getLinks(Song song) {
+        var links = new LinkedHashMap<Emoji, String>();
 
         if (song instanceof SpotifyTrackHolder) {
             var st = ((SpotifyTrackHolder) song).getSpotifyTrack();
 
             if (st != null) {
-                links.put(Emoji.SPOTIFY.toString(), SpotifyManager.SPOTIFY_TRACK_URL + st.getId());
+                links.put(Emoji.SPOTIFY, SpotifyManager.SPOTIFY_TRACK_URL + st.getId());
             }
         }
 
         if (song instanceof NetworkSong && song.getLavaIdentifier().contains("youtu.be/") || song.getLavaIdentifier().contains("youtube.com/watch?v=")) {
-            links.put(Emoji.YOUTUBE.toString(), song.getLavaIdentifier());
+            links.put(Emoji.YOUTUBE, song.getLavaIdentifier());
         }
         //TODO other links
 

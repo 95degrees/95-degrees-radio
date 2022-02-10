@@ -7,6 +7,8 @@ import me.voidinvoid.discordmusic.songs.Playlist;
 import me.voidinvoid.discordmusic.songs.Song;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 
 public interface RadioEventListener {
 
@@ -16,7 +18,7 @@ public interface RadioEventListener {
     default void onSongEnd(Song song, AudioTrack track) {
     }
 
-    default void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player) {
+    default void onSongPause(boolean paused, Song song, AudioTrack track, AudioPlayer player, ButtonClickEvent source) {
     }
 
     default void onPausePending(boolean isPending) {

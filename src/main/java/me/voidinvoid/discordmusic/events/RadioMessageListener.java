@@ -5,7 +5,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
-import me.voidinvoid.discordmusic.lyrics.LiveLyricsManager;
+import me.voidinvoid.discordmusic.interactions.ButtonManager;
 import me.voidinvoid.discordmusic.ratings.Rating;
 import me.voidinvoid.discordmusic.ratings.SongRatingManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
@@ -16,17 +16,18 @@ import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.utils.*;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
 import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
-import me.voidinvoid.discordmusic.utils.reactions.ReactionListener;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.interactions.button.Button;
+import net.dv8tion.jda.api.interactions.button.ButtonStyle;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class RadioMessageListener implements RadioService, RadioEventListener {
@@ -34,23 +35,33 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
     private CachedChannel<TextChannel> textChannel;
     private List<Message> statusMessages = new ArrayList<>();
 
+    private Button SKIP_BUTTON;
+
     @Override
     public void onLoad() {
         textChannel = new CachedChannel<>(RadioConfig.config.channels.radioChat);
+
+        SKIP_BUTTON = ButtonManager.of(ButtonStyle.SECONDARY, Emoji.SKIP.getJDAEmoji(), e -> {
+
+            e.getEvent().deferEdit().queue();
+
+            var sm = Service.of(SkipManager.class);
+            sm.addSkipRequest(e.getEvent().getMember().getUser(), null);
+        });
     }
 
     @Override
     public void onSongStart(Song song, AudioTrack track, AudioPlayer player, int timeUntilJingle) {
         if (!song.getType().useAnnouncement()) return;
 
-        var links = Songs.getLinksMasked(song);
+        var links = Songs.getLinksAsButtons(song);
 
         var timestamp = track.isSeekable() ? Formatting.getFormattedMsTimeLabelled(track.getDuration()) : null;
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setColor(new Color(230, 230, 230))
                 .setTitle("Now Playing")
-                .addField(song.getTitle(), song.getArtist() + (links.isBlank() ? "" : "\n\n" + Emoji.LINK + Emoji.DIVIDER_SMALL + links), false);
+                .addField(song.getTitle(), song.getArtist(), false);
 
         if (timestamp != null) {
             embed.setFooter(timestamp);
@@ -63,7 +74,28 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
             }
         }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, textChannel.get()).queue(m -> {
+        var buttons = new ArrayList<Button>();
+
+        if (Songs.isRatable(song)) {
+            for (Rating r : Rating.values()) {
+                buttons.add(ButtonManager.of(ButtonStyle.SECONDARY, net.dv8tion.jda.api.entities.Emoji.ofUnicode(r.getEmote()), e -> {
+
+                    var rm = Radio.getInstance().getService(SongRatingManager.class);
+                    rm.rateSong(e.getEvent().getMember().getUser(), song, r, false);
+
+                    e.getEvent().deferReply(true).addEmbeds(new EmbedBuilder()
+                            .setTitle("Song Rating")
+                            .setColor(Colors.ACCENT_SONG_RATING)
+                            .setDescription(e.getEvent().getMember().getUser().getAsMention() + ", your rating of **" + Formatting.escape(song.getTitle()) + "** has been saved")
+                            .setTimestamp(OffsetDateTime.now()).setFooter(e.getEvent().getMember().getUser().getName(), e.getEvent().getMember().getUser().getAvatarUrl()).build()).queue();
+                }));
+            }
+        }
+
+        buttons.add(SKIP_BUTTON);
+        buttons.addAll(links);
+
+        ButtonManager.applyButtons(AlbumArtUtils.attachAlbumArt(embed, song, textChannel.get()), buttons).queue(m -> {
             statusMessages.add(m);
 
             RPCSocketManager srv = Radio.getInstance().getService(RPCSocketManager.class);
@@ -71,43 +103,13 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
             if (srv != null && song.getAlbumArt() instanceof LocalAlbumArt) {
                 srv.updateSongInfo(track, m.getEmbeds().get(0).getThumbnail().getUrl(), song instanceof UserSuggestable ? ((UserSuggestable) song).getSuggestedBy() : null);
             }
-
-            var rl = new ReactionListener(m, true);
-
-            if (Songs.isRatable(song)) {
-
-                for (Rating r : Rating.values()) {
-                    rl.add(r.getEmote(), ev -> {
-                        ev.setCancelled(true);
-
-                        var rm = Radio.getInstance().getService(SongRatingManager.class);
-                        rm.rateSong(ev.getMember().getUser(), song, r, false);
-
-                        m.getChannel().sendMessage(new EmbedBuilder()
-                                .setTitle("Song Rating")
-                                .setColor(Colors.ACCENT_SONG_RATING)
-                                .setDescription(ev.getMember().getUser().getAsMention() + ", your rating of **" + Formatting.escape(song.getTitle()) + "** has been saved")
-                                .setTimestamp(OffsetDateTime.now()).setFooter(ev.getMember().getUser().getName(), ev.getMember().getUser().getAvatarUrl()).build())
-                                .queue(m2 -> m2.delete().queueAfter(10, TimeUnit.SECONDS));
-                    });
-                }
-            }
-
-            rl.add(Emoji.SKIP.getEmote(), ev -> {
-                ev.setCancelled(true);
-
-                var sm = Service.of(SkipManager.class);
-                sm.addSkipRequest(ev.getMember().getUser(), null);
-
-            });
         });
     }
 
     @Override
     public void onSongEnd(Song song, AudioTrack track) {
         statusMessages.forEach(m -> {
-            m.clearReactions().queue();
-            Service.of(MessageReactionCallbackManager.class).removeCallback(m.getId());
+            ButtonManager.applyButtons(m.editMessage(m), Songs.getLinksAsButtons(song)).queue();
         });
 
         statusMessages.clear();
@@ -132,9 +134,9 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
             var slash = ((UserSuggestable) song).getSlashCommandSource();
 
             if (slash != null) {
-                AlbumArtUtils.attachAlbumArtToCommandHook(embed, song, slash).queue();
+                AlbumArtUtils.attachAlbumArtToInteractionHook(embed, song, slash).queue();
 
-                if (slash.getEvent().getChannel().getId().equals(textChannel.getId())) {
+                if (slash.getInteraction().getChannel().getId().equals(textChannel.getId())) {
                     return; //if we're not in #radio, send it there too
                 }
             }
@@ -169,9 +171,9 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
             var slash = ((UserSuggestable) song).getSlashCommandSource();
 
             if (slash != null) {
-                AlbumArtUtils.attachAlbumArtToCommandHook(embed, song, slash).queue();
+                AlbumArtUtils.attachAlbumArtToInteractionHook(embed, song, slash).queue();
 
-                if (slash.getEvent().getChannel().getId().equals(textChannel.getId())) {
+                if (slash.getInteraction().getChannel().getId().equals(textChannel.getId())) {
                     return; //if we're not in #radio, send it there too
                 }
             }

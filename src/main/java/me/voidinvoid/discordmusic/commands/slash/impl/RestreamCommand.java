@@ -1,13 +1,13 @@
 package me.voidinvoid.discordmusic.commands.slash.impl;
 
-import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.commands.slash.CommandHandler;
 import me.voidinvoid.discordmusic.commands.slash.SlashCommandData;
 import me.voidinvoid.discordmusic.commands.slash.SlashCommandHandler;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.restream.RadioRestreamManager;
 import me.voidinvoid.discordmusic.utils.Service;
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 public class RestreamCommand implements SlashCommandHandler {
 
@@ -49,10 +49,10 @@ public class RestreamCommand implements SlashCommandHandler {
     }
 
     @Override
-    public CommandUpdateAction.CommandData getCommand() {
-        return new CommandUpdateAction.CommandData("restream", "Enables the Restream system, which can clone the radio into other voice channels")
-                .addSubcommand(new CommandUpdateAction.SubcommandData("join", "Joins your voice channel"))
-                .addSubcommand(new CommandUpdateAction.SubcommandData("leave", "Disconnects the Restream bot"));
+    public CommandData getCommand() {
+        return new CommandData("restream", "Enables the Restream system, which can clone the radio into other voice channels")
+                .addSubcommand(new SubcommandData("join", "Joins your voice channel"))
+                .addSubcommand(new SubcommandData("leave", "Disconnects the Restream bot"));
     }
 
     @Override

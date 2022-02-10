@@ -4,6 +4,7 @@ import me.voidinvoid.discordmusic.Radio;
 import me.voidinvoid.discordmusic.SongOrchestrator;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.levelling.ListeningTrackerManager;
+import me.voidinvoid.discordmusic.utils.ChannelScope;
 import net.dv8tion.jda.api.entities.User;
 
 /**
@@ -38,9 +39,8 @@ public class IdentityInfo {
         this.canSkipSongs = true;
 
         var guild = Radio.getInstance().getGuild();
-        var djChannel = guild.getTextChannelById(RadioConfig.config.channels.djChat);
+        var member = guild.retrieveMember(user).onErrorMap(m -> null).complete();
 
-        var member = guild.getMember(user);
-        this.isDj = djChannel != null && member != null && djChannel.canTalk();
+        this.isDj = member != null && ChannelScope.DJ_CHAT.hasAccess(member);
     }
 }

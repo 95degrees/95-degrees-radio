@@ -11,6 +11,7 @@ import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.config.RadioConfig;
 import me.voidinvoid.discordmusic.events.RadioEventListener;
 import me.voidinvoid.discordmusic.events.SkipManager;
+import me.voidinvoid.discordmusic.interactions.ButtonManager;
 import me.voidinvoid.discordmusic.rpc.RPCSocketManager;
 import me.voidinvoid.discordmusic.songs.Song;
 import me.voidinvoid.discordmusic.songs.SongType;
@@ -119,12 +120,12 @@ public class LiveLyricsManager implements RadioService, RadioEventListener {
     private void createLyricsMessages(Song song) {
         if (!song.getType().useAnnouncement()) return;
 
-        var links = Songs.getLinksMasked(song);
+        var links = Songs.getLinksAsButtons(song);
 
         EmbedBuilder embed = new EmbedBuilder()
                 .setColor(new Color(230, 230, 230))
                 .setTitle("Now Playing")
-                .addField(song.getTitle(), song.getArtist() + (links.isBlank() ? "" : "\n\n" + Emoji.LINK + Emoji.DIVIDER_SMALL + links), false);
+                .addField(song.getTitle(), song.getArtist(), false);
 
         if (song instanceof UserSuggestable) {
             var s = (UserSuggestable) song;
@@ -133,7 +134,7 @@ public class LiveLyricsManager implements RadioService, RadioEventListener {
             }
         }
 
-        AlbumArtUtils.attachAlbumArt(embed, song, getLyricsChannel().get()).queue(m -> lyricsChannelMessages.add(m)); //header
+        ButtonManager.applyButtons(AlbumArtUtils.attachAlbumArt(embed, song, getLyricsChannel().get()), links).queue(m -> lyricsChannelMessages.add(m)); //header
 
         lastLyricsContent = null;
 

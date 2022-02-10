@@ -36,6 +36,7 @@ import me.voidinvoid.discordmusic.utils.Songs;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import org.bson.Document;
 
 import java.nio.file.Paths;
@@ -96,6 +97,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
             return List.of(timescaleFilter);
         });
         player.addListener(this);
+        player.setVolume(40);
 
         audioSendHandler = new AudioPlayerSendHandler(player);
     }
@@ -567,6 +569,10 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
     }
 
     public void setPaused(boolean paused) {
+        setPaused(paused, null);
+    }
+
+    public void setPaused(boolean paused, ButtonClickEvent source) {
         boolean wasPaused = player.isPaused();
 
         player.setPaused(paused);
@@ -579,7 +585,7 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
 
         radioEventListeners.forEach(l -> {
             try {
-                l.onSongPause(p, s, t, player);
+                l.onSongPause(p, s, t, player, source);
             } catch (Exception ex) {
                 log(ConsoleColor.RED + "Exception in song event listener: " + ex.getMessage() + ConsoleColor.RESET);
                 ex.printStackTrace();

@@ -1,6 +1,6 @@
 package me.voidinvoid.discordmusic.songs;
 
-import net.dv8tion.jda.api.commands.CommandHook;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.entities.User;
 
 /**
@@ -15,5 +15,5 @@ public interface UserSuggestable {
 
     User getSuggestedBy();
 
-    CommandHook getSlashCommandSource();
+    InteractionHook getSlashCommandSource();
 }

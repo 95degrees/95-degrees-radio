@@ -8,6 +8,7 @@ import me.voidinvoid.discordmusic.commands.slash.SlashCommandHandler;
 import me.voidinvoid.discordmusic.events.SkipManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Service;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
 
 public class SkipSongCommand implements SlashCommandHandler {
@@ -31,8 +32,8 @@ public class SkipSongCommand implements SlashCommandHandler {
     }
 
     @Override
-    public CommandUpdateAction.CommandData getCommand() {
-        return new CommandUpdateAction.CommandData("skip", "Votes to skip the current radio track");
+    public CommandData getCommand() {
+        return new CommandData("skip", "Votes to skip the current radio track");
     }
 
     @Override

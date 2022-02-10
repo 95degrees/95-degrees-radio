@@ -11,7 +11,7 @@ import me.voidinvoid.discordmusic.songs.albumart.AlbumArt;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.utils.AlbumArtUtils;
 import me.voidinvoid.discordmusic.utils.cache.CachedUser;
-import net.dv8tion.jda.api.commands.CommandHook;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.entities.User;
 
 import javax.imageio.ImageIO;
@@ -26,7 +26,7 @@ public class FileSong extends Song implements UserSuggestable {
     private Path file;
     private CachedUser suggestedBy;
     private AlbumArt albumArt;
-    private CommandHook slashCommandSource;
+    private InteractionHook slashCommandSource;
 
     private AudioTrack track;
 
@@ -36,7 +36,7 @@ public class FileSong extends Song implements UserSuggestable {
         this(type, file, suggestedBy, null, null);
     }
 
-    public FileSong(SongType type, Path file, User suggestedBy, SongQueue songQueue, CommandHook slashCommandSource) {
+    public FileSong(SongType type, Path file, User suggestedBy, SongQueue songQueue, InteractionHook slashCommandSource) {
         super(type);
 
         this.file = file;
@@ -133,7 +133,7 @@ public class FileSong extends Song implements UserSuggestable {
     }
 
     @Override
-    public CommandHook getSlashCommandSource() {
+    public InteractionHook getSlashCommandSource() {
         return slashCommandSource;
     }
 }

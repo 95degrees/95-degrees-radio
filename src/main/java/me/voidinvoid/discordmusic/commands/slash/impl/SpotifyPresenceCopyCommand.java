@@ -9,6 +9,7 @@ import me.voidinvoid.discordmusic.spotify.SpotifyManager;
 import me.voidinvoid.discordmusic.suggestions.SongSuggestionManager;
 import me.voidinvoid.discordmusic.suggestions.SuggestionQueueMode;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
 
 public class SpotifyPresenceCopyCommand implements SlashCommandHandler {
@@ -37,7 +38,7 @@ public class SpotifyPresenceCopyCommand implements SlashCommandHandler {
                 var track = SpotifyManager.SPOTIFY_TRACK_URL + rp.getSyncId();
 
                 Radio.getInstance().getService(SongSuggestionManager.class)
-                        .addSuggestion(track, data.getEvent().acknowledge().submit(), data.getMember(), data.getEvent().getTextChannel(), true, data.getBooleanOption("autoselect", true), SuggestionQueueMode.NORMAL);
+                        .addSuggestion(track, data.getEvent().deferReply().submit(), data.getMember(), data.getEvent().getTextChannel(), true, data.getBooleanOption("autoselect", true), SuggestionQueueMode.NORMAL);
                 return;
             }
         }
@@ -46,8 +47,8 @@ public class SpotifyPresenceCopyCommand implements SlashCommandHandler {
     }
 
     @Override
-    public CommandUpdateAction.CommandData getCommand() {
-        return new CommandUpdateAction.CommandData("copyme", "Queues the song which you are currently playing on your Spotify status");
+    public CommandData getCommand() {
+        return new CommandData("copyme", "Queues the song which you are currently playing on your Spotify status");
     }
 
     @Override

@@ -5,19 +5,22 @@ import me.voidinvoid.discordmusic.utils.Emoji;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Objects;
 
 public class SlashCommandData {
 
     private final SlashCommandEvent event;
-    private final CommandUpdateAction.CommandData command;
+    private final CommandData command;
 
-    public SlashCommandData(SlashCommandEvent event, CommandUpdateAction.CommandData command) {
+    public SlashCommandData(SlashCommandEvent event, CommandData command) {
 
         this.event = event;
         this.command = command;
@@ -32,7 +35,7 @@ public class SlashCommandData {
         return event.getTextChannel();
     }
 
-    public SlashCommandEvent.OptionData getOption(String name) {
+    public OptionMapping getOption(String name) {
         return event.getOption(name);
     }
 
@@ -48,6 +51,10 @@ public class SlashCommandData {
         return opt == null ? defaultValue : opt.getAsLong();
     }
 
+    public int getIntegerOption(String name, int defaultValue) {
+        return (int) getLongOption(name, defaultValue);
+    }
+
     public boolean getBooleanOption(String name, boolean defaultValue) {
         var opt = getOption(name);
 
@@ -57,7 +64,7 @@ public class SlashCommandData {
     public <T extends AbstractChannel> T getChannelOption(String name, T defaultValue, Class<T> channelClass) {
         var opt = getOption(name);
 
-        return !channelClass.isInstance(opt) ? defaultValue : channelClass.cast(opt.getAsChannel());
+        return !channelClass.isInstance(opt) ? defaultValue : channelClass.cast(opt.getAsGuildChannel());
     }
 
     public AbstractChannel getChannelOption(String name, AbstractChannel defaultValue) {
@@ -82,16 +89,16 @@ public class SlashCommandData {
         return event;
     }
 
-    public CommandUpdateAction.CommandData getCommand() {
+    public CommandData getCommand() {
         return command;
     }
 
     public void acknowledge(boolean ephemeral) {
-        event.acknowledge().queue();
+        event.getInteraction().deferReply(ephemeral).queue();
     }
 
     public void embed(MessageEmbed embed, boolean ephemeral) {
-        event.reply(embed).setEphemeral(ephemeral).queue();
+        event.replyEmbeds(embed).setEphemeral(ephemeral).queue();
     }
 
     public void embed(MessageEmbed embed) {
@@ -145,11 +152,7 @@ public class SlashCommandData {
     }
 
     public void error(String message, boolean ephemeral) {
-        if (ephemeral) {
-            sendMessage(Emoji.CROSS + " " + message, true);
-        } else {
-            createErrorEmbed(message).build();
-        }
+        embed(createErrorEmbed(message).build());
     }
 
     public void errorEmbed(String message) {
@@ -157,13 +160,11 @@ public class SlashCommandData {
     }
 
     public EmbedBuilder createErrorEmbed(String message) {
-        var embed = new EmbedBuilder()
+        return new EmbedBuilder()
                 .setTitle(Emoji.CROSS + " Command Error")
                 .setColor(Color.RED)
                 .setDescription(message)
                 .setFooter(event.getUser().getName(), event.getUser().getAvatarUrl())
                 .setTimestamp(OffsetDateTime.now());
-
-        return embed;
     }
 }
