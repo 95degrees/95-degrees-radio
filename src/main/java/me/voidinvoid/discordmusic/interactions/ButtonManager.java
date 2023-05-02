@@ -3,17 +3,15 @@ package me.voidinvoid.discordmusic.interactions;
 import me.voidinvoid.discordmusic.RadioService;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.ActionRow;
-import net.dv8tion.jda.api.interactions.button.Button;
-import net.dv8tion.jda.api.interactions.button.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.internal.interactions.ButtonImpl;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +38,7 @@ public class ButtonManager extends ListenerAdapter implements RadioService {
             if (data.isDirty()) {
                 buttonData.remove(e.getButton().getId());
                 buttonData.put(data.getFullId(), data);
-                e.updateButton(new ButtonImpl(data.getFullId(), e.getButton().getLabel(), e.getButton().getStyle(), e.getButton().getUrl(), e.getButton().isDisabled(), e.getButton().getEmoji())).queue();
+                e.editButton(new ButtonImpl(data.getFullId(), e.getButton().getLabel(), e.getButton().getStyle(), e.getButton().getUrl(), e.getButton().isDisabled(), e.getButton().getEmoji())).queue();
             }
         }
     }

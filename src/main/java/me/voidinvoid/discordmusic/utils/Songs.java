@@ -6,12 +6,11 @@ import me.voidinvoid.discordmusic.songs.SpotifySong;
 import me.voidinvoid.discordmusic.songs.SpotifyTrackHolder;
 import me.voidinvoid.discordmusic.songs.database.DatabaseSong;
 import me.voidinvoid.discordmusic.spotify.SpotifyManager;
-import net.dv8tion.jda.api.interactions.button.Button;
+import net.dv8tion.jda.api.interactions.components.Button;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public final class Songs {

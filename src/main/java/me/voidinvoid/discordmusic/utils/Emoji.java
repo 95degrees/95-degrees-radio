@@ -139,7 +139,7 @@ public final class Emoji {
     }
 
     public net.dv8tion.jda.api.entities.Emoji getJDAEmoji() {
-        return net.dv8tion.jda.api.entities.Emoji.ofEmote(emote);
+        return net.dv8tion.jda.api.entities.Emoji.fromEmote(emote);
     }
 
     @Override
@@ -171,7 +171,7 @@ public final class Emoji {
             }
         }
 
-        if (guild.getEmotes().size() >= guild.getMaxEmotes()) { //we need to delete some, but make sure we dont delete any from the required ids set
+        if (guild.getEmotes().size() >= guild.getMaxEmotes()) { //we need to delete some, but make sure we don't delete any from the required ids set
             var toRemove = guild.getEmotes().stream().filter(e -> requiredIds != null && !requiredIds.contains(e.getName())).findAny().orElse(null);
 
             if (toRemove != null) {

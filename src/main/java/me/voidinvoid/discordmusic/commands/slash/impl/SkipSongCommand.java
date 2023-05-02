@@ -9,7 +9,6 @@ import me.voidinvoid.discordmusic.events.SkipManager;
 import me.voidinvoid.discordmusic.utils.ChannelScope;
 import me.voidinvoid.discordmusic.utils.Service;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.requests.restaction.CommandUpdateAction;
 
 public class SkipSongCommand implements SlashCommandHandler {
 

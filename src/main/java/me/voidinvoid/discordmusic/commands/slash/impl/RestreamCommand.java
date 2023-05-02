@@ -51,8 +51,8 @@ public class RestreamCommand implements SlashCommandHandler {
     @Override
     public CommandData getCommand() {
         return new CommandData("restream", "Enables the Restream system, which can clone the radio into other voice channels")
-                .addSubcommand(new SubcommandData("join", "Joins your voice channel"))
-                .addSubcommand(new SubcommandData("leave", "Disconnects the Restream bot"));
+                .addSubcommands(new SubcommandData("join", "Joins your voice channel"))
+                .addSubcommands(new SubcommandData("leave", "Disconnects the Restream bot"));
     }
 
     @Override

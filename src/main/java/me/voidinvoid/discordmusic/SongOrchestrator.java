@@ -91,11 +91,11 @@ public class SongOrchestrator extends AudioEventAdapter implements RadioService 
                 .forSource(youtube).setup();
 
         player = manager.createPlayer();
-        player.setFilterFactory((track, format, filter) -> {
+        /*player.setFilterFactory((track, format, filter) -> {
             timescaleFilter = new TimescalePcmAudioFilter(filter, format.channelCount, format.sampleRate);
             timescaleFilter.setSpeed(timescale).setPitch(pitch);
             return List.of(timescaleFilter);
-        });
+        });*/
         player.addListener(this);
         player.setVolume(40);
 

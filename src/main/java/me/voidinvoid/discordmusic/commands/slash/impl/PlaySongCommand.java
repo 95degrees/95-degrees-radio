@@ -32,8 +32,8 @@ public class PlaySongCommand implements SlashCommandHandler {
     @Override
     public CommandData getCommand() {
         return new CommandData("play", "Plays the specified track")
-                .addOption(new OptionData(OptionType.STRING, "track", "The name or URL of the track").setRequired(true))
-                .addOption(new OptionData(OptionType.BOOLEAN, "autoselect", "Automatically select the first track if there are multiple matches").setRequired(false));
+                .addOptions(new OptionData(OptionType.STRING, "track", "The name or URL of the track").setRequired(true))
+                .addOptions(new OptionData(OptionType.BOOLEAN, "autoselect", "Automatically select the first track if there are multiple matches").setRequired(false));
     }
 
     @Override

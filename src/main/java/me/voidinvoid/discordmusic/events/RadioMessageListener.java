@@ -15,20 +15,18 @@ import me.voidinvoid.discordmusic.songs.UserSuggestable;
 import me.voidinvoid.discordmusic.songs.albumart.LocalAlbumArt;
 import me.voidinvoid.discordmusic.utils.*;
 import me.voidinvoid.discordmusic.utils.cache.CachedChannel;
-import me.voidinvoid.discordmusic.utils.reactions.MessageReactionCallbackManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.interactions.button.Button;
-import net.dv8tion.jda.api.interactions.button.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 
 import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class RadioMessageListener implements RadioService, RadioEventListener {
 
@@ -74,11 +72,11 @@ public class RadioMessageListener implements RadioService, RadioEventListener {
             }
         }
 
-        var buttons = new ArrayList<Button>();
+        var buttons = new ArrayList<net.dv8tion.jda.api.interactions.components.Button>();
 
         if (Songs.isRatable(song)) {
             for (Rating r : Rating.values()) {
-                buttons.add(ButtonManager.of(ButtonStyle.SECONDARY, net.dv8tion.jda.api.entities.Emoji.ofUnicode(r.getEmote()), e -> {
+                buttons.add(ButtonManager.of(ButtonStyle.SECONDARY, net.dv8tion.jda.api.entities.Emoji.fromUnicode(r.getEmote()), e -> {
 
                     var rm = Radio.getInstance().getService(SongRatingManager.class);
                     rm.rateSong(e.getEvent().getMember().getUser(), song, r, false);

@@ -223,7 +223,7 @@ public class Radio implements EventListener {
             @Override
             public void onStatusChange(@NotNull ConnectionStatus status) {
                 if (status == ConnectionStatus.CONNECTED) {
-                    mgr.getGuild().requestToSpeak().queue();
+                    mgr.getGuild().requestToSpeak();
                 }
             }
 

@@ -20,8 +20,8 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.interaction.ButtonClickEvent;
-import net.dv8tion.jda.api.interactions.ActionRow;
-import net.dv8tion.jda.api.interactions.button.ButtonStyle;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.ButtonStyle;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 
 import java.awt.*;
@@ -140,7 +140,7 @@ public class SongDJ implements RadioService, RadioEventListener {
 
         for (int i = 0; i < rowsToCreate; i++) {
             int index = i;
-            rows[i] = ActionRow.of(availableActions.stream().filter(a -> a.getActionRowIndex() == index).map(a -> ButtonManager.of(ButtonStyle.SECONDARY, net.dv8tion.jda.api.entities.Emoji.ofUnicode(a.getEmoji()), e -> invokeAction(a, e.getEvent().getUser(), e.getEvent()))).collect(Collectors.toList()));
+            rows[i] = ActionRow.of(availableActions.stream().filter(a -> a.getActionRowIndex() == index).map(a -> ButtonManager.of(ButtonStyle.SECONDARY, net.dv8tion.jda.api.entities.Emoji.fromUnicode(a.getEmoji()), e -> invokeAction(a, e.getEvent().getUser(), e.getEvent()))).collect(Collectors.toList()));
         }
 
         return action.setActionRows(rows);
