@@ -6,7 +6,7 @@
 - Uses LavaPlayer for basically everything to do with audio
 
 ## Structure
-The vast majority of the code is split up into different modules inside of the root package. All modules are registered in the root *Root* class, which is the entrypoint to the bot.
+The vast majority of the code is split up into different modules inside of the root package. All modules are registered in the root *Radio* class, which is the entrypoint to the bot.
 
 ### SongOrchestrator
 *SongOrchestrator* is the main class responsible for determining what the radio should be playing at a given point. This is a bit more convoluted than normal music bots since by design it should always be playing *something*. The orchestrator gets its songs by querying an active playlist as to which song to play next (Playlist#provideNextSong) - there is always one active at all times.
